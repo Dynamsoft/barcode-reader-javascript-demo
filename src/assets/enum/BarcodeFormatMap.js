@@ -1,0 +1,26 @@
+import DBR from "../../dbr.js";
+const BarcodeFormatMap = new Map([
+    ["code39", DBR.EnumBarcodeFormat.BF_CODE_39],
+    ["code128", DBR.EnumBarcodeFormat.BF_CODE_128],
+    ["code93", DBR.EnumBarcodeFormat.BF_CODE_93],
+    ["codabar", DBR.EnumBarcodeFormat.BF_CODABAR],
+    ["itf", DBR.EnumBarcodeFormat.BF_ITF],
+    ["ean13", DBR.EnumBarcodeFormat.BF_EAN_13],
+    ["ean8", DBR.EnumBarcodeFormat.BF_EAN_8],
+    ["upca", DBR.EnumBarcodeFormat.BF_UPC_A],
+    ["upce", DBR.EnumBarcodeFormat.BF_UPC_E],
+    ["industrial25", DBR.EnumBarcodeFormat.BF_INDUSTRIAL_25],
+    ["code39extended", DBR.EnumBarcodeFormat.BF_CODE_39_EXTENDED],
+    ["msicode", DBR.EnumBarcodeFormat.BF_MSI_CODE],
+    ["qrcode", DBR.EnumBarcodeFormat.BF_QR_CODE],
+    ["pdf417", DBR.EnumBarcodeFormat.BF_PDF417],
+    ["datamatrix", DBR.EnumBarcodeFormat.BF_DATAMATRIX],
+    ["azteccode", DBR.EnumBarcodeFormat.BF_AZTEC],
+    ["maxicode", DBR.EnumBarcodeFormat.BF_MAXICODE],
+    ["patchcode", DBR.EnumBarcodeFormat.BF_PATCHCODE],
+    ["gs1databar", DBR.EnumBarcodeFormat.BF_GS1_DATABAR],
+    ["gs1composite", DBR.EnumBarcodeFormat.BF_GS1_COMPOSITE],
+    ["micropdf417", DBR.EnumBarcodeFormat.BF_MICRO_PDF417],
+    ["microqr", DBR.EnumBarcodeFormat.BF_MICRO_QR],
+  ]);
+  export default BarcodeFormatMap
