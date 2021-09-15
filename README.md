@@ -20,7 +20,7 @@ yarn
 yarn serve
 ```
 
-You will notice that the barcode results are not complete and sometimes the location is not accurate, both issues are due to the lack of a valid license. The next step show you how to apply for a trial license and use it.
+You will notice that the barcode results are not complete and sometimes the location is not accurate, both issues are due to the lack of a valid license. The next step shows you how to apply for a trial license and use it.
 
 ## License the application
 
@@ -28,7 +28,7 @@ Sign up and request a trial license in the [Dynamsoft Customer Portal](https://w
 
 Once you get the trial license, you can use it by specifying your organization ID in the application.
 
-Open the file /src/dbr.js and specify your organization ID like this:
+Open the file "/src/dbr.js" and specify your organization ID like this:
 
 ```javascript
 DBR.BarcodeReader.organizationID = "Your-Organization-ID";
@@ -38,4 +38,4 @@ That's it. Recompile to test again and you will see the barcode reading working 
 
 > NOTE
 > 
-> The trial license is fetched from Dynamsoft License Server at runtime, so make sure your device has network connection, otherwise, it won't work.
+> The trial license is fetched from Dynamsoft License Server at runtime, so please make sure your device has network connection.
