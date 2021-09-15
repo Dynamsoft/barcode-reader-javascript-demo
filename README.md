@@ -1,4 +1,4 @@
-# Official Demo for Dynamsoft Barcode Reader JavaScript SDK
+# Demo for Dynamsoft Barcode Reader JavaScript SDK
 
 This repository contains the source code for the official demo of the Dynamsoft Barcode Reader JavaScript SDK (hereafter called "the library"). 
 
