@@ -20,6 +20,26 @@
   <link rel="apple-touch-icon" sizes="192x192" href="./dynamsoft-192x192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="./dynamsoft-512x512.png" />
   <link rel="manifest" href="./manifest.json" />
+</head>
+
+<body>
+  <noscript>
+    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+      Please enable it to continue.</strong>
+  </noscript>
+  <div id="app"></div>
+    <!-- built files will be auto injected -->
+    
+  <script>
+    window.addEventListener("hashchange", function () {
+      window.location.reload();
+    })
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+  <script src="https://unpkg.com/vuex@3.4.0/dist/vuex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@8.6.1/dist/dbr.js"></script>
   <script type="application/ld+json">
     [{
       "@context": "http://schema.org",
@@ -34,23 +54,14 @@
         "description": "Turn your web page into a barcode scanner with just a few lines of code!"
       },
       "browserRequirements": "Safari v11+, Chrome v52+, Firefox 59+ and Edge v16+ on Desktop/Android/iOS.",
-      "softwareVersion": "8.4.0",
+      "softwareVersion": "8.6.1",
       "operatingSystem": "All"
     }]
   </script>
-</head>
 
-<body>
-  <noscript>
-    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
-        Please enable it to continue.</strong>
-  </noscript>
-  <div id="app"></div>
-  <!-- built files will be auto injected -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        // console.log(location.pathname+"service-worker.js");
         navigator.serviceWorker.register("service-worker.js").then(function (registration) {
           // Registration was successful
           console.log('ServiceWorker registration successful with scope: ', registration.scope);
@@ -64,12 +75,6 @@
     } else {
       console.log('service worker is not supported');
     }
-  </script>
-
-  <script>
-    window.addEventListener("hashchange", function () {
-      window.location.reload();
-    })
   </script>
 </body>
 

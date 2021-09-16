@@ -213,7 +213,7 @@ export default Vue.extend({
   padding: 10px;
   width: 150px;
   color: #888888;
-  transition: all 0.3s;
+  transition: all .3s;
   background-color: #323234;
   cursor: pointer;
 }

@@ -7,13 +7,14 @@
           href="https://www.dynamsoft.com/"
           target="_blank"
         >
-          <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" />
+          <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="dynamsoft" />
+          dynamsoft
         </a>
       </div>
     </header>
     <div class="guideContainer">
       <div class="guideTitle">
-        <img src="../assets/image/dbr.svg" />
+        <img src="../assets/image/dbr.svg" alt="dynamsoft-barcode-reader" />
       </div>
       <div class="guideTextPart1">
         Turn your web page into a barcode scanner with just a few lines of code!
@@ -495,9 +496,6 @@ export default Vue.extend({
   data() {
     return {
       guideSelection: "",
-      startGuideTime: 0,
-      endGuideTime: 0,
-      landingPageTime: 0,
     };
   },
   mounted() {
@@ -552,6 +550,8 @@ header .headerLeft {
 }
 .headerLeft .dynamsoftLogo {
   margin-left: 15px;
+  font-size: 0;
+  overflow: hidden;
 }
 .headerLeft .dynamsoftLogo img {
   height: 3.7vh;
@@ -704,6 +704,10 @@ header .headerLeft {
   border: none;
   cursor: pointer;
   user-select: none;
+  transition: background-color .3s;
+}
+.guideContainer .btnContainer .startBtn:hover {
+  background-color: #ffae38;
 }
 .supportedBrowsersInfo {
   display: flex;
@@ -725,9 +729,10 @@ header .headerLeft {
   screen and (max-width: 980px) and (orientation: landscape) {
   .guide header {
     margin-top: 4.3vh;
-    justify-content: center;
     background-color: transparent;
-    visibility: hidden;
+  }
+  header .headerLeft {
+    display: none;
   }
   .headerLeft .dynamsoftLogo {
     margin: auto;
@@ -898,15 +903,11 @@ header .headerLeft {
 }
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .guide header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    flex: 0 0 auto;
-    align-items: center;
     margin-top: 0;
-    height: auto;
     background-color: #222222;
-    visibility: visible;
+  }
+  header .headerLeft {
+    display: flex;
   }
   .headerLeft .dynamsoftLogo {
     margin-left: 4vw;

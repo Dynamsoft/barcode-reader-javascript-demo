@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <home />
-    <sidebar />
+    <home v-if="$store.state.isStartScanning" />
+    <sidebar v-if="$store.state.isStartScanning" />
     <barcode-scanner v-if="$store.state.isStartScanning" />
     <guide v-if="!$store.state.isStartScanning" />
     <copy-right-footer />
@@ -36,16 +36,16 @@ export default Vue.extend({
 
 <style>
 @font-face {
-  font-family: "Oswald-Regular";
-  src: url("./assets/font/Oswald-Regular.ttf");
+font-family: "Oswald-Regular";
+src: url("./assets/font/Oswald-Regular.ttf");
 }
 @font-face {
-  font-family: "Oswald-Light";
-  src: url("./assets/font/Oswald-Light.ttf");
+font-family: "Oswald-Light";
+src: url("./assets/font/Oswald-Light.ttf");
 }
 @font-face {
-  font-family: "OpenSans-Regular";
-  src: url("./assets/font/OpenSans-Regular.ttf");
+font-family: "OpenSans-Regular";
+src: url("./assets/font/OpenSans-Regular.ttf");
 }
 * {
   padding: 0;

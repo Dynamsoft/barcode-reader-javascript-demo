@@ -6,26 +6,48 @@
       <div class="headerRight">
         <div class="linkInMobile">
           <a
-            class="trialLink"
-            href="https://www.dynamsoft.com/barcode-reader/downloads/#javascript"
+            class="codeLink"
+            href="https://github.com/Dynamsoft/barcode-reader-javascript-demo"
             target="_blank"
-            @click="recordClickDownload"
+            @click="recordClickLink('codeLink')"
           >
-            Download Free Trial
-            <a-icon
-              type="right"
-              style="font-size: 12px; transform: scale(0.7)"
-            />
+            GET DEMO CODE
+            <svg class="downloadCodeIcon" viewBox="0 0 18 18">
+              <g transform="translate(-519 -1339)">
+                <g transform="translate(520 1340)">
+                  <path d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none"  stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                  <path d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                  <path d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                </g>
+              </g>
+            </svg>
           </a>
         </div>
         <div class="linkInDesktop">
           <a
-            class="trialLink"
+            class="codeLink"
+            href="https://github.com/Dynamsoft/barcode-reader-javascript-demo"
+            target="_blank"
+            @click="recordClickLink('codeLink')"
+          >
+            GET DEMO CODE
+            <svg class="downloadCodeIcon" viewBox="0 0 18 18">
+              <g transform="translate(-519 -1339)">
+                <g transform="translate(520 1340)">
+                  <path d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none"  stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                  <path d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                  <path d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                </g>
+              </g>
+            </svg>
+          </a>
+          <a
+            class="sdkLink"
             href="https://www.dynamsoft.com/barcode-reader/downloads/#javascript"
             target="_blank"
-            @click="recordClickDownload"
+            @click="recordClickLink('sdkLink')"
           >
-            DOWNLOAD FREE TRIAL
+            DOWNLOAD SDK
           </a>
         </div>
       </div>
@@ -46,15 +68,11 @@ export default Vue.extend({
   props: {},
   data() {
     return {
-      clickDownloadTimes: 0,
     };
   },
   mounted() {
   },
   methods: {
-    recordClickDownload() {
-      this.clickDownloadTimes++;
-    },
   },
 });
 </script>
@@ -92,26 +110,59 @@ header .headerRight {
   align-items: center;
   height: 100%;
 }
-.headerRight .linkInMobile .trialLink {
+.headerRight .linkInMobile .codeLink {
   display: flex;
   flex-direction: row;
   align-items: center;
   font-size: 14px;
   color: #fff;
 }
-.headerRight .linkInDesktop {
-  height: 70%;
+.headerRight .linkInMobile .codeLink .downloadCodeIcon {
+  margin-left: 3px;
+  margin-top: 2px;
+  width: 14px;
+  height: 14px;
+  stroke: #fff;
 }
-.headerRight .linkInDesktop .trialLink {
+.headerRight .linkInDesktop {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 65%;
+}
+.headerRight .linkInDesktop a {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 8px 28px;
   height: 100%;
-  font-size: 18px;
+  font-size: 16px;
+}
+.headerRight .linkInDesktop .codeLink {
+  width: 146px;
+}
+.headerRight .linkInDesktop .codeLink:hover {
+  color: #ffae38;
+}
+.headerRight .linkInDesktop .codeLink .downloadCodeIcon {
+  margin-left: 5px;
+  width: 16px;
+  height: 16px;
+  stroke: #fe8e14;
+  transition: stroke .3s;
+}
+.headerRight .linkInDesktop .codeLink:hover .downloadCodeIcon {
+  stroke: #ffae38;
+}
+.headerRight .linkInDesktop .sdkLink {
+  width: 160px;
+  margin-left: 15px;
   color: #fff;
   background-color: #fe8e14;
+  transition: background-color .3s;
+}
+.headerRight .linkInDesktop .sdkLink:hover {
+  background-color: #ffae38;
 }
 
 @media (min-width: 981px),
@@ -120,7 +171,7 @@ header .headerRight {
     height: 7.7vh;
   }
   header .headerRight {
-    padding-right: 81px;
+    padding-right: 25px;
   }
   .headerRight .linkInMobile {
     display: none;

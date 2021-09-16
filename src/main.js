@@ -16,5 +16,9 @@ Vue.use(AsyncComputed)
 
 new Vue({
   render: h => h(App),
-  store
+  store,
+  mounted() {
+    // You'll need this for renderAfterDocumentEvent.
+    document.dispatchEvent(new Event('render-event'))
+},
 }).$mount('#app')

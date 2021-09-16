@@ -170,7 +170,7 @@
     </div>
     <div
       class="scanArea"
-      v-show="!isFullImageLocalization && selectedUseCase === 'general'"
+      v-show="!isFullImageLocalization && !isDecodingFile && selectedUseCase === 'general'"
     >
       <div class="scanLight"></div>
     </div>
@@ -1907,24 +1907,6 @@ export default Vue.extend({
       isShowTipImg: true,
       isShowLoadingImg: true,
       isLoadingCamera: false,
-      startMainTime: 0,
-      endMainTime: 0,
-      mainPageTime: 0,
-      startResolutionTime: 0,
-      endResolutionTime: 0,
-      resolutionUsedTime: {
-        HD: 0,
-        FULL_HD: 0,
-      },
-      scanSuccessfullyList: [],
-      startUseCaseTime: 0,
-      endUseCaseTime: 0,
-      useCaseTime: {
-        general: 0,
-        vin: 0,
-        dl: 0,
-        dpm: 0,
-      },
     };
   },
 
@@ -2154,12 +2136,6 @@ export default Vue.extend({
               ) {
                 this.dlText = result.barcodeText;
               }
-            }
-          };
-
-          this.scanner.onUnduplicatedRead = () => {
-            if (!this.scanSuccessfullyList.includes(this.selectedUseCase)) {
-              this.scanSuccessfullyList.push(this.selectedUseCase);
             }
           };
           await this.scanner.open();
@@ -2539,20 +2515,6 @@ export default Vue.extend({
     },
   },
   watch: {
-    currentResolution(newValue, oldValue) {
-      if (oldValue.length !== 0) {
-        this.endResolutionTime = Date.now();
-        if (oldValue.includes(720)) {
-          this.resolutionUsedTime["HD"] +=
-            this.endResolutionTime - this.startResolutionTime;
-        } else if (oldValue.includes(1080)) {
-          this.resolutionUsedTime["FULL_HD"] +=
-            this.endResolutionTime - this.startResolutionTime;
-        }
-        this.startResolutionTime = Date.now();
-      }
-      console.log(newValue);
-    },
     isDLResultShow(newValue) {
       if (!newValue) {
         this.dlText = "";
@@ -2569,30 +2531,7 @@ export default Vue.extend({
       this.soundEffectsIconPath = newValue ? checkedMusicIcon : musicIcon;
     },
     async selectedUseCase(newUseCase, oldUseCase) {
-      if (oldUseCase !== "") {
-        this.endUseCaseTime = Date.now();
-        switch (oldUseCase) {
-          case "general":
-            this.useCaseTime["general"] +=
-              this.endUseCaseTime - this.startUseCaseTime;
-            break;
-          case "vin":
-            this.useCaseTime["vin"] +=
-              this.endUseCaseTime - this.startUseCaseTime;
-            break;
-          case "dl":
-            this.useCaseTime["dl"] +=
-              this.endUseCaseTime - this.startUseCaseTime;
-            break;
-          case "dpm":
-            this.useCaseTime["dpm"] +=
-              this.endUseCaseTime - this.startUseCaseTime;
-            break;
-          default:
-            break;
-        }
-        this.startUseCaseTime = Date.now();
-      }
+      console.log(oldUseCase);
       if (newUseCase === "dl") {
         this.isShowTipImg = true;
         setTimeout(() => {
@@ -2911,7 +2850,7 @@ export default Vue.extend({
   }
   .curUseCaseTip {
     top: 3.9vh;
-    width: calc(100% - 911.6px);
+    width: calc(100% - 892px);
     font-size: 20px;
     transform: translate(-50%, -50%);
   }

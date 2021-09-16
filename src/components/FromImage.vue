@@ -120,7 +120,7 @@ export default Vue.extend({
           );
           config.duration = 0;
           this.$message.open(config);
-
+          
           let results = await this.reader.decode(file);
           for (let result of results) {
             let barcodeFormat = "";

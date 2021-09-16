@@ -1,7 +1,7 @@
 <template>
   <div class="copyRightFooter">
     <a class="dynamsoftLogo" href="https://www.dynamsoft.com/" target="_blank">
-      <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" />
+      <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="dynamsoft"/>
     </a>
     <div class="copyrightInfo">
       <div>
