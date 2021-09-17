@@ -154,7 +154,6 @@
       </li>
     </ul>
     <div class="dlResultContainer" v-show="isDLResultShow">
-      <!-- <ul class="dlInfo" :data-clipboard-text="copiedDLInfo"> -->
       <ul class="dlInfo">
         <li v-for="(info, infoIndex) in dlInfo" :key="infoIndex">
           <span class="description"> {{ info.description }}: </span>
@@ -1981,28 +1980,27 @@ export default Vue.extend({
       this.dlText = "";
     },
     getDLInfo(txt) {
-      let dlInfo = [];
-      if (txt !== "") {
-        let barcodeText = txt + "\n";
-        for (let i = 0; i < DriverLicenseFields.length; i++) {
-          let __item = DriverLicenseFields[i];
-          let _fieldValue = this.getField(barcodeText, __item.abbreviation);
-          if (_fieldValue != false) {
-            dlInfo.push({
-              description: __item.description,
-              value: _fieldValue,
-            });
+      let lines = txt.split('\n');
+      let abbrs = Object.keys(DriverLicenseFields);
+      let dlInfo = {};
+      lines.forEach((line, i) => {
+          let abbr;
+          let content;
+          if(i === 1){
+              abbr = 'DAQ';
+              content = line.substring(line.indexOf(abbr) + 3);
+          }else{
+              abbr = line.substring(0, 3);
+              content = line.substring(3).trim();
+          } 
+          if(abbrs.includes(abbr)){
+              dlInfo[abbr] = {
+                  description: DriverLicenseFields[abbr],
+                  value: content
+              };
           }
-        }
-      }
+      });
       return dlInfo;
-    },
-    getField(barcodeText, keyword) {
-      let k = barcodeText.search("\n" + keyword);
-      if (k == -1) return false;
-      let m = barcodeText.indexOf("\n", k + 1);
-      let subtext = barcodeText.substring(k + 4, m);
-      return subtext;
     },
     showCameraList() {
       this.isShowCameraList = !this.isShowCameraList;
@@ -2036,8 +2034,8 @@ export default Vue.extend({
       let clipboard = new Clipboard(".copyBtn", {
         text: () => {
           let copyContent = "";
-          for (let i of this.dlInfo) {
-            copyContent += i.description + ": " + i.value + "\n";
+          for (let i in this.dlInfo) {
+            copyContent += this.dlInfo[i].description + ": " + this.dlInfo[i].value + "\n";
           }
           return copyContent;
         },
@@ -2396,19 +2394,19 @@ export default Vue.extend({
       }
     },
     isDLResultShow() {
-      return this.selectedUseCase === "dl" && this.dlInfo.length !== 0;
+      return this.selectedUseCase === "dl" && Object.keys(this.dlInfo).length !== 0;
     },
     dlInfo() {
       if (this.selectedUseCase === "dl") {
         return this.getDLInfo(this.dlText);
       } else {
-        return [];
+        return {};
       }
     },
     copiedDLInfo() {
       let copiedDLInfo = "";
-      for (let i of this.dlInfo) {
-        copiedDLInfo += i.description + ": " + i.value + "\n";
+      for (let i in this.dlInfo) {
+        copiedDLInfo += this.dlInfo[i].description + ": " + this.dlInfo[i].value + "\n";
       }
       return copiedDLInfo;
     },
