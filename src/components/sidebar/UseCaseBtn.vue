@@ -128,7 +128,8 @@
             </g>
           </g>
         </svg>
-        <label> Use Case </label>
+        <!-- <label> Use Case</label> -->
+        <label> {{ curUsecase }}</label>
       </div>
     </a-popover>
   </div>
@@ -176,6 +177,20 @@ export default Vue.extend({
         this.$store.commit("onSelectedUseCaseChange", value);
       },
     },
+    curUsecase() {
+      switch (this.selectedUseCase) {
+        case "general":
+          return "General";
+        case "vin":
+          return "VIN";
+        case "dl":
+          return "Driver's License";
+        case "dpm":
+          return "DPM Codes";
+        default:
+          return "";
+      }
+    },
   },
   watch: {},
 });
@@ -184,6 +199,7 @@ export default Vue.extend({
 <style scoped>
 .sidebarBtn {
   height: 100%;
+  min-width: 90px;
 }
 .useCaseOptions {
   display: flex;
@@ -213,7 +229,7 @@ export default Vue.extend({
   padding: 10px;
   width: 150px;
   color: #888888;
-  transition: all .3s;
+  transition: all 0.3s;
   background-color: #323234;
   cursor: pointer;
 }

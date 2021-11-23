@@ -1,12 +1,23 @@
 <template>
   <div class="copyRightFooter">
     <a class="dynamsoftLogo" href="https://www.dynamsoft.com/" target="_blank">
-      <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="dynamsoft"/>
+      <img
+        src="../assets/image/logo-dynamsoft-blackBg-190x47.png"
+        alt="dynamsoft"
+      />
     </a>
     <div class="copyrightInfo">
       <div>
-        © 2003 – 2021 Dynamsoft. All rights reserved. Privacy Statement / Site
-        Map
+        © 2003 – 2021 Dynamsoft. All rights reserved.
+        <a
+          href="https://www.dynamsoft.com/PrivacyStatement.aspx"
+          target="_blank"
+          >Privacy Statement</a
+        >
+        /
+        <a href="https://www.dynamsoft.com/SiteMap.aspx" target="_blank"
+          >Site Map</a
+        >
       </div>
     </div>
   </div>

@@ -15,9 +15,30 @@
             <svg class="downloadCodeIcon" viewBox="0 0 18 18">
               <g transform="translate(-519 -1339)">
                 <g transform="translate(520 1340)">
-                  <path d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none"  stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                  <path d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                  <path d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                  <path
+                    d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z"
+                    transform="translate(-520 -1340)"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M531,1352.274V1344.5"
+                    transform="translate(-523 -1340.387)"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M533.554,1352l-4.027,5.027L525.5,1352"
+                    transform="translate(-521.527 -1344.02)"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
                 </g>
               </g>
             </svg>
@@ -34,9 +55,30 @@
             <svg class="downloadCodeIcon" viewBox="0 0 18 18">
               <g transform="translate(-519 -1339)">
                 <g transform="translate(520 1340)">
-                  <path d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none"  stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                  <path d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                  <path d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                  <path
+                    d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z"
+                    transform="translate(-520 -1340)"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M531,1352.274V1344.5"
+                    transform="translate(-523 -1340.387)"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M533.554,1352l-4.027,5.027L525.5,1352"
+                    transform="translate(-521.527 -1344.02)"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
                 </g>
               </g>
             </svg>
@@ -52,25 +94,24 @@
         </div>
       </div>
     </header>
-    <copy-right-footer />
   </div>
 </template>
 
 <script >
 import Vue from "vue";
-import CopyRightFooter from "./CopyRightFooter.vue";
 
 export default Vue.extend({
-  components: { 
-    CopyRightFooter, 
-    },
+  components: {
+  },
   name: "Home",
   props: {},
   data() {
     return {
+
     };
   },
   mounted() {
+
   },
   methods: {
   },
@@ -149,7 +190,7 @@ header .headerRight {
   width: 16px;
   height: 16px;
   stroke: #fe8e14;
-  transition: stroke .3s;
+  transition: stroke 0.3s;
 }
 .headerRight .linkInDesktop .codeLink:hover .downloadCodeIcon {
   stroke: #ffae38;
@@ -159,7 +200,7 @@ header .headerRight {
   margin-left: 15px;
   color: #fff;
   background-color: #fe8e14;
-  transition: background-color .3s;
+  transition: background-color 0.3s;
 }
 .headerRight .linkInDesktop .sdkLink:hover {
   background-color: #ffae38;
@@ -170,6 +211,7 @@ header .headerRight {
   .home header {
     height: 7.7vh;
   }
+
   header .headerRight {
     padding-right: 25px;
   }
@@ -177,10 +219,14 @@ header .headerRight {
     display: none;
   }
 }
+@media screen and (max-width: 980px) {
+
+}
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .home header {
     height: 10vh;
   }
+
   header .headerLeft {
     margin-left: 150px;
   }
@@ -204,6 +250,13 @@ header .headerRight {
   }
   .headerRight .linkInDesktop {
     display: none;
+  }
+
+}
+@media screen and (max-width: 350px) {
+
+  .headerRight .linkInMobile .codeLink {
+    margin-left: 10px;
   }
 }
 </style>

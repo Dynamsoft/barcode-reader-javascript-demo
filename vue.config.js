@@ -62,7 +62,7 @@ module.exports = {
           'vue': 'Vue',
           'vuex':'Vuex',
           'clipboard': 'ClipboardJS',
-          'dynamsoft-javascript-barcode': 'dbr'
+          'dynamsoft-javascript-barcode': 'Dynamsoft.DBR',
         }	
     }
   },

@@ -27,7 +27,7 @@ export default Vue.extend({
   },
   mounted() {
     this.$message.config({
-      top: `70%`,
+      top: `80%`,
       maxCount: 3,
     });
   },

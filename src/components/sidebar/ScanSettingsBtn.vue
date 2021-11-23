@@ -115,33 +115,78 @@
                   Scan light barcodes on dark background
                 </div>
               </div>
-              <div class="optionBtns">
-                <label
-                  class="optionBtn"
-                  :class="{ selected: invertColourOn === 'true' }"
-                >
-                  <input
-                    type="radio"
-                    name="optionRow3"
+              <div class="optionBtns barcodeBtns">
+                <div style="display: flex">
+                  <label
                     class="optionBtn"
-                    value="true"
-                    v-model="invertColourOn"
-                  />
-                  Enable
-                </label>
-                <label
-                  class="optionBtn"
-                  :class="{ selected: invertColourOn === 'false' }"
-                >
-                  <input
-                    type="radio"
-                    name="optionRow3"
+                    style="margin-right: 0"
+                    :class="{ selected: invertColourOn === 'true' }"
+                  >
+                    <input
+                      ref="enableBtn"
+                      type="radio"
+                      name="optionRow3"
+                      class="optionBtn"
+                      value="true"
+                      v-model="invertColourOn"
+                    />
+                    Enable
+                  </label>
+                  <div
+                    @click="enableClick"
+                    style="
+                      height: 40px;
+                      width: 80px;
+                      padding: 5px 0;
+                      margin-right: 10px;
+                      background-color: black;
+                    "
+                  >
+                    <img
+                      src="../../assets/image/barcode.svg"
+                      alt=""
+                      style="width: 100%; height: 100%; cursor: pointer"
+                    />
+                  </div>
+                </div>
+                <div style="display: flex">
+                  <label
                     class="optionBtn"
-                    value="false"
-                    v-model="invertColourOn"
-                  />
-                  Disable
-                </label>
+                    style="margin-right: 0"
+                    :class="{ selected: invertColourOn === 'false' }"
+                  >
+                    <input
+                      ref="disableBtn"
+                      type="radio"
+                      name="optionRow3"
+                      class="optionBtn"
+                      value="false"
+                      v-model="invertColourOn"
+                    />
+                    Disable
+                  </label>
+                  <div
+                    @click="disableClick"
+                    style="
+                      height: 40px;
+                      width: 80px;
+                      padding: 5px 0;
+                      background-color: white;
+                    "
+                  >
+                    <img
+                      src="../../assets/image/barcode.svg"
+                      alt=""
+                      style="
+                        cursor: pointer;
+                        width: 100%;
+                        height: 100%;
+                        color: black;
+                        -webkit-filter: invert(100%);
+                      "
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div class="optionRow4 optionRow">
@@ -242,7 +287,14 @@ export default Vue.extend({
       this.$store.commit("hideScanSettingsPopover");
     });
   },
-  methods: {},
+  methods: {
+    enableClick() {
+      this.$refs.enableBtn.click();
+    },
+    disableClick() {
+      this.$refs.disableBtn.click();
+    },
+  },
   computed: {
     popoverPlacement() {
       if (document.body.clientWidth > 980) {
@@ -319,6 +371,9 @@ export default Vue.extend({
 .optionBtn input {
   display: none;
 }
+.optionBtns img {
+  height: 40px;
+}
 .optionBtn.unavailable {
   color: #676767;
   background-color: #4d4d4d;
@@ -371,6 +426,15 @@ export default Vue.extend({
     margin-right: 0;
   }
 }
+
+@media screen and (max-width: 980px) {
+  .barcodeBtns {
+    width: 120px;
+  }
+  .barcodeBtns div div:nth-child(2) {
+    width: 50px !important;
+  }
+}
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .scanSettingsBtn {
     flex-grow: 3;
@@ -404,7 +468,7 @@ export default Vue.extend({
     margin-right: 10px;
     padding: 0 10px;
     min-width: 80px;
-    height: 22px;
+    /* height: 22px; */
   }
   .optionBtn:last-child {
     margin-right: 0;

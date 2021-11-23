@@ -1,20 +1,20 @@
 <template>
-  <div class="fromImage">
-    <label>
-      From Image
-      <input
-        v-on:change="onIptChange"
-        type="file"
-        accept="image/png,image/jpeg,image/bmp,image/gif"
-        style="display: none"
-      />
-      <!-- style="width: 1px; height: 1px" -->
-    </label>
-    <a-modal title="Result" :visible="visible" cancelText="" :closable="false">
+  <div class="fromImage" @click="trigger">
+    <input
+      v-on:change="onIptChange"
+      ref="uploadImage"
+      type="file"
+      accept="image/png,image/jpeg,image/bmp,image/gif"
+      style="display: none"
+    />
+    <!-- style="width: 1px; height: 1px" -->
+    <img src="../assets/image/add-image.svg" alt="" />
+
+    <!-- <a-modal title="Result" :visible="visible" cancelText="" :closable="false">
       <ul class="content">
-        <li v-for="(item, fileIndex) in resultsInfo" :key="fileIndex">
-          <!-- {{ fileIndex + 1 + "." + item.fileName + ":" }} -->
-          <ul>
+        <li v-for="(item, fileIndex) in resultsInfo" :key="fileIndex"> -->
+    <!-- {{ fileIndex + 1 + "." + item.fileName + ":" }} -->
+    <!-- <ul>
             <li
               v-for="(result, resultIndex) in item.results"
               :key="resultIndex"
@@ -29,11 +29,14 @@
             </li>
           </ul>
         </li>
+        <div class="currentImg">
+          <img :src="currentImg" alt="" />
+        </div>
       </ul>
       <template slot="footer">
         <a-button type="primary" @click="handleCancel"> OK </a-button>
       </template>
-    </a-modal>
+    </a-modal> -->
   </div>
 </template>
 
@@ -50,13 +53,15 @@ export default Vue.extend({
       reader: null,
       resultsInfo: [],
       visible: false,
+      currentImg: null,
     };
   },
   async mounted() {
     this.reader || (this.reader = await DBR.BarcodeReader.createInstance());
     if (DBR.BarcodeReader._bUseFullFeature) {
       let runtimeSettings = await this.reader.getRuntimeSettings();
-      runtimeSettings.barcodeFormatIds = DBR.EnumBarcodeFormat.BF_ALL = -31457281;
+      runtimeSettings.barcodeFormatIds = DBR.EnumBarcodeFormat.BF_ALL =
+        -31457281;
       for (let i in DBR.EnumBarcodeFormat_2) {
         runtimeSettings.barcodeFormatIds_2 |= DBR.EnumBarcodeFormat_2[i];
       }
@@ -99,6 +104,7 @@ export default Vue.extend({
       });
     },
     async onIptChange(event) {
+      let _this = this;
       try {
         this.resultsInfo = [];
         let input = event.target;
@@ -109,8 +115,16 @@ export default Vue.extend({
             fileName: "",
             results: [],
           };
+          // render uploaded image
+          let fr = new FileReader();
+          fr.readAsDataURL(file);
+          // eslint-disable-next-line no-unused-vars
+          fr.onload = function (e) {
+            _this.currentImg = this.result;
+          };
+
           resultInfo.fileName = file.name;
-          this.$store.commit('startDecodingFile');
+          this.$store.commit("startDecodingFile");
           // show tip
           this.$message.destroy();
           let config = {};
@@ -120,7 +134,7 @@ export default Vue.extend({
           );
           config.duration = 0;
           this.$message.open(config);
-          
+
           let results = await this.reader.decode(file);
           for (let result of results) {
             let barcodeFormat = "";
@@ -144,17 +158,23 @@ export default Vue.extend({
             );
             config.duration = 1;
           } else {
-            this.visible = true;
-            config = {};
+            this.$emit("showResults", this.resultsInfo, this.currentImg);
             config.content = "Complete!";
             config.duration = 1;
             config.icon = (
               <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
             );
+            // this.visible = true;
+            // config = {};
+            // config.content = "Complete!";
+            // config.duration = 1;
+            // config.icon = (
+            //   <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
+            // );
           }
           this.$message.open(config);
         }
-        this.$store.commit('finishDecodingFile');
+        this.$store.commit("finishDecodingFile");
         input.value = "";
       } catch (ex) {
         this.resultsInfo.push(ex.message);
@@ -164,23 +184,33 @@ export default Vue.extend({
     handleCancel() {
       this.visible = false;
     },
+    trigger() {
+      this.$refs.uploadImage.click();
+    },
   },
 });
 </script>
 
 <style scoped>
 .fromImage {
-  color: #aaaaaa;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.fromImage label {
-  display: block;
-  padding: 5px 12px;
+
+.fromImage img {
+  height: 50%;
+}
+
+.currentImg {
   width: 100%;
   height: 100%;
-  cursor: pointer;
 }
-.content {
-  height: 30vh;
-  overflow: auto;
+
+.currentImg img {
+  width: 100%;
+  height: 100%;
 }
 </style>

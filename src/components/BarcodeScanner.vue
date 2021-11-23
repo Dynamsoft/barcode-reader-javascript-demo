@@ -13,23 +13,7 @@
         position: absolute;
       "
     >
-      <svg
-        class="dbrScanner-bg-loading"
-        style="
-          display: none;
-          animation: 1s linear infinite dbrScanner-rotate;
-          width: 40vmin;
-          height: 40vmin;
-          position: absolute;
-          margin: auto;
-          left: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          fill: #aaa;
-        "
-        viewBox="0 0 1792 1792"
-      >
+      <svg class="dbrScanner-bg-loading" viewBox="0 0 1792 1792">
         <path
           d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"
         />
@@ -114,6 +98,9 @@
           {{ this.cameraInfo }}
         </div>
       </div>
+      <div class="localImages">
+        <from-image ref="fromimage" @showResults="showResults" />
+      </div>
       <div
         class="soundEffects"
         @click="soundEffectsSwitch"
@@ -129,7 +116,7 @@
     <div class="curUseCaseTip">
       {{ this.curUseCase }}
     </div>
-    <ul class="resultContainer" v-show="selectedUseCase !== 'dl'">
+    <ul class="resultContainer" v-show="selectedUseCase !== 'dl' && !isUploadImage">
       <li
         v-for="(value, name) in decodeRecords"
         :key="name"
@@ -153,7 +140,7 @@
         </div>
       </li>
     </ul>
-    <div class="dlResultContainer" v-show="isDLResultShow">
+    <div class="dlResultContainer" v-show="isDLResultShow && !isUploadImage">
       <ul class="dlInfo">
         <li v-for="(info, infoIndex) in dlInfo" :key="infoIndex">
           <span class="description"> {{ info.description }}: </span>
@@ -169,7 +156,11 @@
     </div>
     <div
       class="scanArea"
-      v-show="!isFullImageLocalization && !isDecodingFile && selectedUseCase === 'general'"
+      v-show="
+        !isFullImageLocalization &&
+        !isDecodingFile &&
+        selectedUseCase === 'general'
+      "
     >
       <div class="scanLight"></div>
     </div>
@@ -1784,37 +1775,75 @@
       <a-icon type="loading" />
     </div>
     <div class="loadingCameraImg" v-show="isLoadingCamera">
-      <svg
-        class="dbrScanner-bg-loading"
-        style="
-          animation: 1s linear infinite dbrScanner-rotate;
-          width: 40vmin;
-          height: 40vmin;
-          position: absolute;
-          margin: auto;
-          left: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          fill: #aaa;
-        "
-        viewBox="0 0 1792 1792"
-      >
+      <svg class="dbrScanner-bg-loading" viewBox="0 0 1792 1792">
         <path
           d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"
         />
       </svg>
+      <div></div>
+    </div>
+    <div class="qrcode" v-show="!ifHasCamera">
+      <div>
+        <h2>
+          <a-icon type="warning" style="margin-right: 10px" />No camera detected
+        </h2>
+        <div id="qrcode" ref="qrcode"></div>
+        <div>
+          <p>Scan the QR Code above, and try the demo on your phone</p>
+          <p @click="triggerUploadImg">OR Upload from local</p>
+        </div>
+        <button style="display: none" @click="triggerUploadImg">
+          UPLOAD IMAGE FROM LOCAL
+        </button>
+      </div>
+    </div>
+    <div class="decodeRes" v-show="isUploadImage">
+      <div class="resContainer">
+        <div class="imgContainer">
+          <img :src="curImg" alt="scanned image" />
+        </div>
+        <div class="resList">
+          <p style="font-size: 24px; margin-bottom: 15px">Results:</p>
+          <ul v-for="(item, index) in results" :key="index">
+            <li v-for="(result, i) in item.results" :key="i">
+              {{ result.barcodeFormat + ": " + result.text }}
+              <a
+                href="javascript:void(0)"
+                v-show="!isCopied[i]"
+                @click="copyResText(result.text, i)"
+              >
+                Copy
+              </a>
+              <a
+                href="javascript:void(0)"
+                v-show="isCopied[i]"
+                class="orangeFont"
+                @click="copyResText(result.text, i)"
+              >
+                Copied
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="restartVideo">
+          <button @click="hideResults">RESTART VIDEO</button>
+          <a href="javascript:void(0)" @click="triggerUploadImg"
+            >Upload Image from local</a
+          >
+        </div>
+      </div>
     </div>
     <ul class="cameraList" v-show="isShowCameraList">
-      <li>
+      <!-- <li>
         <from-image />
-      </li>
+      </li> -->
       <li
         v-for="(item, index) in cameraAndResolutionList"
         :key="index"
         @click="onChangeCameraAndResolution(item)"
         :class="{
           selected:
+            currentCamera &&
             item[0].deviceId == currentCamera.deviceId &&
             item[1].includes(currentResolution[0]),
         }"
@@ -1823,6 +1852,7 @@
           class="cameraOption"
           :style="{
             color:
+              currentCamera &&
               item[0].deviceId == currentCamera.deviceId &&
               item[1].includes(currentResolution[0])
                 ? '#fe8e14'
@@ -1846,6 +1876,9 @@ import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 import DriverLicenseFields from "../assets/enum/DriverLicenseFields.js";
 import FromImage from "./FromImage.vue";
 import Clipboard from "clipboard";
+
+// generate qr code
+import QRCode from "qrcodejs2";
 
 export default Vue.extend({
   name: "BarcodeScanner",
@@ -1879,6 +1912,7 @@ export default Vue.extend({
       changeClientTimeoutId: null,
       changeRuntimeSettingsTimeoutId: null,
       isResizing: false,
+      ifHasCamera: true,
       generalPresetRegion: [
         null,
         {
@@ -1906,10 +1940,15 @@ export default Vue.extend({
       isShowTipImg: true,
       isShowLoadingImg: true,
       isLoadingCamera: false,
+      results: [],
+      curImg: null,
+      isCopied: [],
+      isUploadImage: false,
     };
   },
 
   async mounted() {
+
     // this.clientHeight = window.innerHeight;
     // this.clientWidth = window.innerWidth;
     this.clientHeight = document.body.clientHeight;
@@ -1940,8 +1979,15 @@ export default Vue.extend({
       this.hideCameraList();
     });
     await this.showScanner();
-    this.cameraList = await this.scanner.getAllCameras();
-    this.currentCamera = await this.scanner.getCurrentCamera();
+    try {
+      this.cameraList = await this.scanner.getAllCameras();
+      this.currentCamera = await this.scanner.getCurrentCamera();
+    } catch (e) {
+      let config = {};
+      config.content = e.message;
+      config.duration = 3;
+      this.$message.warning(config);
+    }
     for (let i of this.cameraList) {
       for (let j of this.resolutionList) {
         this.cameraAndResolutionList.push([i, j]);
@@ -1980,25 +2026,25 @@ export default Vue.extend({
       this.dlText = "";
     },
     getDLInfo(txt) {
-      let lines = txt.split('\n');
+      let lines = txt.split("\n");
       let abbrs = Object.keys(DriverLicenseFields);
       let dlInfo = {};
       lines.forEach((line, i) => {
-          let abbr;
-          let content;
-          if(i === 1){
-              abbr = 'DAQ';
-              content = line.substring(line.indexOf(abbr) + 3);
-          }else{
-              abbr = line.substring(0, 3);
-              content = line.substring(3).trim();
-          } 
-          if(abbrs.includes(abbr)){
-              dlInfo[abbr] = {
-                  description: DriverLicenseFields[abbr],
-                  value: content
-              };
-          }
+        let abbr;
+        let content;
+        if (i === 1) {
+          abbr = "DAQ";
+          content = line.substring(line.indexOf(abbr) + 3);
+        } else {
+          abbr = line.substring(0, 3);
+          content = line.substring(3).trim();
+        }
+        if (abbrs.includes(abbr)) {
+          dlInfo[abbr] = {
+            description: DriverLicenseFields[abbr],
+            value: content,
+          };
+        }
       });
       return dlInfo;
     },
@@ -2035,7 +2081,8 @@ export default Vue.extend({
         text: () => {
           let copyContent = "";
           for (let i in this.dlInfo) {
-            copyContent += this.dlInfo[i].description + ": " + this.dlInfo[i].value + "\n";
+            copyContent +=
+              this.dlInfo[i].description + ": " + this.dlInfo[i].value + "\n";
           }
           return copyContent;
         },
@@ -2090,7 +2137,8 @@ export default Vue.extend({
     async showScanner() {
       this.isLoadingCamera = true;
       try {
-        this.scanner || (this.scanner = await DBR.BarcodeScanner.createInstance());
+        this.scanner ||
+          (this.scanner = await DBR.BarcodeScanner.createInstance());
       } catch (e) {
         let config = {};
         config.content = e.message;
@@ -2136,21 +2184,29 @@ export default Vue.extend({
               }
             }
           };
+
+
+
           await this.scanner.open();
           this.isLoadingCamera = false;
         }
       } catch (e) {
         let config = {};
-        config.content = `Unable to connect to the camera, make sure it is not used by other apps and try again. Alternatively, you can click "From Image" in the "Camera" drop-down list to read barcodes from an existing image.`;
-        config.duration = 0;
+        // config.content = `Unable to connect to the camera, make sure it is not used by other apps and try again. Alternatively, you can click "From Image" in the "Camera" drop-down list to read barcodes from an existing image.`;
+        config.content = `Unable to connect to the camera, make sure it is not used by other apps and try again. Alternatively, you can read barcodes by uploading local images`;
+        config.duration = 3;
+        // show qrcode if no camera
+        this.ifHasCamera = false;
+        this.generateQRcode();
         this.$message.warning(config);
+
         return Promise.reject(e.message);
       }
     },
     async onChangeCameraAndResolution(item) {
       let config = {};
       this.isLoadingCamera = true;
-      await this.scanner.setCurrentCamera(item[0].deviceId)
+      await this.scanner.setCurrentCamera(item[0].deviceId);
       await this.scanner.setResolution(item[1]);
       this.currentResolution = this.scanner.getResolution();
       this.currentCamera = await this.scanner.getCurrentCamera();
@@ -2160,9 +2216,7 @@ export default Vue.extend({
         );
         config.content = "Switch camera failed!";
       } else if (!this.currentResolution.includes(item[1][1])) {
-        config.icon = (
-          <a-icon type="meh" style={{ color: "#FE8E14" }}></a-icon>
-        );
+        config.icon = <a-icon type="meh" style={{ color: "#FE8E14" }}></a-icon>;
         config.content =
           "Switch resolution failed. " +
           (item[1].includes(720) ? "HD" : "FULL HD") +
@@ -2171,8 +2225,7 @@ export default Vue.extend({
         config.icon = (
           <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
         );
-        config.content =
-          "Switched to " + this.cameraInfo + " successfully!";
+        config.content = "Switched to " + this.cameraInfo + " successfully!";
       }
       this.$message.open(config);
       this.isLoadingCamera = false;
@@ -2208,7 +2261,48 @@ export default Vue.extend({
       );
       this.maskCanvasContext.stroke();
     },
+
+    //qrcode
+    generateQRcode() {
+      // eslint-disable-next-line no-unused-vars
+      var qrcode = new QRCode(this.$refs.qrcode, {
+        width: 200,
+        height: 200,
+        text: window.location.href,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H,
+      });
+    },
+
+    // trigger upload images from local files
+    triggerUploadImg() {
+      this.$refs.fromimage.trigger();
+    },
+
+    // show decode results
+    showResults(results, image) {
+      this.isCopied = [];
+      this.isUploadImage = true;
+      results.forEach((e) => {
+        console.log(e);
+      });
+      this.results = results;
+      this.curImg = image;
+    },
+
+    // hide decode results
+    hideResults() {
+      this.isUploadImage = false;
+    },
+
+    // copy decoded result
+    copyResText(text, index) {
+      navigator.clipboard.writeText(text);
+      this.$set(this.isCopied, index, true);
+    },
   },
+
   asyncComputed: {
     runtimeSettings: {
       async get() {
@@ -2255,7 +2349,9 @@ export default Vue.extend({
             this.isShowCloseMask = false;
           } else {
             if (this.selectedUseCase === "general") {
-              runtimeSettings.region = JSON.parse(JSON.stringify(this.generalPresetRegion));
+              runtimeSettings.region = JSON.parse(
+                JSON.stringify(this.generalPresetRegion)
+              );
               this.isShowCloseMask = false;
             } else if (this.selectedUseCase === "vin") {
               runtimeSettings.region = JSON.parse(JSON.stringify(this.region));
@@ -2394,7 +2490,9 @@ export default Vue.extend({
       }
     },
     isDLResultShow() {
-      return this.selectedUseCase === "dl" && Object.keys(this.dlInfo).length !== 0;
+      return (
+        this.selectedUseCase === "dl" && Object.keys(this.dlInfo).length !== 0
+      );
     },
     dlInfo() {
       if (this.selectedUseCase === "dl") {
@@ -2406,7 +2504,8 @@ export default Vue.extend({
     copiedDLInfo() {
       let copiedDLInfo = "";
       for (let i in this.dlInfo) {
-        copiedDLInfo += this.dlInfo[i].description + ": " + this.dlInfo[i].value + "\n";
+        copiedDLInfo +=
+          this.dlInfo[i].description + ": " + this.dlInfo[i].value + "\n";
       }
       return copiedDLInfo;
     },
@@ -2448,15 +2547,12 @@ export default Vue.extend({
     },
     regionMaskEdgeLength() {
       let regionMaskEdgeLength =
-        this.regionScale *
-        Math.min(this.clientWidth, this.clientHeight);
+        this.regionScale * Math.min(this.clientWidth, this.clientHeight);
       return Math.floor(regionMaskEdgeLength);
     },
     regionLeft() {
       let left =
-        (this.clientWidth - this.regionMaskEdgeLength) /
-        2 /
-        this.clientWidth;
+        (this.clientWidth - this.regionMaskEdgeLength) / 2 / this.clientWidth;
       if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
         if (this.clientWidth > this.clientHeight) {
           return Math.round(left * 100) - 25;
@@ -2469,9 +2565,7 @@ export default Vue.extend({
     },
     regionTop() {
       let top =
-        (this.clientHeight - this.regionMaskEdgeLength) /
-        2 /
-        this.clientHeight;
+        (this.clientHeight - this.regionMaskEdgeLength) / 2 / this.clientHeight;
       if (this.selectedUseCase === "vin") {
         if (this.clientWidth > this.clientHeight) {
           return Math.round(top * 100) + 5;
@@ -2513,6 +2607,7 @@ export default Vue.extend({
     },
   },
   watch: {
+
     isDLResultShow(newValue) {
       if (!newValue) {
         this.dlText = "";
@@ -2529,6 +2624,7 @@ export default Vue.extend({
       this.soundEffectsIconPath = newValue ? checkedMusicIcon : musicIcon;
     },
     async selectedUseCase(newUseCase, oldUseCase) {
+
       console.log(oldUseCase);
       if (newUseCase === "dl") {
         this.isShowTipImg = true;
@@ -2543,6 +2639,7 @@ export default Vue.extend({
         this.isLoadingCamera = true;
         await this.scanner.setResolution(this.resolutionList[1]);
         this.currentResolution = this.scanner.getResolution();
+
         this.isLoadingCamera = false;
       }
       if (
@@ -2565,6 +2662,10 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+.orangeFont {
+  color: #fe8e14 !important;
+}
+
 .barcodeScanner {
   position: absolute;
   width: 100%;
@@ -2594,6 +2695,136 @@ export default Vue.extend({
   background: #ddd;
   position: absolute;
 }
+.qrcode {
+  width: 100%;
+  height: 100%;
+  background: #585757;
+  position: absolute;
+  color: white;
+}
+
+.qrcode p {
+  font-size: 18px;
+  text-align: center;
+}
+
+.qrcode div:first-child {
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.qrcode p:last-child {
+  cursor: pointer;
+  color: #fe8e14;
+}
+
+.qrcode h2:first-child {
+  width: 300px;
+  height: 55px;
+  padding: 10px 20px;
+  background-color: #222222;
+  color: white;
+  text-align: center;
+  font-size: 24px;
+}
+
+.qrcode #qrcode {
+  background-color: white;
+  padding: 44px;
+}
+
+.decodeRes {
+  position: absolute;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+  background-color: #585757;
+}
+
+.decodeRes .resContainer {
+  position: absolute;
+  left: 50%;
+  top: 19.5vh;
+  transform: translateX(-50%);
+  width: auto;
+  display: flex;
+  height: 40%;
+  background-color: #464545;
+}
+
+.decodeRes .imgContainer {
+  width: 470px;
+  background-color: #262626;
+  padding: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: flex;
+}
+
+.decodeRes .imgContainer img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
+.decodeRes .resList {
+  width: 330px;
+  overflow: auto;
+  padding: 24px;
+  padding-left: 30px;
+  color: white;
+}
+
+.decodeRes .resList li {
+  font-size: 16px;
+  font-family: OpenSans-Regular;
+  margin-bottom: 7px;
+  overflow: auto;
+}
+
+.decodeRes .resList li a {
+  font-size: 16px;
+  color: #aaaaaa;
+  float: right;
+  font-family: Oswald-Regular;
+}
+
+.decodeRes .restartVideo {
+  position: absolute;
+  left: 50%;
+  bottom: -40%;
+  transform: translateX(-50%);
+}
+
+.decodeRes .restartVideo button {
+  background: #fe8e14;
+  width: 166px;
+  height: 50px;
+  padding: 12px 20px;
+  font-size: 18px;
+  text-align: center;
+  outline: none;
+  border: none;
+  color: white;
+  margin-right: 17px;
+  cursor: pointer;
+}
+
+.decodeRes .restartVideo a {
+  font-size: 16px;
+}
+
+.localImages {
+  width: 90px;
+}
+
 .cameraAndSoundsContainer {
   position: absolute;
   display: flex;
@@ -2611,6 +2842,7 @@ export default Vue.extend({
   justify-content: flex-end;
   align-items: center;
   height: 100%;
+  width: 250px;
   color: rgba(170, 170, 170);
   background-color: rgba(34, 34, 34);
 }
@@ -2634,6 +2866,7 @@ export default Vue.extend({
   justify-content: center;
   align-items: center;
   height: 100%;
+  width: 90px;
 }
 .curUseCaseTip {
   position: absolute;
@@ -2805,6 +3038,19 @@ export default Vue.extend({
   }
 }
 
+.dbrScanner-bg-loading {
+  animation: 1s linear infinite dbrScanner-rotate;
+  width: 40vmin;
+  height: 40vmin;
+  position: absolute;
+  margin: auto;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  fill: #aaa;
+}
+
 @keyframes dbrScanner-scanlight {
   from {
     top: 0;
@@ -2814,6 +3060,87 @@ export default Vue.extend({
     top: 97%;
   }
 }
+
+@media screen and (max-width: 1199px) {
+  .cameraAndSoundsContainer .cameraDropdown {
+    width: 210px;
+  }
+
+  .cameraAndSoundsContainer .cameraDropdown .cameraInfo {
+    margin: 0; 
+  }
+
+  .localImages,
+  .cameraAndSoundsContainer .soundEffects {
+    width: 75px;
+  }
+
+  .decodeRes .resContainer {
+    width: 60%;
+  }
+
+  .decodeRes .resContainer .restartVideo {
+    text-align: center;
+    width: 100%;
+  }
+}
+@media (max-width: 759px) {
+  .decodeRes .resContainer {
+    width: 90%;
+  }
+}
+
+@media (max-width: 572px) {
+  .qrcode div:first-child {
+    height: auto !important;
+    top: 35%;
+  }
+  .qrcode div:nth-child(3) {
+    display: none;
+  }
+  .qrcode button {
+    display: block !important;
+    width: 200px;
+    height: 46px;
+    margin: 40px 0 0 0;
+    background-color: #fe8e14;
+    outline: none;
+    border: none;
+  }
+  #qrcode {
+    display: none;
+  }
+  .decodeRes .resContainer {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    width: 100%;
+  }
+
+  .decodeRes .resContainer .imgContainer,
+  .decodeRes .resContainer .resList {
+    width: 100%;
+  }
+
+  .decodeRes .resContainer .imgContainer {
+    max-height: 150px;
+  }
+
+  .decodeRes .resContainer .resList {
+    padding-top: 10px;
+  }
+
+  .decodeRes .resContainer .restartVideo button {
+    width: 140px;
+    font-size: 16px;
+  }
+
+  .decodeRes .resContainer .restartVideo a {
+    width: auto;
+    bottom: -35%;
+  }
+}
+
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
   .copyright {
@@ -2840,21 +3167,29 @@ export default Vue.extend({
     width: 190px;
     font-size: 12px;
   }
-  .cameraAndSoundsContainer .soundEffects {
-    width: 90px;
+  .localImages {
+    background-color: rgba(34, 34, 34);
+    /* width: 100px; */
+    height: 100%;
+    border-left: 1px solid rgb(98, 96, 94);
   }
+
+  /* .cameraAndSoundsContainer .soundEffects {
+    width: 90px;
+  } */
   .cameraAndSoundsContainer .soundEffects img {
     height: 50%;
   }
   .curUseCaseTip {
     top: 3.9vh;
-    width: calc(100% - 892px);
+    /* width: calc(100% - 892px); */
+    width: auto;
     font-size: 20px;
     transform: translate(-50%, -50%);
   }
   .resultContainer {
     width: 47.7%;
-    min-width: 700px;
+    /* min-width: 700px; */
     bottom: 13%;
     font-size: 20px;
     line-height: 22px;
@@ -2898,6 +3233,10 @@ export default Vue.extend({
   }
 }
 @media screen and (max-width: 980px) and (orientation: landscape) {
+  .decodeRes .resContainer {
+    width: 80%;
+  }
+
   .copyright {
     display: block;
     font-size: 12px;
@@ -2906,8 +3245,9 @@ export default Vue.extend({
   .cameraAndSoundsContainer {
     height: 10vh;
   }
-  .cameraDropdown {
+  .cameraAndSoundsContainer .cameraDropdown {
     padding-left: 10px;
+    width: 100px;
   }
   .cameraDropdown .cameraIconContainer {
     margin-top: 5px;
@@ -2974,7 +3314,6 @@ export default Vue.extend({
     font-size: 14px;
   }
 }
-
 /* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
   .copyright {
@@ -2997,6 +3336,12 @@ export default Vue.extend({
     width: 73.9%;
     bottom: 17.1%;
     font-size: 12px;
+  }
+  .localImages {
+    background-color: rgba(34, 34, 34);
+    width: 60px;
+    height: 100%;
+    border-left: 1px solid rgb(98, 96, 94);
   }
   .result .barcodeFormat {
     padding-left: 5px;
@@ -3032,5 +3377,11 @@ export default Vue.extend({
   .scanArea {
     width: 100%;
   }
+}
+@media screen and (max-width: 350px) {
+  .localImages, .cameraAndSoundsContainer .soundEffects {
+    width: 45px;  
+  }
+
 }
 </style>

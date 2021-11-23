@@ -7,7 +7,10 @@
           href="https://www.dynamsoft.com/"
           target="_blank"
         >
-          <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="dynamsoft" />
+          <img
+            src="../assets/image/logo-dynamsoft-blackBg-190x47.png"
+            alt="dynamsoft"
+          />
           dynamsoft
         </a>
       </div>
@@ -16,9 +19,9 @@
       <div class="guideTitle">
         <img src="../assets/image/dbr.svg" alt="dynamsoft-barcode-reader" />
       </div>
-      <div class="guideTextPart1">
+      <h1 class="guideTextPart1" style="color: white">
         Turn your web page into a barcode scanner with just a few lines of code!
-      </div>
+      </h1>
       <div class="guideOptions">
         <div class="optionRow1 optionRow">
           <div
@@ -143,7 +146,7 @@
                     width="34"
                     height="16.783"
                     viewBox="0 0 34 16.783"
-                    class="vinIcon"
+                    class="vinIcon invert"
                   >
                     <g transform="translate(-522 -549.5)">
                       <g transform="translate(522.5 550)">
@@ -239,7 +242,12 @@
                 <div class="headerLeft">
                   <span> DPM Codes</span>
                   <div class="dpmIcon">
-                    <svg width="24" height="24" viewBox="0 0 24 24">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      class="invert"
+                    >
                       <path
                         d="M10.661,10A1.664,1.664,0,1,1,9,11.667v-.006A1.665,1.665,0,0,1,10.661,10Zm0,4.164A1.641,1.641,0,1,1,9,15.805,1.642,1.642,0,0,1,10.661,14.164Zm0,4.119A1.654,1.654,0,1,1,9,19.937,1.654,1.654,0,0,1,10.661,18.283Zm0,4.145A1.654,1.654,0,1,1,9,24.082,1.655,1.655,0,0,1,10.661,22.428Zm0,4.125A1.664,1.664,0,1,1,9,28.221v-.006A1.661,1.661,0,0,1,10.661,26.553Zm0,4.119A1.664,1.664,0,1,1,9,32.339H9A1.667,1.667,0,0,1,10.661,30.672Zm20.679,0a1.664,1.664,0,1,1-1.667,1.667,1.664,1.664,0,0,1,1.667-1.667Zm-4.145,0a1.664,1.664,0,1,1-1.641,1.686v-.019a1.653,1.653,0,0,1,1.638-1.667Zm-4.132,0a1.664,1.664,0,1,1-1.654,1.674v-.006A1.663,1.663,0,0,1,23.063,30.672Zm-4.145,0a1.664,1.664,0,1,1-1.654,1.674v-.006a1.66,1.66,0,0,1,1.653-1.667Zm-4.132,0a1.664,1.664,0,1,1-1.661,1.667h0a1.661,1.661,0,0,1,1.655-1.667Zm0-16.508a1.657,1.657,0,1,1-.008,0Zm0,8.264a1.657,1.657,0,1,1-.006,0ZM18.918,10a1.664,1.664,0,1,1-1.654,1.674v-.013A1.658,1.658,0,0,1,18.918,10Zm0,4.164a1.641,1.641,0,1,1-1.654,1.641,1.641,1.641,0,0,1,1.654-1.641Zm0,8.264a1.654,1.654,0,1,1-1.654,1.654h0a1.653,1.653,0,0,1,1.651-1.654Zm0,4.125a1.664,1.664,0,1,1-1.654,1.674v-.013a1.654,1.654,0,0,1,1.648-1.661Zm4.145-8.27a1.654,1.654,0,1,1-1.654,1.654h0A1.656,1.656,0,0,1,23.063,18.283Zm0,4.145a1.654,1.654,0,1,1-1.654,1.654h0A1.656,1.656,0,0,1,23.063,22.428Zm4.132-8.264a1.641,1.641,0,1,1-1.641,1.641h0a1.639,1.639,0,0,1,1.637-1.641Zm0,4.119a1.654,1.654,0,1,1-1.641,1.667v-.013a1.645,1.645,0,0,1,1.637-1.654Zm0,8.27a1.664,1.664,0,1,1-1.641,1.686v-.026a1.647,1.647,0,0,1,1.633-1.661ZM31.339,10a1.664,1.664,0,1,1-1.667,1.661A1.664,1.664,0,0,1,31.339,10Zm0,12.428a1.664,1.664,0,1,1-.005,0Z"
                         transform="translate(-9 -10)"
@@ -261,7 +269,8 @@
       </div>
       <div class="guideOptionsInDesktop">
         <div class="guideTextPart2">
-          To try the library, select a mode below and hit 'Start Scan' :
+          <!-- To try the library, select a mode below and hit 'Start Scan' : -->
+          To try the library, select a mode below and start scannning
         </div>
         <div class="optionColumns">
           <div class="optionColumn1 optionColumn">
@@ -269,16 +278,16 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'common1d' }"
             >
-              <label>
+              <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
                   value="common1d"
                   v-model="guideSelection"
                 />
-                <div class="circle">
+                <!-- <div class="circle">
                   <a-icon type="check" v-show="guideSelection == 'common1d'" />
-                </div>
+                </div> -->
                 <div class="itemHeader">Common 1D Barcodes</div>
                 <div class="itemBody">
                   Code 39, Code 128, Code 93, Codabar, EAN 13, EAN 8, UPC A, UPC
@@ -292,16 +301,16 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'common2d' }"
             >
-              <label>
+              <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
                   value="common2d"
                   v-model="guideSelection"
                 />
-                <div class="circle">
+                <!-- <div class="circle">
                   <a-icon type="check" v-show="guideSelection == 'common2d'" />
-                </div>
+                </div> -->
                 <div class="itemHeader">Common 2D barcodes</div>
                 <div class="itemBody">QR Code, Data Matrix, PDF417</div>
               </label>
@@ -310,19 +319,19 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'common1dAnd2d' }"
             >
-              <label>
+              <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
                   value="common1dAnd2d"
                   v-model="guideSelection"
                 />
-                <div class="circle">
+                <!-- <div class="circle">
                   <a-icon
                     type="check"
                     v-show="guideSelection == 'common1dAnd2d'"
                   />
-                </div>
+                </div> -->
                 <div class="itemHeader">Common 1D + 2D</div>
               </label>
             </div>
@@ -332,19 +341,19 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'vin' }"
             >
-              <label>
+              <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
                   value="vin"
                   v-model="guideSelection"
                 />
-                <div class="circle">
+                <!-- <div class="circle">
                   <a-icon type="check" v-show="guideSelection == 'vin'" />
-                </div>
+                </div> -->
                 <div class="itemHeader">
                   <span>VIN</span>
-                  <svg viewBox="0 0 34 16.783" class="vinIcon">
+                  <svg viewBox="0 0 34 16.783" class="vinIcon invert">
                     <g transform="translate(-522 -549.5)">
                       <g transform="translate(522.5 550)">
                         <g>
@@ -422,16 +431,16 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'dl' }"
             >
-              <label>
+              <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
                   value="dl"
                   v-model="guideSelection"
                 />
-                <div class="circle">
+                <!-- <div class="circle">
                   <a-icon type="check" v-show="guideSelection == 'dl'" />
-                </div>
+                </div> -->
                 <div class="itemHeader">USA/CAN Driver’s License</div>
               </label>
             </div>
@@ -441,16 +450,16 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'dpm' }"
             >
-              <label>
+              <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
                   value="dpm"
                   v-model="guideSelection"
                 />
-                <div class="circle">
+                <!-- <div class="circle">
                   <a-icon type="check" v-show="guideSelection == 'dpm'" />
-                </div>
+                </div> -->
                 <div class="itemHeader">
                   <span> DPM Codes</span>
                 </div>
@@ -458,7 +467,7 @@
                   <div>Support Data Matrix only</div>
 
                   <div class="dpmIcon">
-                    <svg viewBox="0 0 24 24">
+                    <svg viewBox="0 0 24 24" class="invert">
                       <path
                         d="M10.661,10A1.664,1.664,0,1,1,9,11.667v-.006A1.665,1.665,0,0,1,10.661,10Zm0,4.164A1.641,1.641,0,1,1,9,15.805,1.642,1.642,0,0,1,10.661,14.164Zm0,4.119A1.654,1.654,0,1,1,9,19.937,1.654,1.654,0,0,1,10.661,18.283Zm0,4.145A1.654,1.654,0,1,1,9,24.082,1.655,1.655,0,0,1,10.661,22.428Zm0,4.125A1.664,1.664,0,1,1,9,28.221v-.006A1.661,1.661,0,0,1,10.661,26.553Zm0,4.119A1.664,1.664,0,1,1,9,32.339H9A1.667,1.667,0,0,1,10.661,30.672Zm20.679,0a1.664,1.664,0,1,1-1.667,1.667,1.664,1.664,0,0,1,1.667-1.667Zm-4.145,0a1.664,1.664,0,1,1-1.641,1.686v-.019a1.653,1.653,0,0,1,1.638-1.667Zm-4.132,0a1.664,1.664,0,1,1-1.654,1.674v-.006A1.663,1.663,0,0,1,23.063,30.672Zm-4.145,0a1.664,1.664,0,1,1-1.654,1.674v-.006a1.66,1.66,0,0,1,1.653-1.667Zm-4.132,0a1.664,1.664,0,1,1-1.661,1.667h0a1.661,1.661,0,0,1,1.655-1.667Zm0-16.508a1.657,1.657,0,1,1-.008,0Zm0,8.264a1.657,1.657,0,1,1-.006,0ZM18.918,10a1.664,1.664,0,1,1-1.654,1.674v-.013A1.658,1.658,0,0,1,18.918,10Zm0,4.164a1.641,1.641,0,1,1-1.654,1.641,1.641,1.641,0,0,1,1.654-1.641Zm0,8.264a1.654,1.654,0,1,1-1.654,1.654h0a1.653,1.653,0,0,1,1.651-1.654Zm0,4.125a1.664,1.664,0,1,1-1.654,1.674v-.013a1.654,1.654,0,0,1,1.648-1.661Zm4.145-8.27a1.654,1.654,0,1,1-1.654,1.654h0A1.656,1.656,0,0,1,23.063,18.283Zm0,4.145a1.654,1.654,0,1,1-1.654,1.654h0A1.656,1.656,0,0,1,23.063,22.428Zm4.132-8.264a1.641,1.641,0,1,1-1.641,1.641h0a1.639,1.639,0,0,1,1.637-1.641Zm0,4.119a1.654,1.654,0,1,1-1.641,1.667v-.013a1.645,1.645,0,0,1,1.637-1.654Zm0,8.27a1.664,1.664,0,1,1-1.641,1.686v-.026a1.647,1.647,0,0,1,1.633-1.661ZM31.339,10a1.664,1.664,0,1,1-1.667,1.661A1.664,1.664,0,0,1,31.339,10Zm0,12.428a1.664,1.664,0,1,1-.005,0Z"
                         transform="translate(-9 -10)"
@@ -499,6 +508,7 @@ export default Vue.extend({
     };
   },
   mounted() {
+
     this.guideSelection = "common1d";
     if (window.location.hash.toLowerCase() === "#general") {
       this.guideSelection = "common1dAnd2d";
@@ -516,7 +526,14 @@ export default Vue.extend({
   },
   methods: {
     startScanning() {
-      this.$store.commit("startScanning", this.guideSelection);
+
+
+      setTimeout(() => {
+        // console.log(this.guideSelection)
+        this.$store.commit("startScanning", this.guideSelection);
+      }, 0);
+
+      // this.$store.commit("startScanning", this.guideSelection);
     },
   },
   computed: {},
@@ -557,6 +574,7 @@ header .headerLeft {
   height: 3.7vh;
   max-width: 100%;
 }
+
 .guideContainer {
   display: flex;
   flex-direction: column;
@@ -616,9 +634,16 @@ header .headerLeft {
   background-color: #222222;
   border: 1px solid transparent;
 }
-.optionItemContainer.selected {
-  border: 1px solid #fe8e14;
+.optionItemContainer:hover {
+  background-color: #606060;
 }
+
+.optionItemContainer:hover .invert {
+  filter: invert();
+}
+/* .optionItemContainer.selected {
+  border: 1px solid #fe8e14;
+} */
 .guideOptions .optionRow:nth-child(3) .optionItemContainer,
 .guideOptions .optionRow:nth-child(4) .optionItemContainer {
   height: 100%;
@@ -686,7 +711,7 @@ header .headerLeft {
   margin-left: 11px;
 }
 .guideContainer .btnContainer {
-  display: flex;
+  display: none;
   position: relative;
   flex-direction: column;
   align-items: center;
@@ -704,7 +729,7 @@ header .headerLeft {
   border: none;
   cursor: pointer;
   user-select: none;
-  transition: background-color .3s;
+  transition: background-color 0.3s;
 }
 .guideContainer .btnContainer .startBtn:hover {
   background-color: #ffae38;
@@ -725,6 +750,7 @@ header .headerLeft {
   color: #fff;
   font-family: "OpenSans-Regular";
 }
+
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
   .guide header {
@@ -740,6 +766,7 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 4.5vh;
   }
+
   .guideContainer .guideTitle {
     margin-top: 4.5vh;
   }
@@ -799,6 +826,7 @@ header .headerLeft {
     padding-left: 6.25%;
     cursor: pointer;
   }
+
   .guideOptionsInDesktop
     .optionColumn:nth-child(2)
     .optionItemContainer:nth-child(2)
@@ -915,6 +943,7 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 24px;
   }
+
   .guideContainer {
     justify-content: space-around;
   }
@@ -971,6 +1000,17 @@ header .headerLeft {
   }
 }
 /* mobile */
+@media screen and (max-width: 980px) {
+  .guideContainer .btnContainer {
+    display: flex;
+  }
+  .optionItemContainer.selected {
+    border: 1px solid #fe8e14;
+  }
+  .optionItemContainer:hover {
+    background-color: #222222;
+  }
+}
 @media screen and (max-width: 980px) and (orientation: portrait) {
   .guideContainer .guideTextPart1 {
     line-height: 18px;
