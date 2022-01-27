@@ -13,10 +13,6 @@
           />
           dynamsoft
         </a>
-        <!-- ignore this part when uploading to github -->
-        <div class="liveChatIcon">
-          <live-chat />
-        </div>
       </div>
     </header>
     <div class="guideContainer">
@@ -483,41 +479,15 @@
 
 <script >
 import Vue from "vue";
-import LiveChat from "./LiveChat.vue"; // ignore this part when uploading to github
-import postSessionData from "../postSessionData"; // ignore this part when uploading to github
 
 export default Vue.extend({
   name: "Guide",
-  components: {
-    LiveChat, // ignore this part when uploading to github
-  },
   data() {
     return {
       guideSelection: "",
-      startGuideTime: 0, // ignore this part when uploading to github
-      endGuideTime: 0, // ignore this part when uploading to github
-      landingPageTime: 0, // ignore this part when uploading to github
     };
   },
   mounted() {
-    // ignore this part when uploading to github
-    this.startGuideTime = Date.now();
-    window.addEventListener("visibilitychange", () => {
-      if (!this.$store.state.isStartScanning) {
-        if (document.visibilityState === "hidden") {
-          this.endGuideTime = Date.now();
-          this.landingPageTime += this.endGuideTime - this.startGuideTime;
-          let sessionData = {
-            sessionId: sessionStorage.getItem("sessionId"),
-            landingPageTime: this.landingPageTime,
-          };
-          postSessionData(sessionData, true);
-        } else if (document.visibilityState === "visible") {
-          this.startGuideTime = Date.now();
-        }
-      }
-    });
-
     this.guideSelection = "common1d";
     if (window.location.hash.toLowerCase() === "#general") {
       this.guideSelection = "common1dAnd2d";
@@ -535,16 +505,6 @@ export default Vue.extend({
   },
   methods: {
     startScanning() {
-      // ignore this part when uploading to github
-      this.endGuideTime = Date.now();
-      this.landingPageTime += this.endGuideTime - this.startGuideTime;
-      let sessionData = {
-        sessionId: sessionStorage.getItem("sessionId"),
-        landingPageTime: this.landingPageTime,
-        landingPageSelection: this.guideSelection,
-      };
-      postSessionData(sessionData, false);
-
       setTimeout(() => {
         // console.log(this.guideSelection)
         this.$store.commit("startScanning", this.guideSelection);
@@ -590,10 +550,6 @@ header .headerLeft {
 .headerLeft .dynamsoftLogo img {
   height: 3.7vh;
   max-width: 100%;
-}
-/* ignore this part when uploading to github */
-.headerLeft .liveChatIcon {
-  margin-left: 12px;
 }
 .guideContainer {
   display: flex;
@@ -786,10 +742,6 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 4.5vh;
   }
-  /* ignore this part when uploading to github */
-  header .headerLeft .liveChatIcon {
-    display: none;
-  }
   .guideContainer .guideTitle {
     margin-top: 4.5vh;
   }
@@ -965,10 +917,6 @@ header .headerLeft {
   }
   .headerLeft .dynamsoftLogo img {
     height: 24px;
-  }
-  /* ignore this part when uploading to github */
-  header .headerLeft .liveChatIcon {
-    display: block;
   }
   .guideContainer {
     justify-content: space-around;
