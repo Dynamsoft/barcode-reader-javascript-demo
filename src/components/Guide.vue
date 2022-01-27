@@ -13,6 +13,10 @@
           />
           dynamsoft
         </a>
+        <!-- ignore this part when uploading to github -->
+        <div class="liveChatIcon">
+          <live-chat />
+        </div>
       </div>
     </header>
     <div class="guideContainer">
@@ -285,9 +289,6 @@
                   value="common1d"
                   v-model="guideSelection"
                 />
-                <!-- <div class="circle">
-                  <a-icon type="check" v-show="guideSelection == 'common1d'" />
-                </div> -->
                 <div class="itemHeader">Common 1D Barcodes</div>
                 <div class="itemBody">
                   Code 39, Code 128, Code 93, Codabar, EAN 13, EAN 8, UPC A, UPC
@@ -308,9 +309,6 @@
                   value="common2d"
                   v-model="guideSelection"
                 />
-                <!-- <div class="circle">
-                  <a-icon type="check" v-show="guideSelection == 'common2d'" />
-                </div> -->
                 <div class="itemHeader">Common 2D barcodes</div>
                 <div class="itemBody">QR Code, Data Matrix, PDF417</div>
               </label>
@@ -326,12 +324,6 @@
                   value="common1dAnd2d"
                   v-model="guideSelection"
                 />
-                <!-- <div class="circle">
-                  <a-icon
-                    type="check"
-                    v-show="guideSelection == 'common1dAnd2d'"
-                  />
-                </div> -->
                 <div class="itemHeader">Common 1D + 2D</div>
               </label>
             </div>
@@ -348,9 +340,6 @@
                   value="vin"
                   v-model="guideSelection"
                 />
-                <!-- <div class="circle">
-                  <a-icon type="check" v-show="guideSelection == 'vin'" />
-                </div> -->
                 <div class="itemHeader">
                   <span>VIN</span>
                   <svg viewBox="0 0 34 16.783" class="vinIcon invert">
@@ -457,9 +446,6 @@
                   value="dpm"
                   v-model="guideSelection"
                 />
-                <!-- <div class="circle">
-                  <a-icon type="check" v-show="guideSelection == 'dpm'" />
-                </div> -->
                 <div class="itemHeader">
                   <span> DPM Codes</span>
                 </div>
@@ -497,17 +483,40 @@
 
 <script >
 import Vue from "vue";
+import LiveChat from "./LiveChat.vue"; // ignore this part when uploading to github
+import postSessionData from "../postSessionData"; // ignore this part when uploading to github
 
 export default Vue.extend({
   name: "Guide",
   components: {
+    LiveChat, // ignore this part when uploading to github
   },
   data() {
     return {
       guideSelection: "",
+      startGuideTime: 0, // ignore this part when uploading to github
+      endGuideTime: 0, // ignore this part when uploading to github
+      landingPageTime: 0, // ignore this part when uploading to github
     };
   },
   mounted() {
+    // ignore this part when uploading to github
+    this.startGuideTime = Date.now();
+    window.addEventListener("visibilitychange", () => {
+      if (!this.$store.state.isStartScanning) {
+        if (document.visibilityState === "hidden") {
+          this.endGuideTime = Date.now();
+          this.landingPageTime += this.endGuideTime - this.startGuideTime;
+          let sessionData = {
+            sessionId: sessionStorage.getItem("sessionId"),
+            landingPageTime: this.landingPageTime,
+          };
+          postSessionData(sessionData, true);
+        } else if (document.visibilityState === "visible") {
+          this.startGuideTime = Date.now();
+        }
+      }
+    });
 
     this.guideSelection = "common1d";
     if (window.location.hash.toLowerCase() === "#general") {
@@ -526,7 +535,15 @@ export default Vue.extend({
   },
   methods: {
     startScanning() {
-
+      // ignore this part when uploading to github
+      this.endGuideTime = Date.now();
+      this.landingPageTime += this.endGuideTime - this.startGuideTime;
+      let sessionData = {
+        sessionId: sessionStorage.getItem("sessionId"),
+        landingPageTime: this.landingPageTime,
+        landingPageSelection: this.guideSelection,
+      };
+      postSessionData(sessionData, false);
 
       setTimeout(() => {
         // console.log(this.guideSelection)
@@ -574,7 +591,10 @@ header .headerLeft {
   height: 3.7vh;
   max-width: 100%;
 }
-
+/* ignore this part when uploading to github */
+.headerLeft .liveChatIcon {
+  margin-left: 12px;
+}
 .guideContainer {
   display: flex;
   flex-direction: column;
@@ -766,7 +786,10 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 4.5vh;
   }
-
+  /* ignore this part when uploading to github */
+  header .headerLeft .liveChatIcon {
+    display: none;
+  }
   .guideContainer .guideTitle {
     margin-top: 4.5vh;
   }
@@ -943,7 +966,10 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 24px;
   }
-
+  /* ignore this part when uploading to github */
+  header .headerLeft .liveChatIcon {
+    display: block;
+  }
   .guideContainer {
     justify-content: space-around;
   }

@@ -11,8 +11,7 @@
         min-height: 100px;
         background: #ddd;
         position: absolute;
-      "
-    >
+      ">
       <svg class="dbrScanner-bg-loading" viewBox="0 0 1792 1792">
         <path
           d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"
@@ -1828,15 +1827,11 @@
         <div class="restartVideo">
           <button @click="hideResults">RESTART VIDEO</button>
           <a href="javascript:void(0)" @click="triggerUploadImg"
-            >Upload Image from local</a
-          >
+            >Upload Image from local</a>
         </div>
       </div>
     </div>
-    <ul class="cameraList" v-show="isShowCameraList">
-      <!-- <li>
-        <from-image />
-      </li> -->
+    <ul class="cameraList" v-show="isShowCameraList" ref="cameraList">
       <li
         v-for="(item, index) in cameraAndResolutionList"
         :key="index"
@@ -1845,7 +1840,7 @@
           selected:
             currentCamera &&
             item[0].deviceId == currentCamera.deviceId &&
-            item[1].includes(currentResolution[0]),
+            item[1].includes(currentResolution[0])
         }"
       >
         <div
@@ -1863,9 +1858,8 @@
         </div>
       </li>
     </ul>
-  </div>
+  </div> 
 </template>
-
 <script>
 import Vue from "vue";
 import DBR from "../dbr";
@@ -1893,7 +1887,7 @@ export default Vue.extend({
       resultsInfo: [],
       resolutionList: [
         [1280, 720],
-        [1920, 1080],
+        [1920, 1080]
       ],
       currentResolution: [],
       cameraList: [],
@@ -1948,7 +1942,6 @@ export default Vue.extend({
   },
 
   async mounted() {
-
     // this.clientHeight = window.innerHeight;
     // this.clientWidth = window.innerWidth;
     this.clientHeight = document.body.clientHeight;
@@ -1961,7 +1954,7 @@ export default Vue.extend({
       DBR.BarcodeScanner.browserInfo.OS == "iPhone"
     ) {
       this.isShowTorchIcon = true;
-    } else {
+    } else {  
       this.isShowTorchIcon = false;
     }
     // this.cvsDrawArea();
@@ -2007,7 +2000,7 @@ export default Vue.extend({
       (window.orientation === 0 || window.orientation === 180)
     ) {
       let config = {};
-      config.duration = 2;
+      config.duration = 5;
       config.content = "Rotate your device.";
       config.icon = (
         <a-icon type="mobile" spin style={{ color: "#FE8E14" }}></a-icon>
@@ -2137,8 +2130,7 @@ export default Vue.extend({
     async showScanner() {
       this.isLoadingCamera = true;
       try {
-        this.scanner ||
-          (this.scanner = await DBR.BarcodeScanner.createInstance());
+        this.scanner || (this.scanner = await DBR.BarcodeScanner.createInstance());
       } catch (e) {
         let config = {};
         config.content = e.message;
@@ -2165,6 +2157,7 @@ export default Vue.extend({
           if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
             this.currentResolution = this.resolutionList[1];
           }
+
           await this.scanner.updateVideoSettings({
             video: {
               width: this.currentResolution[0],
@@ -2172,6 +2165,7 @@ export default Vue.extend({
               facingMode: "environment",
             },
           });
+
           this.scanner.onFrameRead = (results) => {
             for (let i = 0; i < results.length; i++) {
               let result = results[i];
@@ -2184,10 +2178,12 @@ export default Vue.extend({
               }
             }
           };
-
-
-
-          await this.scanner.open();
+          
+          let callBackInfo = await this.scanner.open()
+          if((callBackInfo.width !== 1080 && callBackInfo.height !== 1920) || (callBackInfo.width !== 1920 && callBackInfo.height !== 1080) && this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
+            this.currentResolution[0] = callBackInfo.width;
+            this.currentResolution[1] = callBackInfo.height;
+          }
           this.isLoadingCamera = false;
         }
       } catch (e) {
@@ -2203,6 +2199,7 @@ export default Vue.extend({
         return Promise.reject(e.message);
       }
     },
+
     async onChangeCameraAndResolution(item) {
       let config = {};
       this.isLoadingCamera = true;
@@ -2230,6 +2227,7 @@ export default Vue.extend({
       this.$message.open(config);
       this.isLoadingCamera = false;
     },
+
     cvsDrawArea() {
       this.maskCanvas.width = this.clientWidth;
       this.maskCanvas.height = this.clientHeight;
@@ -2284,9 +2282,9 @@ export default Vue.extend({
     showResults(results, image) {
       this.isCopied = [];
       this.isUploadImage = true;
-      results.forEach((e) => {
-        console.log(e);
-      });
+      // results.forEach((e) => {
+      //   console.log(e);
+      // });
       this.results = results;
       this.curImg = image;
     },
@@ -2316,9 +2314,10 @@ export default Vue.extend({
         }
         let runtimeSettings = null;
         this.changeRuntimeSettingsTimeoutId &&
-          clearTimeout(this.changeRuntimeSettingsTimeoutId);
+        clearTimeout(this.changeRuntimeSettingsTimeoutId);
         this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
           // scan mode
+          this.scanner.pauseScan();
           if (this.scanMode === "bestSpeed") {
             await this.scanner.updateRuntimeSettings("speed");
           } else if (this.scanMode === "balance") {
@@ -2345,7 +2344,13 @@ export default Vue.extend({
 
           // set scan region
           if (this.isFullImageLocalization) {
-            runtimeSettings.region = [null];
+            runtimeSettings.region = {
+              regionLeft: 0,
+              regionTop: 0,
+              regionRight: 100,
+              regionBottom: 100,
+              regionMeasuredByPercentage: 1,
+            };
             this.isShowCloseMask = false;
           } else {
             if (this.selectedUseCase === "general") {
@@ -2369,6 +2374,7 @@ export default Vue.extend({
           }
           // barcode format part
           runtimeSettings.barcodeFormatIds = 0;
+          
           runtimeSettings.barcodeFormatIds_2 = 0;
           let newValue = this.selectedBarcodes;
           for (let i = 0; i < newValue.length; i++) {
@@ -2391,7 +2397,7 @@ export default Vue.extend({
             ];
           } else if (this.selectedUseCase === "dl") {
             runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
-            runtimeSettings.deblurLevel = 5;
+            runtimeSettings.deblurLevel = 7;
           } else if (this.selectedUseCase === "dpm") {
             runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
               DBR.EnumDPMCodeReadingMode.DPMCRM_GENERAL;
@@ -2412,6 +2418,7 @@ export default Vue.extend({
             ? (runtimeSettings.expectedBarcodesCount = 1)
             : (runtimeSettings.expectedBarcodesCount = 512);
           await this.scanner.updateRuntimeSettings(runtimeSettings);
+          this.scanner.resumeScan();
           this.isShowLoadingImg = false;
           return runtimeSettings;
         }, 500);
@@ -2467,9 +2474,7 @@ export default Vue.extend({
     cameraInfo() {
       if (this.currentCamera) {
         return (
-          this.currentCamera.label +
-          " " +
-          (this.currentResolution.includes(720) ? "HD" : "FULL HD")
+          this.currentCamera.label + " " + (this.currentResolution.includes(720) ? "HD" : "FULL HD")
         );
       } else {
         return "";
@@ -2607,7 +2612,6 @@ export default Vue.extend({
     },
   },
   watch: {
-
     isDLResultShow(newValue) {
       if (!newValue) {
         this.dlText = "";
@@ -2624,8 +2628,6 @@ export default Vue.extend({
       this.soundEffectsIconPath = newValue ? checkedMusicIcon : musicIcon;
     },
     async selectedUseCase(newUseCase, oldUseCase) {
-
-      console.log(oldUseCase);
       if (newUseCase === "dl") {
         this.isShowTipImg = true;
         setTimeout(() => {
@@ -2644,12 +2646,12 @@ export default Vue.extend({
       }
       if (
         (DBR.BarcodeScanner.browserInfo.OS === "Android" ||
-          DBR.BarcodeScanner.browserInfo.OS === "iPhone") &&
+        DBR.BarcodeScanner.browserInfo.OS === "iPhone") &&
         (newUseCase === "vin" || newUseCase === "dl") &&
         (window.orientation === 0 || window.orientation === 180)
       ) {
         let config = {};
-        config.duration = 2;
+        config.duration = 5;
         config.content = "Rotate your device.";
         config.icon = (
           <a-icon type="mobile" spin style={{ color: "#FE8E14" }}></a-icon>
@@ -2824,6 +2826,25 @@ export default Vue.extend({
 .localImages {
   width: 90px;
 }
+
+/* .localImages .promptMsg {
+  position: relative;
+  top: 10px;
+  width: 250px;
+  padding: 5px;
+  border: 2px solid #fe8e14;
+  color: #fe8e14;
+}
+
+.localImages .promptMsg .triangular {
+  position: absolute;
+  top: -18px;
+  left: 33px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-bottom: 8px solid #fe8e14;
+} */
 
 .cameraAndSoundsContainer {
   position: absolute;
@@ -3331,6 +3352,9 @@ export default Vue.extend({
   .curUseCaseTip {
     top: 8.5vh;
     font-size: 14px;
+  }
+  .isDriverLicense {
+    top: 17vh;
   }
   .resultContainer {
     width: 73.9%;

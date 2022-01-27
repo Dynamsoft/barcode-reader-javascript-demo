@@ -23,6 +23,16 @@
 </head>
 
 <body>
+  <!-- ignore this part when uploading to github -->
+  <script>
+    let startLoadingPageTime = Date.now();
+    sessionStorage.setItem('startLoadingPageTime', startLoadingPageTime);
+  </script>
+  <script src="./generateSessionID.js"></script> 
+  <script>
+    sessionStorage.setItem('sessionId', sessionId);
+  </script>
+  
   <noscript>
     <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
       Please enable it to continue.</strong>
@@ -39,7 +49,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuex@3.4.0/dist/vuex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@8.8.3/dist/dbr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@8.8.7/dist/dbr.min.js"></script>
   <script type="application/ld+json">
     [{
       "@context": "http://schema.org",
@@ -77,8 +87,71 @@
     }
   </script>
 
+  <!-- ignore this part when uploading to github -->
+  <!-- Google Tag Manager -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-538F83" height="0" width="0"
+      style="display:none;visibility:hidden">
+    </iframe>
+  </noscript>
+  <script>
+    if (!navigator.webdriver) {
+      setTimeout(()=>{
+        (function (w, d, s, l, i) {
+          w[l] = w[l] || []; w[l].push({
+            'gtm.start':
+              new Date().getTime(), event: 'gtm.js'
+          }); var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+              '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-538F83');
+      }, 0)
+    }
+  </script>
+  <!-- End Google Tag Manager -->
 
+  <!-- ignore this part when uploading to github -->
+  <!-- <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+  <script>
+    eruda.init();
+  </script> -->
 
+  <!-- ignore this part when uploading to github -->
+  <script>
+    // live chat
+    var Comm100API = Comm100API || new Object();
+    Comm100API.chat_buttons = Comm100API.chat_buttons || [];
+    var comm100_chatButton = new Object();
+    comm100_chatButton.code_plan = 5000110;
+    comm100_chatButton.div_id = "comm100-button-5000110";
+    Comm100API.chat_buttons.push(comm100_chatButton);
+    Comm100API.site_id = 10008;
+    Comm100API.main_code_plan = 5000110;
+    var comm100_lc = document.createElement("script");
+    comm100_lc.type = "text/javascript";
+    comm100_lc.async = true;
+    var comm100_s = null;
+    setTimeout(()=>{
+      comm100_lc.src =
+        "https://support.dynamsoft.com/LiveChatServer/livechat.ashx?siteId=" +
+        Comm100API.site_id;
+      comm100_s = document.querySelector("body>script");
+      comm100_s.parentNode.insertBefore(comm100_lc, comm100_s);
+      setTimeout(function () {
+        if (!Comm100API.loaded) {
+          var lc = document.createElement("script");
+          lc.type = "text/javascript";
+          lc.async = true;
+          lc.src =
+            "https://support.dynamsoft.com/LiveChatServer/livechat.ashx?siteId=" +
+            Comm100API.site_id;
+          var s = document.querySelector("body>script");
+          s.parentNode.insertBefore(lc, s);
+        }
+      }, 5000);
+  }, 0)
+    
+  </script>
 </body>
 
 </html>

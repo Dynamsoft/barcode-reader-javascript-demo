@@ -7,7 +7,7 @@
       backgroundColor: $store.state.isFullImageLocalization
         ? 'rgba(34, 34, 34, .8)'
         : '',
-    }"
+    }" 
   >
     <svg
       viewBox="0 0 21.579 18"
