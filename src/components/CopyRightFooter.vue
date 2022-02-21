@@ -8,7 +8,7 @@
     </a>
     <div class="copyrightInfo">
       <div>
-        © 2003 – 2022 Dynamsoft. All rights reserved.
+        © 2003 – 2021 Dynamsoft. All rights reserved.
         <a
           href="https://www.dynamsoft.com/PrivacyStatement.aspx"
           target="_blank"

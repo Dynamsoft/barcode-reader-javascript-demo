@@ -7,8 +7,7 @@ const COMMON1D = ['code39', 'code128', 'code93', 'codabar', 'ean13', 'ean8', 'up
 const COMMON2D = ['qrcode', 'pdf417', 'datamatrix'];
 const GENERAL1D = ['code39', 'code128', 'code93', 'codabar', 'itf', 'ean13', 'ean8', 'upca', 'upce', 'industrial25', 'code39extended', 'msicode'];
 const GENERAL2D = ['qrcode', 'pdf417', 'datamatrix'];
-const VIN1D = ['code39', 'code128', 'code93', 'code39extended', 'codabar', 'itf', 'industrial25'];
-const VIN2D = ['qrcode', 'datamatrix'];
+const VIN = ['code39', 'code128', 'code93', 'code39extended', 'codabar', 'itf', 'industrial25'];
 const DL = ['pdf417'];
 const DPM = ['datamatrix'];
 export default new Vuex.Store({
@@ -41,7 +40,6 @@ export default new Vuex.Store({
     scanMode: 'bestSpeed',
     invertColourOn: false,
     soundEffectsOn: true,
-    // isShowPromptMsg: false,
   },
   getters: {
     selectedBarcodes: state => {
@@ -121,8 +119,8 @@ export default new Vuex.Store({
       }
       else if (state.selectedUseCase === 'vin') {
         // change selected barcode format
-        state.selected1dBarcodes = VIN1D.slice();
-        state.selected2dBarcodes = VIN2D.slice();
+        state.selected1dBarcodes = VIN.slice();
+        state.selected2dBarcodes = [];
         state.selectedOtherBarcodes = [];
         // set single
         this.commit("singleOrMulSwitch", "single");

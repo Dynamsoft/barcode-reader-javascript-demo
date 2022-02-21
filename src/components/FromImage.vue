@@ -7,7 +7,36 @@
       accept="image/png,image/jpeg,image/bmp,image/gif"
       style="display: none"
     />
+    <!-- style="width: 1px; height: 1px" -->
     <img src="../assets/image/add-image.svg" alt="" />
+
+    <!-- <a-modal title="Result" :visible="visible" cancelText="" :closable="false">
+      <ul class="content">
+        <li v-for="(item, fileIndex) in resultsInfo" :key="fileIndex"> -->
+    <!-- {{ fileIndex + 1 + "." + item.fileName + ":" }} -->
+    <!-- <ul>
+            <li
+              v-for="(result, resultIndex) in item.results"
+              :key="resultIndex"
+            >
+              <span>
+                {{ result.barcodeFormat + ":" }}
+              </span>
+              <span class="resultText" :data-clipboard-text="result.text">
+                {{ result.text }}
+                <a-icon type="copy" @click="copyResult()" />
+              </span>
+            </li>
+          </ul>
+        </li>
+        <div class="currentImg">
+          <img :src="currentImg" alt="" />
+        </div>
+      </ul>
+      <template slot="footer">
+        <a-button type="primary" @click="handleCancel"> OK </a-button>
+      </template>
+    </a-modal> -->
   </div>
 </template>
 
@@ -135,6 +164,13 @@ export default Vue.extend({
             config.icon = (
               <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
             );
+            // this.visible = true;
+            // config = {};
+            // config.content = "Complete!";
+            // config.duration = 1;
+            // config.icon = (
+            //   <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
+            // );
           }
           this.$message.open(config);
         }
