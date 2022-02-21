@@ -2,6 +2,10 @@
   <div class="home">
     <header>
       <div class="headerLeft">
+        <!-- ignore this part when uploading to github -->
+        <div class="liveChatIcon">
+          <live-chat />
+        </div>
       </div>
       <div class="headerRight">
         <div class="linkInMobile">
@@ -198,6 +202,10 @@ header .headerRight {
   .home header {
     height: 7.7vh;
   }
+  /* ignore this part when uploading to github */
+  .headerLeft .liveChatIcon {
+    display: none;
+  }
   header .headerRight {
     padding-right: 25px;
   }
@@ -213,6 +221,10 @@ header .headerRight {
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .home header {
     height: 10vh;
+  }
+  /* ignore this part when uploading to github */
+  .headerLeft .liveChatIcon {
+    display: block;
   }
   header .headerLeft {
     margin-left: 150px;
