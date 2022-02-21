@@ -2391,7 +2391,7 @@ export default Vue.extend({
             ];
           } else if (this.selectedUseCase === "dl") {
             runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
-            runtimeSettings.deblurLevel = 5;
+            runtimeSettings.deblurLevel = 7;
           } else if (this.selectedUseCase === "dpm") {
             runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
               DBR.EnumDPMCodeReadingMode.DPMCRM_GENERAL;
