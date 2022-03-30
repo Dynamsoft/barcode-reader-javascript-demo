@@ -52,7 +52,7 @@ module.exports = {
             },
             compress: {
                 drop_debugger: true,
-                drop_console: true, 
+                // drop_console: true, 
             },
             },
             parallel: true,

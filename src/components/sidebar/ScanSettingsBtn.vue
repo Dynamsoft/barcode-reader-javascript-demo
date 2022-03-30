@@ -280,12 +280,21 @@ export default Vue.extend({
   name: "scanSettingsBtn",
   components: {},
   data() {
-    return {};
+    return {
+      popoverPlacement: document.body.clientWidth > 980 ? 'rightBottom' : 'topRight',
+    };
   },
   mounted() {
     document.addEventListener("click", () => {
       this.$store.commit("hideScanSettingsPopover");
     });
+    window.addEventListener('resize', () => {
+      if(document.body.clientWidth > 980) {
+        this.popoverPlacement = 'rightBottom';
+      } else {
+        this.popoverPlacement = 'topRight';
+      }
+    })
   },
   methods: {
     enableClick() {
@@ -296,13 +305,6 @@ export default Vue.extend({
     },
   },
   computed: {
-    popoverPlacement() {
-      if (document.body.clientWidth > 980) {
-        return "rightBottom";
-      } else {
-        return "topRight";
-      }
-    },
     singleOrMul: {
       get() {
         return this.$store.state.singleOrMul;

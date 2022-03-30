@@ -107,11 +107,9 @@ export default Vue.extend({
   props: {},
   data() {
     return {
-
     };
   },
   mounted() {
-
   },
   methods: {
   },
@@ -211,7 +209,6 @@ header .headerRight {
   .home header {
     height: 7.7vh;
   }
-
   header .headerRight {
     padding-right: 25px;
   }
@@ -220,13 +217,14 @@ header .headerRight {
   }
 }
 @media screen and (max-width: 980px) {
-
+  .headerLeft .liveChatIcon {
+    margin-left: 100px;
+  }
 }
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .home header {
     height: 10vh;
   }
-
   header .headerLeft {
     margin-left: 150px;
   }
@@ -251,10 +249,14 @@ header .headerRight {
   .headerRight .linkInDesktop {
     display: none;
   }
-
+  .headerLeft .liveChatIcon {
+    margin-left: 60px;
+  }
 }
 @media screen and (max-width: 350px) {
-
+  .headerLeft .liveChatIcon {
+    margin-left: 30px;
+  }
   .headerRight .linkInMobile .codeLink {
     margin-left: 10px;
   }

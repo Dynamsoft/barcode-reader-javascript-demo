@@ -1,62 +1,11 @@
 <template>
   <div class="barcodeScanner">
-    <div
-      v-once
-      class="videoContainer"
-      ref="videoContainer"
-      style="
-        width: 100%;
-        height: 100%;
-        min-width: 100px;
-        min-height: 100px;
-        background: #ddd;
-        position: absolute;
-      "
-    >
-      <svg class="dbrScanner-bg-loading" viewBox="0 0 1792 1792">
-        <path
-          d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"
-        />
-      </svg>
-      <svg
-        class="dbrScanner-bg-camera"
-        style="
-          display: none;
-          width: 40%;
-          height: 40%;
-          position: absolute;
-          margin: auto;
-          left: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          fill: #aaa;
-        "
-        viewBox="0 0 2048 1792"
-      >
-        <path
-          d="M1024 672q119 0 203.5 84.5t84.5 203.5-84.5 203.5-203.5 84.5-203.5-84.5-84.5-203.5 84.5-203.5 203.5-84.5zm704-416q106 0 181 75t75 181v896q0 106-75 181t-181 75h-1408q-106 0-181-75t-75-181v-896q0-106 75-181t181-75h224l51-136q19-49 69.5-84.5t103.5-35.5h512q53 0 103.5 35.5t69.5 84.5l51 136h224zm-704 1152q185 0 316.5-131.5t131.5-316.5-131.5-316.5-316.5-131.5-316.5 131.5-131.5 316.5 131.5 316.5 316.5 131.5z"
-        />
-      </svg>
-      <video
-        class="dbrScanner-video"
-        playsinline="true"
-        style="
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          left: 0;
-          top: 0;
-          object-fit: cover;
-        "
-      ></video>
-      <canvas
-        class="dbrScanner-cvs-drawarea"
-        style="width: 100%; height: 100%; position: absolute; left: 0; top: 0"
-      ></canvas>
-      <div class="copyright">
-        <span>Powered by Dynamsoft</span>
+    <div v-once class="videoContainer" ref="videoContainer" style="width: 100%;height: 100%;min-width: 100px;min-height: 100px;background: #ddd;position: absolute;" >
+      <div class="dce-video-container" style="position:absolute;left:0;top:0;width:100%;height:100%;"></div>
+      <div ref="scanArea" class="dce-scanarea" style="position:absolute;left:0;top:0;width:100%;height:100%;">
+        <div class="dce-scanlight" style="display:none;position:absolute;width:100%;height:3px;border-radius:50%;box-shadow:0px 0px 2vw 1px #fe8e14;background:#fe8e14;animation:3s infinite dce-scanlight;user-select:none;"></div>
       </div>
+      <div class="copyright"><span>Powered by Dynamsoft</span></div>
     </div>
     <div class="cameraAndSoundsContainer">
       <div class="cameraDropdown" @click.stop="showCameraList">
@@ -130,7 +79,9 @@
         </div>
         <div class="resultMain">
           <div class="resultText" @click="copyResult('.result')">
-            {{ name.slice(name.indexOf("_dbrkey_") + 8) }}
+            {{ (name.slice(0, name.indexOf("_dbrkey_")) === "PHARMACODE_ONE_TRACK" || 
+            name.slice(0, name.indexOf("_dbrkey_")) === "PHARMACODE_TWO_TRACK") ? 
+            pharmacodeResult : name.slice(name.indexOf("_dbrkey_") + 8) }}
           </div>
           <div class="break">-</div>
           <div class="copyBtn" @click="copyResult('.result')">Copy</div>
@@ -154,21 +105,6 @@
         <div class="closeBtn" @click="closeDLResult">Close</div>
       </div>
     </div>
-    <div
-      class="scanArea"
-      v-show="
-        !isFullImageLocalization &&
-        !isDecodingFile &&
-        selectedUseCase === 'general'
-      "
-    >
-      <div class="scanLight"></div>
-    </div>
-    <canvas
-      id="closeRegionMask"
-      style="position: absolute"
-      v-show="isShowCloseMask && !isResizing"
-    ></canvas>
     <div
       class="torchContainer"
       :style="torchContainerStyle"
@@ -1863,12 +1799,12 @@
         </div>
       </li>
     </ul>
-  </div>
+  </div> 
 </template>
 
 <script>
 import Vue from "vue";
-import DBR from "../dbr";
+import {BarcodeScanner,EnumGrayscaleTransformationMode,EnumDPMCodeReadingMode,EnumLocalizationMode} from "dynamsoft-javascript-barcode";
 import musicIcon from "../assets/image/music.svg";
 import checkedMusicIcon from "../assets/image/music-check.svg";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
@@ -1902,9 +1838,8 @@ export default Vue.extend({
       regionScale: 0.4,
       clientWidth: 0,
       clientHeight: 0,
-      isShowCloseMask: false,
+      visibleRegionInPixels: null,
       maskCanvas: null,
-      maskCanvasContext: null,
       isShowTorchIcon: false,
       flashlightOn: false,
       isShowCameraList: false,
@@ -1913,72 +1848,57 @@ export default Vue.extend({
       changeRuntimeSettingsTimeoutId: null,
       isResizing: false,
       ifHasCamera: true,
-      generalPresetRegion: [
-        null,
-        {
-          regionLeft: 0,
-          regionTop: 30,
-          regionRight: 100,
-          regionBottom: 70,
-          regionMeasuredByPercentage: 1,
-        },
-        {
-          regionLeft: 25,
-          regionTop: 25,
-          regionRight: 75,
-          regionBottom: 75,
-          regionMeasuredByPercentage: 1,
-        },
-        {
-          regionLeft: 25,
-          regionTop: 25,
-          regionRight: 75,
-          regionBottom: 75,
-          regionMeasuredByPercentage: 1,
-        },
-      ],
       isShowTipImg: true,
       isShowLoadingImg: true,
       isLoadingCamera: false,
+      resolutionUsedTime: {
+      },
+      useCaseTime: {
+      },
       results: [],
       curImg: null,
       isCopied: [],
       isUploadImage: false,
+      pharmacodeResult: [],
     };
   },
 
   async mounted() {
-
     // this.clientHeight = window.innerHeight;
     // this.clientWidth = window.innerWidth;
     this.clientHeight = document.body.clientHeight;
     this.clientWidth = document.body.clientWidth;
-    this.maskCanvas = document.getElementById("closeRegionMask");
-    this.maskCanvasContext = this.maskCanvas.getContext("2d");
+    // this.maskCanvas = document.getElementById("closeRegionMask");
 
     if (
-      DBR.BarcodeScanner.browserInfo.OS == "Android" ||
-      DBR.BarcodeScanner.browserInfo.OS == "iPhone"
+      BarcodeScanner.browserInfo.OS == "Android" ||
+      BarcodeScanner.browserInfo.OS == "iPhone"
     ) {
       this.isShowTorchIcon = true;
     } else {
       this.isShowTorchIcon = false;
     }
-    // this.cvsDrawArea();
-    window.onresize = () => {
-      this.isResizing = true;
+    window.addEventListener('resize', () => {
       this.changeClientTimeoutId && clearTimeout(this.changeClientTimeoutId);
+      this.scanner.dce.ifShowScanRegionMask = false;
+      this.$refs.scanArea.style.display = "none";
       this.changeClientTimeoutId = setTimeout(() => {
         this.clientHeight = document.body.clientHeight;
         this.clientWidth = document.body.clientWidth;
-        this.cvsDrawArea();
-        this.isResizing = false;
+        if(this.scanner && this.scanner.isOpen()) {
+          this.visibleRegionInPixels = this.scanner.dce.getVisibleRegion(true); 
+        }
+        this.scanner.dce.ifShowScanRegionMask = true;
+        this.$refs.scanArea.style.display = "";
       }, 1000);
-    };
+    })
     document.addEventListener("click", () => {
       this.hideCameraList();
     });
     await this.showScanner();
+    if(this.scanner && this.scanner.isOpen()) {
+      this.visibleRegionInPixels = this.scanner.dce.getVisibleRegion(true);
+    }
     try {
       this.cameraList = await this.scanner.getAllCameras();
       this.currentCamera = await this.scanner.getCurrentCamera();
@@ -2001,8 +1921,8 @@ export default Vue.extend({
       }, 5000);
     }
     if (
-      (DBR.BarcodeScanner.browserInfo.OS === "Android" ||
-        DBR.BarcodeScanner.browserInfo.OS === "iPhone") &&
+      (BarcodeScanner.browserInfo.OS === "Android" ||
+        BarcodeScanner.browserInfo.OS === "iPhone") &&
       (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") &&
       (window.orientation === 0 || window.orientation === 180)
     ) {
@@ -2018,7 +1938,7 @@ export default Vue.extend({
   beforeDestroy() {
     this.isDestroyed = true;
     if (this.scanner) {
-      this.scanner.destroy();
+      this.scanner.destroyContext();
     }
   },
   methods: {
@@ -2137,8 +2057,10 @@ export default Vue.extend({
     async showScanner() {
       this.isLoadingCamera = true;
       try {
-        this.scanner ||
-          (this.scanner = await DBR.BarcodeScanner.createInstance());
+        this.scanner || (this.scanner = await BarcodeScanner.createInstance());
+        // this.scanner.intervalTime = 1000;
+        this.scanner.dce.setVideoFit('cover');
+        // this.scanner.resultsOverlay.style.objectFit = "cover";
       } catch (e) {
         let config = {};
         config.content = e.message;
@@ -2146,9 +2068,8 @@ export default Vue.extend({
         this.$message.warning(config);
         return Promise.reject(e.message);
       }
-
       if (this.isDestroyed) {
-        this.scanner.destroy();
+        this.scanner.destroyContext();
         return;
       }
 
@@ -2161,33 +2082,29 @@ export default Vue.extend({
           this.scanner.regionMaskStrokeStyle = "transparent";
           this.scanner.regionMaskFillStyle = "transparent";
 
-          this.currentResolution = this.resolutionList[0];
+          this.scanner.setResolution(this.resolutionList[0]);
           if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
-            this.currentResolution = this.resolutionList[1];
+            this.scanner.setResolution(this.resolutionList[1]);
           }
-          await this.scanner.updateVideoSettings({
-            video: {
-              width: this.currentResolution[0],
-              height: this.currentResolution[1],
-              facingMode: "environment",
-            },
-          });
           this.scanner.onFrameRead = (results) => {
             for (let i = 0; i < results.length; i++) {
               let result = results[i];
-              if (
-                this.selectedUseCase === "dl" &&
-                result.barcodeFormatString === "PDF417" &&
-                result.barcodeFormatString_2.includes("No Barcode Format")
-              ) {
+              if (this.selectedUseCase === "dl" && result.barcodeFormatString === "PDF417" && result.barcodeFormatString_2.includes("No Barcode Format")) {
                 this.dlText = result.barcodeText;
+              } else if(result.barcodeFormatString_2 === "PHARMACODE_ONE_TRACK"){
+                if(result.localizationResult.x1 < result.localizationResult.x2) {
+                  this.pharmacodeResult = result.barcodeText;
+                } else if(result.localizationResult.x1 > result.localizationResult.x2) {
+                  this.getPharmacodeResult(result);
+                }  
+              } else if(result.barcodeFormatString_2 === "PHARMACODE_TWO_TRACK") {
+                this.getPharmacodeResult(result);
               }
             }
           };
 
-
-
-          await this.scanner.open();
+          let callBackInfo = await this.scanner.open();
+          this.currentResolution = [callBackInfo.width, callBackInfo.height];
           this.isLoadingCamera = false;
         }
       } catch (e) {
@@ -2203,6 +2120,20 @@ export default Vue.extend({
         return Promise.reject(e.message);
       }
     },
+
+    getPharmacodeResult(result) {
+      for(let i = 0; i < 2; i++) {
+        let res = '';
+        for(let j = 0; j < result.results[i].bytes.length; j++) {
+          res += String.fromCharCode(result.results[i].bytes[j]);
+        }
+        if(res !== result.barcodeText) {
+          this.pharmacodeResult = res;
+          break;
+        }
+      }
+    },
+
     async onChangeCameraAndResolution(item) {
       let config = {};
       this.isLoadingCamera = true;
@@ -2230,37 +2161,6 @@ export default Vue.extend({
       this.$message.open(config);
       this.isLoadingCamera = false;
     },
-    cvsDrawArea() {
-      this.maskCanvas.width = this.clientWidth;
-      this.maskCanvas.height = this.clientHeight;
-      // this.maskCanvasContext = this.maskCanvas.getContext("2d");
-
-      this.maskCanvasContext.fillStyle = "rgba(0,0,0,.5)";
-      this.maskCanvasContext.fillRect(
-        0,
-        0,
-        this.maskCanvas.width,
-        this.maskCanvas.height
-      );
-      this.maskCanvasContext.globalCompositeOperation = "destination-out";
-      this.maskCanvasContext.fillStyle = "white";
-      this.maskCanvasContext.fillRect(
-        (this.regionLeft / 100) * this.maskCanvas.width,
-        (this.regionTop / 100) * this.maskCanvas.height,
-        ((100 - 2 * this.regionLeft) / 100) * this.maskCanvas.width,
-        ((100 - 2 * this.regionTop) / 100) * this.maskCanvas.height
-      );
-      this.maskCanvasContext.globalCompositeOperation = "source-over";
-      this.maskCanvasContext.lineWidth = 2;
-      this.maskCanvasContext.strokeStyle = "rgb(254, 142, 20)";
-      this.maskCanvasContext.rect(
-        (this.regionLeft / 100) * this.maskCanvas.width,
-        (this.regionTop / 100) * this.maskCanvas.height,
-        ((100 - 2 * this.regionLeft) / 100) * this.maskCanvas.width,
-        ((100 - 2 * this.regionTop) / 100) * this.maskCanvas.height
-      );
-      this.maskCanvasContext.stroke();
-    },
 
     //qrcode
     generateQRcode() {
@@ -2284,9 +2184,9 @@ export default Vue.extend({
     showResults(results, image) {
       this.isCopied = [];
       this.isUploadImage = true;
-      results.forEach((e) => {
-        console.log(e);
-      });
+      // results.forEach((e) => {
+      //   console.log(e);
+      // });
       this.results = results;
       this.curImg = image;
     },
@@ -2309,29 +2209,33 @@ export default Vue.extend({
         if (!this.scanner) {
           return null;
         }
+        if(!this.scanner.isOpen()) {
+          return null;
+        }
         if (this.isLoadingCamera) {
           this.isShowLoadingImg = false;
         } else {
           this.isShowLoadingImg = true;
         }
+        this.scanner.pauseScan();
+        this.scanner.dce.ifShowScanRegionMask = false;
         let runtimeSettings = null;
-        this.changeRuntimeSettingsTimeoutId &&
-          clearTimeout(this.changeRuntimeSettingsTimeoutId);
+        this.changeRuntimeSettingsTimeoutId && clearTimeout(this.changeRuntimeSettingsTimeoutId);
         this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
           // scan mode
           if (this.scanMode === "bestSpeed") {
             await this.scanner.updateRuntimeSettings("speed");
           } else if (this.scanMode === "balance") {
             await this.scanner.updateRuntimeSettings("balance");
-          } else if (this.scanMOde === "bestCoverage") {
+          } else if (this.scanMode === "bestCoverage") {
             await this.scanner.updateRuntimeSettings("coverage");
           }
           runtimeSettings = await this.scanner.getRuntimeSettings();
           // colour invert
           runtimeSettings.furtherModes.grayscaleTransformationModes = [
             this.invertColourOn
-              ? DBR.EnumGrayscaleTransformationMode.GTM_INVERTED
-              : DBR.EnumGrayscaleTransformationMode.GTM_ORIGINAL,
+              ? EnumGrayscaleTransformationMode.GTM_INVERTED
+              : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
             0,
             0,
             0,
@@ -2345,27 +2249,11 @@ export default Vue.extend({
 
           // set scan region
           if (this.isFullImageLocalization) {
+            this.$refs.scanArea.style.display = "none";
             runtimeSettings.region = [null];
-            this.isShowCloseMask = false;
           } else {
-            if (this.selectedUseCase === "general") {
-              runtimeSettings.region = JSON.parse(
-                JSON.stringify(this.generalPresetRegion)
-              );
-              this.isShowCloseMask = false;
-            } else if (this.selectedUseCase === "vin") {
-              runtimeSettings.region = JSON.parse(JSON.stringify(this.region));
-              this.isShowCloseMask = true;
-              this.cvsDrawArea();
-            } else if (this.selectedUseCase === "dl") {
-              runtimeSettings.region = JSON.parse(JSON.stringify(this.region));
-              this.isShowCloseMask = true;
-              this.cvsDrawArea();
-            } else if (this.selectedUseCase === "dpm") {
-              runtimeSettings.region = JSON.parse(JSON.stringify(this.region));
-              this.isShowCloseMask = true;
-              this.cvsDrawArea();
-            }
+            this.$refs.scanArea.style.display = "";
+            runtimeSettings.region = this.region;
           }
           // barcode format part
           runtimeSettings.barcodeFormatIds = 0;
@@ -2394,14 +2282,14 @@ export default Vue.extend({
             runtimeSettings.deblurLevel = 7;
           } else if (this.selectedUseCase === "dpm") {
             runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
-              DBR.EnumDPMCodeReadingMode.DPMCRM_GENERAL;
+              EnumDPMCodeReadingMode.DPMCRM_GENERAL;
             let locModes = runtimeSettings.localizationModes;
             for (let i in locModes) {
-              if (locModes[i] == DBR.EnumLocalizationMode.LM_STATISTICS_MARKS) {
+              if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
                 break;
               }
               if (locModes[i] == 0) {
-                locModes[i] = DBR.EnumLocalizationMode.LM_STATISTICS_MARKS;
+                locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
                 break;
               }
             }
@@ -2412,7 +2300,13 @@ export default Vue.extend({
             ? (runtimeSettings.expectedBarcodesCount = 1)
             : (runtimeSettings.expectedBarcodesCount = 512);
           await this.scanner.updateRuntimeSettings(runtimeSettings);
+          this.isShowTipImg = true;
+          setTimeout(() => {
+            this.isShowTipImg = false;
+          }, 5000);
           this.isShowLoadingImg = false;
+          this.scanner.resumeScan();
+          this.scanner.dce.ifShowScanRegionMask = true;
           return runtimeSettings;
         }, 500);
       },
@@ -2429,34 +2323,24 @@ export default Vue.extend({
   },
   computed: {
     driverLicenseTipStyle() {
-      if (this.selectedUseCase !== "dl") {
-        return {
-          display: "none",
-        };
-      } else {
-        let width = ((100 - 2 * this.regionLeft) / 100) * this.clientWidth;
-        let height = ((100 - 2 * this.regionTop) / 100) * this.clientHeight;
-        return {
-          top: this.regionTop + "%",
-          height: height + "px",
-          width: width + "px",
-        };
-      }
+      if(this.selectedUseCase !== "dl") return { display: "none"};
+      if(!this.cssRegionLeft || !this.cssRegionTop) return { display: "none"};
+      let width = (100 - 2 * this.cssRegionLeft)/100*this.clientWidth;
+      let height = (100 - 2 * this.cssRegionTop)/100*this.clientHeight;
+      return {
+        top: this.cssRegionTop + "%",
+        height: height + "px",
+        width: width + "px",
+      };
     },
     tipImgStyle: {
       get() {
-        if (this.selectedUseCase !== "dl") {
-          return {};
-        }
-        if (!this.isShowTipImg) {
-          return {
-            display: "none",
-          };
-        }
-        let height =
-          ((100 - 2 * this.regionTop) / 100) * this.clientHeight * 0.278;
+        if(!this.cssRegionTop) return {};
+        if (this.selectedUseCase !== "dl") return {};
+        if (!this.isShowTipImg) return {display: "none"};
+        let height = (100 - 2 * this.cssRegionTop)/100*this.clientHeight*0.278;
         return {
-          marginTop: "54px",
+          marginTop: "50%",
           height: height + "px",
         };
       },
@@ -2513,11 +2397,7 @@ export default Vue.extend({
       return this.$store.state.isDecodingFile;
     },
     decodeRecords() {
-      if (
-        this.selectedUseCase !== "dl" &&
-        this.scanner &&
-        this.scanner.decodeRecords
-      ) {
+      if (this.selectedUseCase !== "dl" && this.scanner && this.scanner.decodeRecords) {
         return this.scanner.decodeRecords;
       } else {
         return {};
@@ -2545,42 +2425,67 @@ export default Vue.extend({
     isFullImageLocalization() {
       return this.$store.state.isFullImageLocalization;
     },
-    regionMaskEdgeLength() {
-      let regionMaskEdgeLength =
-        this.regionScale * Math.min(this.clientWidth, this.clientHeight);
-      return Math.floor(regionMaskEdgeLength);
+    regionEdgeLength() {
+      if(!this.visibleRegionInPixels) return 0;
+      if(!this.scanner || !this.scanner.isOpen()) return 0;
+      const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
+      const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
+      let regionEdgeLength = this.regionScale * Math.min(visibleRegionWidth, visibleRegionHeight);
+      return Math.round(regionEdgeLength);
     },
     regionLeft() {
-      let left =
-        (this.clientWidth - this.regionMaskEdgeLength) / 2 / this.clientWidth;
+      if(!this.visibleRegionInPixels) return 0;
+      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      const vw = this.currentResolution[0];
+      const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
+      let left = 0.5-this.regionEdgeLength/vw/2;
       if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
         if (this.clientWidth > this.clientHeight) {
-          return Math.round(left * 100) - 25;
+          left = Math.round((left-0.25*visibleRegionWidth/vw) * 100);
         } else {
-          return Math.round(left * 100) - 20;
+          left = Math.round((left-0.2*visibleRegionWidth/vw) * 100);
+        }
+      } else if(this.selectedUseCase === "general") {
+        if (this.clientWidth > this.clientHeight) {
+          left = Math.round((left-0.1*visibleRegionWidth/vw) * 100);
+        } else {
+          left = Math.round((left-0.2*visibleRegionWidth/vw) * 100);
         }
       } else {
-        return Math.round(left * 100);
+        left = Math.round(left * 100);
       }
+      left = left<0||left>=50?0:left;
+      return left;
     },
     regionTop() {
-      let top =
-        (this.clientHeight - this.regionMaskEdgeLength) / 2 / this.clientHeight;
+      if(!this.visibleRegionInPixels) return 0;
+      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      const vh = this.currentResolution[1];
+      const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
+      let top = 0.5-this.regionEdgeLength/vh/2;
       if (this.selectedUseCase === "vin") {
         if (this.clientWidth > this.clientHeight) {
-          return Math.round(top * 100) + 5;
+          top = Math.round((top + 0.05*visibleRegionHeight/vh)*100);
         } else {
-          return Math.round(top * 100) + 5;
+          top = Math.round((top + 0.05*visibleRegionHeight/vh)*100);
         }
       } else if (this.selectedUseCase === "dl") {
         if (this.clientWidth > this.clientHeight) {
-          return Math.round(top * 100) - 5;
+          top = Math.round((top - 0.05*visibleRegionHeight/vh)*100);
         } else {
-          return Math.round(top * 100) - 5;
+          top = Math.round((top - 0.05*visibleRegionHeight/vh)*100);
+        }
+      } else if(this.selectedUseCase === "general") {
+        if (this.clientWidth > this.clientHeight) {
+          top = Math.round((top - 0.1*visibleRegionHeight/vh)*100);
+        } else {
+          top = Math.round((top - 0.1*visibleRegionHeight/vh)*100);
         }
       } else {
-        return Math.round(top * 100);
+        top = Math.round(top * 100);
       }
+      top = top<0||top>=50?0:top;
+      return top;
     },
     region() {
       let region = {
@@ -2592,11 +2497,29 @@ export default Vue.extend({
       };
       return region;
     },
+    cssRegionLeft() {
+      if(!this.visibleRegionInPixels) return 0;
+      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      const vw = this.currentResolution[0];
+      const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
+      let left = (this.regionLeft/100*vw-this.visibleRegionInPixels.regionLeft)/visibleRegionWidth;
+      left = Math.round(left*100);
+      return left;
+    },
+    cssRegionTop() {
+      if(!this.visibleRegionInPixels) return 0;
+      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      const vh = this.currentResolution[1];
+      const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
+      let top = (this.regionTop/100*vh-this.visibleRegionInPixels.regionTop)/visibleRegionHeight;
+      top = Math.round(top*100);
+      return top;
+    },
     torchContainerStyle() {
-      let left = this.regionLeft;
+      let left = this.cssRegionLeft;
       let right = left;
-      let top = this.regionTop;
-      let bottom = this.regionTop;
+      let top = this.cssRegionTop;
+      let bottom = top;
       let style = {
         left: left + "%",
         right: right + "%",
@@ -2607,6 +2530,9 @@ export default Vue.extend({
     },
   },
   watch: {
+    currentResolution(newValue, oldValue) {
+      this.visibleRegionInPixels = this.scanner.dce.getVisibleRegion(true); 
+    },
 
     isDLResultShow(newValue) {
       if (!newValue) {
@@ -2624,14 +2550,12 @@ export default Vue.extend({
       this.soundEffectsIconPath = newValue ? checkedMusicIcon : musicIcon;
     },
     async selectedUseCase(newUseCase, oldUseCase) {
-
-      console.log(oldUseCase);
-      if (newUseCase === "dl") {
+      /* if (newUseCase === "dl") {
         this.isShowTipImg = true;
         setTimeout(() => {
           this.isShowTipImg = false;
         }, 5000);
-      }
+      } */
       if (
         (newUseCase === "vin" || newUseCase === "dl") &&
         !this.currentResolution.includes(1080)
@@ -2643,8 +2567,8 @@ export default Vue.extend({
         this.isLoadingCamera = false;
       }
       if (
-        (DBR.BarcodeScanner.browserInfo.OS === "Android" ||
-          DBR.BarcodeScanner.browserInfo.OS === "iPhone") &&
+        (BarcodeScanner.browserInfo.OS === "Android" ||
+          BarcodeScanner.browserInfo.OS === "iPhone") &&
         (newUseCase === "vin" || newUseCase === "dl") &&
         (window.orientation === 0 || window.orientation === 180)
       ) {
@@ -2972,15 +2896,6 @@ export default Vue.extend({
 .dlResultContainer .footer .closeBtn {
   cursor: pointer;
 }
-.scanArea {
-  width: 100%;
-  height: 50%;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  user-select: none;
-}
 .scanLight {
   position: absolute;
   width: 100%;
@@ -3147,7 +3062,7 @@ export default Vue.extend({
     display: none;
   }
   .cameraAndSoundsContainer {
-    height: 7.6%;
+    height: 7.7vh;
   }
   .cameraDropdown {
     padding-left: 43px;
@@ -3216,9 +3131,6 @@ export default Vue.extend({
   }
   .dlResultContainer {
     max-width: 500px;
-  }
-  .scanArea {
-    width: 41.9%;
   }
   .driverLicenseTip .tipText {
     margin-bottom: 10px;
@@ -3298,9 +3210,6 @@ export default Vue.extend({
     padding-right: 10px;
     padding-left: 10px;
   }
-  .scanArea {
-    width: 41.9%;
-  }
   .driverLicenseTip .tipText {
     margin-bottom: 10px;
     font-size: 14px;
@@ -3373,9 +3282,6 @@ export default Vue.extend({
   }
   .cameraAndSoundsContainer .soundEffects {
     width: 60px;
-  }
-  .scanArea {
-    width: 100%;
   }
 }
 @media screen and (max-width: 350px) {

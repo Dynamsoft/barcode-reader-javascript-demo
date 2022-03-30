@@ -42,7 +42,9 @@
 
 <script >
 import Vue from "vue";
-import DBR from "../dbr";
+import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleTransformationMode} from "dynamsoft-javascript-barcode";
+import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
+import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 import Clipboard from "clipboard";
 
 export default Vue.extend({
@@ -54,26 +56,34 @@ export default Vue.extend({
       resultsInfo: [],
       visible: false,
       currentImg: null,
+      changeRuntimeSettingsTimeoutId: null,
     };
   },
   async mounted() {
-    this.reader || (this.reader = await DBR.BarcodeReader.createInstance());
-    if (DBR.BarcodeReader._bUseFullFeature) {
+    this.reader || (this.reader = await BarcodeReader.createInstance());
+    if (BarcodeReader._bUseFullFeature) {
       let runtimeSettings = await this.reader.getRuntimeSettings();
-      runtimeSettings.barcodeFormatIds = DBR.EnumBarcodeFormat.BF_ALL =
-        -31457281;
-      for (let i in DBR.EnumBarcodeFormat_2) {
-        runtimeSettings.barcodeFormatIds_2 |= DBR.EnumBarcodeFormat_2[i];
+      runtimeSettings.barcodeFormatIds = 0;
+      runtimeSettings.barcodeFormatIds_2 = 0;
+      let newValue = this.selectedBarcodes;
+      for (let i = 0; i < newValue.length; i++) {
+        let n1 = BarcodeFormatMap.get(newValue[i]);
+        let n2 = BarcodeFormatMap_2.get(newValue[i]);
+        if (n1 !== undefined) {
+          runtimeSettings.barcodeFormatIds |= n1;
+        }
+        if (n2 !== undefined) {
+          runtimeSettings.barcodeFormatIds_2 |= n2;
+        }
       }
-      runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
-        DBR.EnumDPMCodeReadingMode.DPMCRM_GENERAL;
+      runtimeSettings.furtherModes.dpmCodeReadingModes[0] = EnumDPMCodeReadingMode.DPMCRM_GENERAL;
       let locModes = runtimeSettings.localizationModes;
       for (let i in locModes) {
-        if (locModes[i] == DBR.EnumLocalizationMode.LM_STATISTICS_MARKS) {
+        if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
           break;
         }
         if (locModes[i] == 0) {
-          locModes[i] = DBR.EnumLocalizationMode.LM_STATISTICS_MARKS;
+          locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
           break;
         }
       }
@@ -188,6 +198,73 @@ export default Vue.extend({
       this.$refs.uploadImage.click();
     },
   },
+  asyncComputed: {
+    runtimeSettings: {
+      async get() {
+        if(this.reader) {
+          let runtimeSettings = null;
+          this.changeRuntimeSettingsTimeoutId && clearTimeout(this.changeRuntimeSettingsTimeoutId);
+          this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
+            // scan mode
+            if (this.scanMode === "bestSpeed") {
+              await this.reader.updateRuntimeSettings("speed");
+            } else if (this.scanMode === "balance") {
+              await this.reader.updateRuntimeSettings("balance");
+            } else if (this.scanMode === "bestCoverage") {
+              await this.reader.updateRuntimeSettings("coverage");
+            }
+            runtimeSettings = await this.reader.getRuntimeSettings();
+            // colour invert
+            runtimeSettings.furtherModes.grayscaleTransformationModes = [
+              this.invertColourOn
+                ? EnumGrayscaleTransformationMode.GTM_INVERTED
+                : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+            ];
+            // barcode format part
+            runtimeSettings.barcodeFormatIds = 0;
+            runtimeSettings.barcodeFormatIds_2 = 0;
+            let newValue = this.selectedBarcodes;
+            for (let i = 0; i < newValue.length; i++) {
+              let n1 = BarcodeFormatMap.get(newValue[i]);
+              let n2 = BarcodeFormatMap_2.get(newValue[i]);
+              if (n1 !== undefined) {
+                runtimeSettings.barcodeFormatIds |= n1;
+              }
+              if (n2 !== undefined) {
+                runtimeSettings.barcodeFormatIds_2 |= n2;
+              }
+            }
+            await this.reader.updateRuntimeSettings(runtimeSettings);
+            return runtimeSettings;
+          }, 500);
+        }
+      },
+      watch: [
+        "selectedBarcodes",
+        "invertColourOn",
+        "scanMode",
+      ],
+    },
+  },
+  computed: {
+    selectedBarcodes() {
+      return this.$store.getters.selectedBarcodes;
+    },
+    invertColourOn() {
+      return this.$store.state.invertColourOn;
+    },
+    scanMode() {
+      return this.$store.state.scanMode;
+    },
+  }
+  
 });
 </script>
 

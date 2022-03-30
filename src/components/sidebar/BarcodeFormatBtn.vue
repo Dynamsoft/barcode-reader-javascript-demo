@@ -359,27 +359,26 @@ export default Vue.extend({
       checkAll1dBarcode: false,
       checkAll2dBarcode: false,
       checkAllOtherBarcode: false,
+      popoverPlacement: document.body.clientWidth > 980 ? 'rightTop' : 'top',
       selection1DColumn: [
         [
+          { value: "code11", label: "Code 11" },
           { value: "code39", label: "Code 39" },
           { value: "codabar", label: "Codabar" },
           { value: "upca", label: "UPC A" },
-          {
-            value: "code39extended",
-            label: "Code39 Extended",
-          },
+          { value: "msicode", label: "MSI Code" }
         ],
         [
           { value: "code128", label: "Code 128" },
+          { value: "code39extended", label: "Code39 Extended" },
           { value: "ean13", label: "EAN 13" },
           { value: "upce", label: "UPC E" },
-          { value: "itf", label: "ITF" },
         ],
         [
           { value: "code93", label: "Code 93" },
           { value: "ean8", label: "EAN 8" },
           { value: "industrial25", label: "Industrial 25" },
-          { value: "msicode", label: "MSI Code" },
+          { value: "itf", label: "ITF" },
         ],
       ],
       selection2DColumn: [
@@ -392,6 +391,7 @@ export default Vue.extend({
           { value: "azteccode", label: "Aztec Code" },
           { value: "dotcode", label: "DotCode" },
           { value: "gs1composite", label: "GS1 Composite" },
+          { value: "pharmacode", label: "Pharmacode" }
         ],
         [
           { value: "maxicode", label: "Maxicode" },
@@ -413,6 +413,13 @@ export default Vue.extend({
     document.addEventListener("click", () => {
       this.$store.commit("hideBarcodeFormatPopover");
     });
+    window.addEventListener('resize', () => {
+      if(document.body.clientWidth > 980) {
+        this.popoverPlacement = 'rightTop';
+      } else {
+        this.popoverPlacement = 'top';
+      }
+    })
   },
   methods: {
     switchPanelBody(panel) {
@@ -465,13 +472,6 @@ export default Vue.extend({
     },
   },
   computed: {
-    popoverPlacement() {
-      if (document.body.clientWidth > 980) {
-        return "rightTop";
-      } else {
-        return "top";
-      }
-    },
     invertColourOn() {
       return this.$store.state.invertColourOn;
     },
@@ -625,7 +625,7 @@ export default Vue.extend({
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: center;
+  /* align-items: center; */
   margin: 10px 0;
 }
 .barcodeSelection .selectionColumn {

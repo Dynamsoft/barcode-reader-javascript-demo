@@ -2,7 +2,7 @@
   <div id="app">
     <home v-if="$store.state.isStartScanning" />
     <sidebar v-if="$store.state.isStartScanning" />
-    <barcode-scanner v-if="$store.state.isStartScanning" />
+    <barcode-scanner-component v-if="$store.state.isStartScanning" />
     <guide v-if="!$store.state.isStartScanning" />
     <copy-right-footer />
   </div>
@@ -12,16 +12,17 @@
 import Vue from "vue";
 import Home from "./components/Home.vue";
 import Sidebar from "./components/Sidebar.vue";
-import BarcodeScanner from "./components/BarcodeScanner.vue";
+import BarcodeScannerComponent from "./components/BarcodeScanner.vue";
 import Guide from "./components/Guide.vue";
 import CopyRightFooter from "./components/CopyRightFooter.vue";
+import {BarcodeScanner} from "dynamsoft-javascript-barcode";
 
 export default Vue.extend({
   name: "App",
   components: {
     Home,
     Sidebar,
-    BarcodeScanner,
+    BarcodeScannerComponent,
     Guide,
     CopyRightFooter,
   },
@@ -70,7 +71,9 @@ li {
   position: relative;
   height: 100%;
 }
-
+.cvs-scan-region-overlay-0 {
+  object-fit: cover !important;
+}
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
   #comm100-float-button-2 {

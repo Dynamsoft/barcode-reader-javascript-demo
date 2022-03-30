@@ -19,9 +19,15 @@
       <div class="guideTitle">
         <img src="../assets/image/dbr.svg" alt="dynamsoft-barcode-reader" />
       </div>
-      <h1 class="guideTextPart1" style="color: white">
+      <!-- <h1 class="guideTextPart1" style="color: white">
         Turn your web page into a barcode scanner with just a few lines of code!
+      </h1> -->
+      <h1 class="guideTextPart1" style="color: white">
+        Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this barcode scanner demo and see how it works in different modes.
       </h1>
+      <!-- <p class="guideIntroduction">
+        Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this barcode scanner demo and see how it works in different modes.
+      </p> -->
       <div class="guideOptions">
         <div class="optionRow1 optionRow">
           <div
@@ -48,7 +54,7 @@
               </div>
               <div class="itemBody">
                 Code 39, Code 128, Code 93, Codabar, EAN 13, EAN 8, UPC A, UPC
-                E, Industrial 25, Code39 Extended
+                E, Industrial 25, Code39 Extended, MSI Code
               </div>
             </label>
           </div>
@@ -291,7 +297,7 @@
                 <div class="itemHeader">Common 1D Barcodes</div>
                 <div class="itemBody">
                   Code 39, Code 128, Code 93, Codabar, EAN 13, EAN 8, UPC A, UPC
-                  E, Industrial 25, Code39 Extended
+                  E, Industrial 25, Code39 Extended, MSI Code
                 </div>
               </label>
             </div>
@@ -488,7 +494,7 @@
     </div>
     <div class="supportedBrowsersInfo">
       <span>
-        Supported Browsers: Safari v11+, Chrome v52+, Firefox 59+ and Edge v16+
+        Supported Browsers: Safari v11+, Chrome v61+, Firefox v52+(v55+ on Android/IOS) and Edge v16+
         on Desktop/Android/iOS.
       </span>
     </div>
@@ -501,6 +507,7 @@ import Vue from "vue";
 export default Vue.extend({
   name: "Guide",
   components: {
+    
   },
   data() {
     return {
@@ -508,7 +515,6 @@ export default Vue.extend({
     };
   },
   mounted() {
-
     this.guideSelection = "common1d";
     if (window.location.hash.toLowerCase() === "#general") {
       this.guideSelection = "common1dAnd2d";
@@ -526,10 +532,7 @@ export default Vue.extend({
   },
   methods: {
     startScanning() {
-
-
       setTimeout(() => {
-        // console.log(this.guideSelection)
         this.$store.commit("startScanning", this.guideSelection);
       }, 0);
 
@@ -574,13 +577,13 @@ header .headerLeft {
   height: 3.7vh;
   max-width: 100%;
 }
-
 .guideContainer {
   display: flex;
   flex-direction: column;
   /* justify-content: space-evenly; */
   flex: 1 1 auto;
   color: white;
+  overflow: auto;
 }
 .guideContainer .guideTitle {
   margin-top: 3.8vh;
@@ -593,11 +596,14 @@ header .headerLeft {
 .guideContainer .guideTextPart1 {
   margin: 2.4vh auto 0;
   max-width: 78.7%;
-  text-align: center;
+  /* text-align: center; */
   font-family: "OpenSans-Regular";
   font-size: 12px;
   line-height: 18px;
 }
+/* .guideContainer .guideIntroduction {
+  font-family: "OpenSans-Regular";
+} */
 .guideContainer .guideOptions {
   display: flex;
   flex-direction: column;
@@ -716,6 +722,7 @@ header .headerLeft {
   flex-direction: column;
   align-items: center;
   flex: 1 1 auto;
+  margin-top: 15px;
 }
 .guideContainer .btnContainer .startBtn {
   position: absolute;
@@ -766,16 +773,17 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 4.5vh;
   }
-
   .guideContainer .guideTitle {
-    margin-top: 4.5vh;
+    margin-top: 1.5vh;
   }
   .guideContainer .guideTitle img {
     height: 5.8vh;
   }
   .guideContainer .guideTextPart1 {
-    margin-top: 2vh;
-    width: auto;
+    margin: 5vh auto 0;
+    width: 60%;
+    min-width: 900px;
+    max-width: auto;
     font-size: 16px;
     line-height: 26px;
   }
@@ -792,7 +800,7 @@ header .headerLeft {
   }
   .guideContainer .guideOptionsInDesktop {
     margin: 0 auto;
-    margin-top: 6.7vh;
+    margin-top: 6vh;
     width: 66.8%;
     min-width: 980px;
   }
@@ -943,7 +951,6 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 24px;
   }
-
   .guideContainer {
     justify-content: space-around;
   }
@@ -954,10 +961,7 @@ header .headerLeft {
     height: 32.7px;
   }
   .guideContainer .guideTextPart1 {
-    margin-top: 0;
-    font-size: 12px;
-    line-height: 18px;
-    color: #aaaaaa;
+    display: none;
   }
   .guideContainer .guideOptions {
     display: flex;
@@ -1012,13 +1016,27 @@ header .headerLeft {
   }
 }
 @media screen and (max-width: 980px) and (orientation: portrait) {
+  /* .guideContainer .guideTextPart1 {
+    display: none;
+  } */
   .guideContainer .guideTextPart1 {
+    margin: 2.5vh auto 0;
+    width: 84%;
+    min-width: 300px;
+    max-width: auto;
+    font-size: 12px;
     line-height: 18px;
-    color: #aaaaaa;
   }
+  /* .guideContainer .guideIntroduction {
+    margin: 2.5vh auto 0;
+    width: 84%;
+    min-width: 300px;
+    font-size: 12px;
+  } */
   .guideContainer .guideOptions[data-v-730248fc] {
     margin-left: 4%;
     margin-right: auto;
+    margin-top: 3.5vh;
     width: 90.1%;
   }
   .guideContainer .guideOptionsInDesktop {

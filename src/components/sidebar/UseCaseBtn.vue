@@ -144,6 +144,7 @@ export default Vue.extend({
   components: {},
   data() {
     return {
+      popoverPlacement: document.body.clientWidth > 980 ? 'rightTop' : 'top',
       useCaseuseCaseOptions: [
         { value: "general", label: "General" },
         {
@@ -159,16 +160,16 @@ export default Vue.extend({
     document.addEventListener("click", () => {
       this.$store.commit("hideUseCasePopover");
     });
+    window.addEventListener('resize', () => {
+      if(document.body.clientWidth > 980) {
+        this.popoverPlacement = 'rightTop';
+      } else {
+        this.popoverPlacement = 'top';
+      }
+    })
   },
   methods: {},
   computed: {
-    popoverPlacement() {
-      if (document.body.clientWidth > 980) {
-        return "rightTop";
-      } else {
-        return "topLeft";
-      }
-    },
     selectedUseCase: {
       get() {
         return this.$store.state.selectedUseCase;
