@@ -9,7 +9,6 @@
             class="codeLink"
             href="https://github.com/Dynamsoft/barcode-reader-javascript-demo"
             target="_blank"
-            @click="recordClickLink('codeLink')"
           >
             GET DEMO CODE
             <svg class="downloadCodeIcon" viewBox="0 0 18 18">
@@ -49,7 +48,6 @@
             class="codeLink"
             href="https://github.com/Dynamsoft/barcode-reader-javascript-demo"
             target="_blank"
-            @click="recordClickLink('codeLink')"
           >
             GET DEMO CODE
             <svg class="downloadCodeIcon" viewBox="0 0 18 18">
@@ -87,7 +85,6 @@
             class="sdkLink"
             href="https://www.dynamsoft.com/barcode-reader/downloads/#javascript"
             target="_blank"
-            @click="recordClickLink('sdkLink')"
           >
             DOWNLOAD SDK
           </a>
@@ -109,8 +106,8 @@ export default Vue.extend({
     return {
     };
   },
-  mounted() {
-  },
+
+
   methods: {
   },
 });

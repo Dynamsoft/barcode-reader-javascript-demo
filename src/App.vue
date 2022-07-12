@@ -9,13 +9,14 @@
 </template>
 
 <script >
-import "./dbr.js";
 import Vue from "vue";
 import Home from "./components/Home.vue";
 import Sidebar from "./components/Sidebar.vue";
 import BarcodeScannerComponent from "./components/BarcodeScanner.vue";
 import Guide from "./components/Guide.vue";
 import CopyRightFooter from "./components/CopyRightFooter.vue";
+import "./dbr";
+import "./dcp";
 
 export default Vue.extend({
   name: "App",
@@ -70,9 +71,6 @@ li {
 #app {
   position: relative;
   height: 100%;
-}
-.cvs-scan-region-overlay-0 {
-  object-fit: cover !important;
 }
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {

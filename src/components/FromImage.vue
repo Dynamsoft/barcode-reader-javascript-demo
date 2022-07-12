@@ -43,6 +43,7 @@
 <script >
 import Vue from "vue";
 import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleTransformationMode} from "dynamsoft-javascript-barcode";
+import {CodeParser} from "dynamsoft-code-parser"
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 import Clipboard from "clipboard";
@@ -53,6 +54,7 @@ export default Vue.extend({
   data() {
     return {
       reader: null,
+      parser: null,
       resultsInfo: [],
       visible: false,
       currentImg: null,
@@ -114,8 +116,8 @@ export default Vue.extend({
       });
     },
     async onIptChange(event) {
-      let _this = this;
       try {
+        this.$emit("clearResultsCvs");
         this.resultsInfo = [];
         let input = event.target;
         let files = input.files;
@@ -125,14 +127,7 @@ export default Vue.extend({
             fileName: "",
             results: [],
           };
-          // render uploaded image
-          let fr = new FileReader();
-          fr.readAsDataURL(file);
-          // eslint-disable-next-line no-unused-vars
-          fr.onload = function (e) {
-            _this.currentImg = this.result;
-          };
-
+          this.reader.ifSaveOriginalImageInACanvas = true;
           resultInfo.fileName = file.name;
           this.$store.commit("startDecodingFile");
           // show tip
@@ -144,19 +139,32 @@ export default Vue.extend({
           );
           config.duration = 0;
           this.$message.open(config);
-
           let results = await this.reader.decode(file);
-          for (let result of results) {
+          let cvs = this.reader.getOriginalImageInACanvas();
+          cvs.style.width = "100%";
+          cvs.style.height = "100%";
+          cvs.style.objectFit = "contain";
+          this.currentImg = cvs;
+          for(let result of results) {
             let barcodeFormat = "";
             if (result.barcodeFormatString.includes("No Barcode Format")) {
               barcodeFormat = result.barcodeFormatString_2;
-            } else {
+            }else {
               barcodeFormat = result.barcodeFormatString;
             }
-            resultInfo.results.push({
-              barcodeFormat: barcodeFormat,
-              text: result.barcodeText,
-            });
+            if(this.selectedUseCase === "dl" && result.barcodeFormatString === "PDF417" && result.barcodeFormatString_2.includes("No Barcode Format")){
+              resultInfo.results.push({
+                barcodeFormat: barcodeFormat,
+                json: JSON.stringify(await this.parser.parseData(result.barcodeBytes)),
+                text: result.barcodeText
+              });
+            }
+            else {
+              resultInfo.results.push({
+                barcodeFormat: barcodeFormat,
+                text: result.barcodeText,
+              });
+            }
           }
           this.resultsInfo.push(resultInfo);
           this.$message.destroy();
@@ -167,8 +175,10 @@ export default Vue.extend({
               <a-icon type="close" style={{ color: "#FE8E14" }}></a-icon>
             );
             config.duration = 1;
+            this.$store.commit("finishDecodingFile");
+            this.$emit("clearResultList");
           } else {
-            this.$emit("showResults", this.resultsInfo, this.currentImg);
+            this.$emit("showResults", this.resultsInfo, this.currentImg, results);
             config.content = "Complete!";
             config.duration = 1;
             config.icon = (
@@ -184,7 +194,7 @@ export default Vue.extend({
           }
           this.$message.open(config);
         }
-        this.$store.commit("finishDecodingFile");
+        // this.$store.commit("finishDecodingFile");
         input.value = "";
       } catch (ex) {
         this.resultsInfo.push(ex.message);
@@ -241,6 +251,31 @@ export default Vue.extend({
                 runtimeSettings.barcodeFormatIds_2 |= n2;
               }
             }
+            if (this.selectedUseCase === "vin") {
+              runtimeSettings.localizationModes = [32, 8, 2, 0, 0, 0, 0, 0];
+              runtimeSettings.deblurLevel = 9;
+              runtimeSettings.scaleDownThreshold = 100000;
+              runtimeSettings.furtherModes.barcodeColourModes = [
+                1, 2, 32, 0, 0, 0, 0, 0,
+              ];
+            } else if (this.selectedUseCase === "dl") {
+              runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
+              runtimeSettings.deblurLevel = 9;
+              runtimeSettings.minResultConfidence = 0;
+            } else if (this.selectedUseCase === "dpm") {
+              runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
+                EnumDPMCodeReadingMode.DPMCRM_GENERAL;
+              let locModes = runtimeSettings.localizationModes;
+              for (let i in locModes) {
+                if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
+                  break;
+                }
+                if (locModes[i] == 0) {
+                  locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
+                  break;
+                }
+              }
+            }
             await this.reader.updateRuntimeSettings(runtimeSettings);
             return runtimeSettings;
           }, 500);
@@ -252,6 +287,15 @@ export default Vue.extend({
         "scanMode",
       ],
     },
+    selectedUseCase: {
+      async get() {
+        if(this.$store.state.selectedUseCase === "dl") {
+          this.parser || (this.parser = await CodeParser.createInstance());
+          // this.parser.setCodeFormat(EnumCodeFormat.CF_DL_AAMVA_ANSI);
+        }
+        return this.$store.state.selectedUseCase;
+      }
+    },
   },
   computed: {
     selectedBarcodes() {
@@ -262,9 +306,8 @@ export default Vue.extend({
     },
     scanMode() {
       return this.$store.state.scanMode;
-    },
+    }
   }
-  
 });
 </script>
 

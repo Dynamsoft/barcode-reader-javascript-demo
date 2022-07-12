@@ -507,7 +507,6 @@ import Vue from "vue";
 export default Vue.extend({
   name: "Guide",
   components: {
-    
   },
   data() {
     return {
@@ -515,6 +514,7 @@ export default Vue.extend({
     };
   },
   mounted() {
+    
     this.guideSelection = "common1d";
     if (window.location.hash.toLowerCase() === "#general") {
       this.guideSelection = "common1dAnd2d";
@@ -532,6 +532,8 @@ export default Vue.extend({
   },
   methods: {
     startScanning() {
+      
+
       setTimeout(() => {
         this.$store.commit("startScanning", this.guideSelection);
       }, 0);
@@ -779,6 +781,12 @@ header .headerLeft {
   .guideContainer .guideTitle img {
     height: 5.8vh;
   }
+  /* .guideContainer .guideTextPart1 {
+    margin-top: 2vh;
+    width: auto;
+    font-size: 16px;
+    line-height: 26px;
+  } */
   .guideContainer .guideTextPart1 {
     margin: 5vh auto 0;
     width: 60%;
@@ -787,6 +795,12 @@ header .headerLeft {
     font-size: 16px;
     line-height: 26px;
   }
+  /* .guideContainer .guideIntroduction {
+    margin: 3.5vh auto 0;
+    width: 60%;
+    min-width: 900px;
+    font-size: 16px;
+  } */
   .guideContainer .guideOptions {
     display: none;
   }
@@ -951,6 +965,7 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 24px;
   }
+
   .guideContainer {
     justify-content: space-around;
   }
@@ -963,6 +978,12 @@ header .headerLeft {
   .guideContainer .guideTextPart1 {
     display: none;
   }
+  /* .guideContainer .guideIntroduction {
+    margin: 0 auto;
+    width: 80%;
+    min-width: 600px;
+    font-size: 12px;
+  } */
   .guideContainer .guideOptions {
     display: flex;
   }

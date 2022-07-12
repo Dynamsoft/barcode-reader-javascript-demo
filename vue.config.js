@@ -8,6 +8,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 // vue.config.js for less-loader@6.0.0
 module.exports = {
   publicPath: './',
+
   configureWebpack: config=>{
     if(config.mode === "production"){
         // use gz
@@ -24,26 +25,7 @@ module.exports = {
             }),
         );
         config.devtool = false;
-        config.plugins.push(
-          new PrerenderSPAPlugin({
-            // Required - The path to the webpack-outputted app to prerender.
-            staticDir: path.join(__dirname, 'dist'),
-      
-            // Optional - The path your rendered app should be output to.
-            // (Defaults to staticDir.)
-            // outputDir: path.join(__dirname, 'prerendered'),
-            
-            // Required - Routes to render.
-            routes: [ '/' ],
-            renderer: new Renderer({
-              inject: {
-                  foo: 'bar'
-              },
-              headless: true,
-              renderAfterDocumentEvent: 'render-event'
-            })
-          })
-        );
+
         config.plugins.push(
           new UglifyJsPlugin({
             uglifyOptions: {
@@ -57,13 +39,8 @@ module.exports = {
             },
             parallel: true,
           })
-        );
+        );	
     }
-    config.externals = {
-      'vue': 'Vue',
-      'vuex':'Vuex',
-      'clipboard': 'ClipboardJS',
-    }	
   },
   chainWebpack: config => {
     config.plugins.delete('preload');

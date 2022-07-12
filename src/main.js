@@ -10,9 +10,10 @@ Vue.use(Popover)
 Vue.use(Checkbox)
 Vue.use(message)
 Vue.prototype.$message = message;
-Vue.config.productionTip = false
 Vue.use(Modal)
+Vue.prototype.$warning = Modal.warning;
 Vue.use(AsyncComputed)
+Vue.config.productionTip = false
 
 new Vue({
   render: h => h(App),
