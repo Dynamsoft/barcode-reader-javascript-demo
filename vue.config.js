@@ -58,13 +58,13 @@ module.exports = {
             parallel: true,
           })
         );
-        config.externals = {
-          'vue': 'Vue',
-          'vuex':'Vuex',
-          'clipboard': 'ClipboardJS',
-          'dynamsoft-javascript-barcode': 'Dynamsoft.DBR',
-        }	
     }
+    config.externals = {
+      'vue': 'Vue',
+      'vuex':'Vuex',
+      'clipboard': 'ClipboardJS',
+      'dynamsoft-javascript-barcode': 'Dynamsoft.DBR',
+    }	
   },
   chainWebpack: config => {
     config.plugins.delete('preload');
