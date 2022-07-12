@@ -9,13 +9,13 @@
 </template>
 
 <script >
+import "./dbr.js";
 import Vue from "vue";
 import Home from "./components/Home.vue";
 import Sidebar from "./components/Sidebar.vue";
 import BarcodeScannerComponent from "./components/BarcodeScanner.vue";
 import Guide from "./components/Guide.vue";
 import CopyRightFooter from "./components/CopyRightFooter.vue";
-import {BarcodeScanner} from "dynamsoft-javascript-barcode";
 
 export default Vue.extend({
   name: "App",
