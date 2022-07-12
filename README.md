@@ -9,7 +9,7 @@ https://demo.dynamsoft.com/barcode-reader-js/.
 >
 > We recommend that you instead try the samples in the DBRJS samples repository https://github.com/Dynamsoft/barcode-reader-javascript-samples.
 >
-> The demo itself is based on Vue, you can find a simple Vue sample at https://github.com/Dynamsoft/barcode-reader-javascript-samples/tree/main/1.hello-world/5.read-video-vue
+> The demo itself is based on Vue 2, you can find a simple Vue 2 sample at https://github.com/Dynamsoft/barcode-reader-javascript-samples/tree/main/1.hello-world/5.read-video-vue
 
 If you would like to get this demo project running, you can follow the steps below:
 
@@ -21,12 +21,22 @@ If you would like to get this demo project running, you can follow the steps bel
     yarn
     ```
 
-2. Add a license key
+2. Add license
 
-    Open "src/dbr.js" and input your license key in this line:
+    > If you don't have a license yet, you can skip this step. You will still be able to test the demo for up to 24 hours.
+
+    Open "src/dbr.js" and input your DBR license key in this line:
 
     ```js
     BarcodeReader.license = "YOUR-LICENSE-KEY";
+    ```
+
+    Open "src/dcp.js" and input your DCP license key in this line:
+
+    > If you don't need to read driver licenses, you can skip this step.
+
+    ```js
+    CodeParser.license = "YOUR-LICENSE-KEY";
     ```
 
 3. Compiles and hot-reloads for development
