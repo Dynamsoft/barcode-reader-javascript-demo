@@ -18,7 +18,11 @@ If you would like to get this demo project running, you can follow the steps bel
 1. Set up
 
     ```cmd
-    yarn
+    npm install
+    ```
+    or
+    ```cmd
+    yarn install
     ```
 
 2. Add license
@@ -39,14 +43,24 @@ If you would like to get this demo project running, you can follow the steps bel
     CodeParser.license = "YOUR-LICENSE-KEY";
     ```
 
-3. Compiles and hot-reloads for development
+3. Running
 
+    For development:
+
+    ```cmd
+    npm run serve
+    ```
+    or
     ```cmd
     yarn serve
     ```
+    
+    For production
 
-4. Compiles and minifies for production
-
+    ```cmd
+    npm run build
+    ```
+    or
     ```cmd
     yarn build
     ```
