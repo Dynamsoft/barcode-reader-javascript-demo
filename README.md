@@ -43,7 +43,7 @@ If you would like to get this demo project running, you can follow the steps bel
     CodeParser.license = "YOUR-LICENSE-KEY";
     ```
 
-3. Running
+3. Run
 
     For development:
 
