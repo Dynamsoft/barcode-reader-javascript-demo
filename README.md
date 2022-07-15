@@ -55,7 +55,7 @@ If you would like to get this demo project running, you can follow the steps bel
     yarn serve
     ```
     
-    For production
+    For production:
 
     ```cmd
     npm run build
