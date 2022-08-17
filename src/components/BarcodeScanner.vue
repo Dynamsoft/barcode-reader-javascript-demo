@@ -1,1822 +1,1898 @@
 <template>
-  <div class="barcodeScanner">
-    <div v-once class="videoContainer" ref="videoContainer" style="width: 100%;height: 100%;min-width: 100px;min-height: 100px;background: #ddd;position: absolute;" >
-      <div class="dce-video-container" style="position:absolute;left:0;top:0;width:100%;height:100%;"></div>
-      <div ref="scanArea" class="dce-scanarea" style="position:absolute;left:0;top:0;width:100%;height:100%;">
-        <div class="dce-scanlight" style="display:none;position:absolute;width:100%;height:3px;border-radius:50%;box-shadow:0px 0px 2vw 1px #fe8e14;background:#fe8e14;animation:3s infinite dce-scanlight;user-select:none;"></div>
+  <div>
+    <div :class="{mask: true, maskHidden: isShowMask}"></div>
+    <home />
+    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" />
+    <div class="barcodeScanner">
+      <div
+        v-once
+        class="videoContainer"
+        ref="videoContainer"
+        style="
+          width: 100%;
+          height: 100%;
+          min-width: 100px;
+          min-height: 100px;
+          background: #ddd;
+          position: absolute;
+        "
+      >
+        <div
+          class="dce-video-container"
+          style="position: absolute; left: 0; top: 0; width: 100%; height: 100%"
+        ></div>
+        <div
+          ref="scanArea"
+          class="dce-scanarea"
+          style="position: absolute; left: 0; top: 0; width: 100%; height: 100%"
+        >
+          <div
+            class="dce-scanlight"
+            style="
+              display: none;
+              position: absolute;
+              width: 100%;
+              height: 3px;
+              border-radius: 50%;
+              box-shadow: 0px 0px 2vw 1px #fe8e14;
+              background: #fe8e14;
+              animation: 3s infinite dce-scanlight;
+              user-select: none;
+            "
+          ></div>
+          <div class="screenshot" ref="screenshot" v-show="!isUploadImage" @click="getImages">
+            <img class="screenshotIcon" src="../assets/image/capture.png" alt="capture">
+          </div>
+        </div>
+        <div class="copyright"><span>Powered by Dynamsoft</span></div>
       </div>
-      <div class="copyright"><span>Powered by Dynamsoft</span></div>
-    </div>
-    <div class="cameraAndSoundsContainer">
-      <div class="cameraDropdown" @click.stop="showCameraList">
-        <div class="cameraIconContainer">
-          <svg viewBox="0 0 29.308 17">
-            <g transform="translate(-346.925 -627.702)">
-              <g transform="translate(347.425 628.202)">
-                <g>
-                  <path
-                    d="M365.791,644.2H348.656a1.231,1.231,0,0,1-1.231-1.231V629.433a1.231,1.231,0,0,1,1.231-1.231h16a1.231,1.231,0,0,1,1.231,1.231v14.733"
-                    transform="translate(-347.425 -628.202)"
-                    fill="none"
-                    stroke="#aaa"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1"
+      <div class="cameraAndSoundsContainer">
+        <div class="cameraDropdown" @click.stop="showCameraList">
+          <div class="cameraIconContainer">
+            <svg viewBox="0 0 29.308 17">
+              <g transform="translate(-346.925 -627.702)">
+                <g transform="translate(347.425 628.202)">
+                  <g>
+                    <path
+                      d="M365.791,644.2H348.656a1.231,1.231,0,0,1-1.231-1.231V629.433a1.231,1.231,0,0,1,1.231-1.231h16a1.231,1.231,0,0,1,1.231,1.231v14.733"
+                      transform="translate(-347.425 -628.202)"
+                      fill="none"
+                      stroke="#aaa"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1"
+                    />
+                    <path
+                      d="M371.81,640.606a1.23,1.23,0,0,1-1.781,1.1l-4.923-2.462a1.229,1.229,0,0,1-.681-1.1v-4.633a1.232,1.232,0,0,1,.681-1.1l4.923-2.462a1.231,1.231,0,0,1,1.781,1.1Z"
+                      transform="translate(-343.502 -627.828)"
+                      fill="none"
+                      stroke="#aaa"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1"
+                    />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            <label>Camera</label>
+          </div>
+          <a-icon
+            type="down"
+            style="margin-right: 8px; font-size: 16px"
+            :rotate="isShowCameraList ? 180 : 0"
+          />
+          <div class="cameraInfo">
+            {{ this.cameraInfo }}
+          </div>
+        </div>
+        <div class="localImages">
+          <from-image
+            ref="fromimage"
+            @showResults="showResults"
+            :selectedUseCase="selectedUseCase"
+            @clearResultsCvs="clearResultsCvs"
+            @clearResultList="clearResultList"
+            @removeDLResults="removeDLResults"
+          />
+        </div>
+        <div
+          class="soundEffects"
+          @click="soundEffectsSwitch"
+          :style="{
+            backgroundColor: $store.state.soundEffectsOn
+              ? 'rgba(110, 110, 110, .8)'
+              : '',
+          }"
+        >
+          <img :src="soundEffectsIconPath" />
+        </div>
+        <div class="web-screenshot" @click="getImages" title="capture video frames">
+          <img src="../assets/image/capture.png" alt="capture">
+        </div>
+      </div>
+      <div class="curUseCaseTip">
+        {{ this.curUseCase }}
+      </div>
+      <ul
+        class="resultContainer"
+        v-show="selectedUseCase !== 'dl' && !isUploadImage"
+      >
+        <li
+          v-for="(value, name) in decodeRecords"
+          :key="name"
+          class="result"
+          :data-clipboard-text="name.slice(name.indexOf('_dbrkey_') + 8)"
+          v-show="value > 1"
+        >
+          <div class="barcodeFormat">
+            {{ name.slice(0, name.indexOf("_dbrkey_")) }}
+            <div class="break">:</div>
+          </div>
+          <div class="resultMain">
+            <div class="resultText" @click="copyResult('.result')">
+              {{
+                name.slice(0, name.indexOf("_dbrkey_")) ===
+                  "PHARMACODE_ONE_TRACK" ||
+                name.slice(0, name.indexOf("_dbrkey_")) === "PHARMACODE_TWO_TRACK"
+                  ? pharmacodeResult
+                  : name.slice(name.indexOf("_dbrkey_") + 8)
+              }}
+            </div>
+            <div class="break">-</div>
+            <div class="copyBtn" @click="copyResult('.result')">Copy</div>
+          </div>
+          <div class="counter">
+            {{ value + "x" }}
+          </div>
+        </li>
+      </ul>
+      <div class="dlResultContainer" v-show="isDLResultShow && !isUploadImage">
+        <ul class="dlInfo">
+          <li v-for="(info, infoIndex) in dlInfo" :key="infoIndex">
+            <span class="description"> {{ info.description }}: </span>
+            <span class="value">
+              {{ info.value }}
+            </span>
+          </li>
+        </ul>
+        <div class="footer">
+          <div @click="copyDLInfo" class="copyBtn">Copy all</div>
+          <div class="closeBtn" @click="closeDLResult">Close</div>
+        </div>
+      </div>
+      <div
+        class="torchContainer"
+        :style="torchContainerStyle"
+        v-show="!isResizing && !isUploadImage"
+      >
+        <a-icon
+          v-show="isShowTorchIcon"
+          type="funnel-plot"
+          @click="flashlightSwitch"
+          style="
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            font-size: 30px;
+            color: rgb(254, 142, 20);
+            transform: translateX(-50%);
+          "
+        />
+      </div>
+      <div class="driverLicenseTip" :style="driverLicenseTipStyle">
+        <div class="tipImg">
+          <svg viewBox="0 0 90 49" :style="tipImgStyle">
+            <g transform="translate(-136 -293)">
+              <g transform="translate(142.112 315.375)">
+                <g transform="translate(3.888 0.125)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
                   />
-                  <path
-                    d="M371.81,640.606a1.23,1.23,0,0,1-1.781,1.1l-4.923-2.462a1.229,1.229,0,0,1-.681-1.1v-4.633a1.232,1.232,0,0,1,.681-1.1l4.923-2.462a1.231,1.231,0,0,1,1.781,1.1Z"
-                    transform="translate(-343.502 -627.828)"
-                    fill="none"
-                    stroke="#aaa"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="1"
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(9.09)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(9.88)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(10.671)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(14.623)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(15.413)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(17.389)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(22.922)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(23.712)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(25.293)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(28.06)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(29.245)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(31.616)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.964)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(36.754)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(37.544)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 1.903)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(8.695)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(9.485)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(11.461)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(14.227)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(15.808)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(17.389)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(21.736)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(22.527)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(24.898)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(28.85)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(30.826)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(32.802)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.568)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(36.359)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(37.544)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 3.681)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(7.509)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(8.299)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(9.485)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(15.018)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(17.389)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(18.575)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(20.946)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(24.108)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(25.688)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(29.64)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(31.221)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(32.407)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(34.383)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.173)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(37.149)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 5.46)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(7.904)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(8.695)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(11.066)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(15.413)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(16.599)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(18.575)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(22.527)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(23.712)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(24.503)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(29.64)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(30.431)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(31.616)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(34.778)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(35.568)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(37.94)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 7.238)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(7.904)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(8.695)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(11.856)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(14.227)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(15.018)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(17.389)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(22.131)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(24.108)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(26.084)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(28.455)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(30.036)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(30.826)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.568)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(36.359)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(38.335)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 9.017)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(9.09)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(9.88)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(11.856)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(14.227)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(15.018)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(16.203)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(22.131)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(24.108)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(24.898)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(28.85)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(30.036)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(30.826)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.568)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(36.359)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(38.73)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 10.795)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(8.299)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(9.485)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(11.066)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(15.413)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(17.389)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(18.97)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(21.736)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(23.712)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(25.688)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(29.245)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(30.036)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(31.616)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.173)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(36.359)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(37.94)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 12.573)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(9.485)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(10.671)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(11.461)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(15.808)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(17.389)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(19.365)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(22.131)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(23.712)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(25.688)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(28.455)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(29.245)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(30.826)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(34.383)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(35.173)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(37.94)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
+                  />
+                </g>
+                <g transform="translate(3.888 14.352)">
+                  <rect width="3.162" height="1.778" fill="#fff" />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(3.557)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(4.347)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(5.138)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(6.718)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(9.485)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(10.671)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(12.251)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(13.437)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(14.623)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(16.994)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(19.365)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(20.155)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.371"
+                    height="1.778"
+                    transform="translate(21.736)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.79"
+                    height="1.778"
+                    transform="translate(24.503)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(25.688)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(26.874)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(28.455)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(29.245)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.581"
+                    height="1.778"
+                    transform="translate(30.826)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.976"
+                    height="1.778"
+                    transform="translate(33.592)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(35.964)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="1.186"
+                    height="1.778"
+                    transform="translate(37.149)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(38.73)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="2.766"
+                    height="1.778"
+                    transform="translate(40.311)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(43.472)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.053)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(45.844)"
+                    fill="#fff"
+                  />
+                  <rect
+                    width="0.395"
+                    height="1.778"
+                    transform="translate(47.029)"
+                    fill="#fff"
                   />
                 </g>
               </g>
+              <g
+                transform="translate(136 293)"
+                fill="none"
+                stroke="#fff"
+                stroke-width="1"
+              >
+                <rect width="90" height="49" stroke="none" />
+                <rect x="0.5" y="0.5" width="89" height="48" fill="none" />
+              </g>
+              <rect
+                width="70"
+                height="1"
+                transform="translate(146 303)"
+                fill="#fff"
+              />
+              <rect
+                width="70"
+                height="1"
+                transform="translate(146 307)"
+                fill="#fff"
+              />
+              <rect
+                width="15"
+                height="1"
+                transform="translate(201 320)"
+                fill="#fff"
+              />
+              <rect
+                width="15"
+                height="1"
+                transform="translate(201 324)"
+                fill="#fff"
+              />
             </g>
           </svg>
-          <label>Camera</label>
         </div>
-        <a-icon
-          type="down"
-          style="margin-right: 8px; font-size: 16px"
-          :rotate="isShowCameraList ? 180 : 0"
-        />
-        <div class="cameraInfo">
-          {{ this.cameraInfo }}
-        </div>
+        <div class="tipText">Scan barcode on the back of license</div>
       </div>
-      <div class="localImages">
-        <from-image ref="fromimage" @showResults="showResults" :selectedUseCase="selectedUseCase" @clearResultsCvs="clearResultsCvs" @clearResultList="clearResultList"/>
+      <div class="loadingImg" v-show="isShowLoadingImg">
+        <a-icon type="loading" />
       </div>
-      <div
-        class="soundEffects"
-        @click="soundEffectsSwitch"
-        :style="{
-          backgroundColor: $store.state.soundEffectsOn
-            ? 'rgba(110, 110, 110, .8)'
-            : '',
-        }"
-      >
-        <img :src="soundEffectsIconPath" />
-      </div>
-    </div>
-    <div class="curUseCaseTip">
-      {{ this.curUseCase }}
-    </div>
-    <ul class="resultContainer" v-show="selectedUseCase !== 'dl' && !isUploadImage">
-      <li
-        v-for="(value, name) in decodeRecords"
-        :key="name"
-        class="result"
-        :data-clipboard-text="name.slice(name.indexOf('_dbrkey_') + 8)"
-        v-show="value > 1"
-      >
-        <div class="barcodeFormat">
-          {{ name.slice(0, name.indexOf("_dbrkey_")) }}
-          <div class="break">:</div>
-        </div>
-        <div class="resultMain">
-          <div class="resultText" @click="copyResult('.result')">
-            {{ (name.slice(0, name.indexOf("_dbrkey_")) === "PHARMACODE_ONE_TRACK" || 
-            name.slice(0, name.indexOf("_dbrkey_")) === "PHARMACODE_TWO_TRACK") ? 
-            pharmacodeResult : name.slice(name.indexOf("_dbrkey_") + 8) }}
-          </div>
-          <div class="break">-</div>
-          <div class="copyBtn" @click="copyResult('.result')">Copy</div>
-        </div>
-        <div class="counter">
-          {{ value + "x" }}
-        </div>
-      </li>
-    </ul>
-    <div class="dlResultContainer" v-show="isDLResultShow && !isUploadImage">
-      <ul class="dlInfo">
-        <li v-for="(info, infoIndex) in dlInfo" :key="infoIndex">
-          <span class="description"> {{ info.description }}: </span>
-          <span class="value">
-            {{ info.value }}
-          </span>
-        </li>
-      </ul>
-      <div class="footer">
-        <div @click="copyDLInfo" class="copyBtn">Copy all</div>
-        <div class="closeBtn" @click="closeDLResult">Close</div>
-      </div>
-    </div>
-    <div
-      class="torchContainer"
-      :style="torchContainerStyle"
-      v-show="!isResizing"
-    >
-      <a-icon
-        v-show="isShowTorchIcon"
-        type="funnel-plot"
-        @click="flashlightSwitch"
-        style="
-          position: absolute;
-          left: 50%;
-          bottom: 0;
-          font-size: 30px;
-          color: rgb(254, 142, 20);
-          transform: translateX(-50%);
-        "
-      />
-    </div>
-    <div class="driverLicenseTip" :style="driverLicenseTipStyle">
-      <div class="tipImg">
-        <svg viewBox="0 0 90 49" :style="tipImgStyle">
-          <g transform="translate(-136 -293)">
-            <g transform="translate(142.112 315.375)">
-              <g transform="translate(3.888 0.125)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(9.09)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(9.88)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(10.671)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(14.623)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(15.413)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(17.389)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(22.922)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(23.712)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(25.293)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(28.06)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(29.245)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(31.616)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.964)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(36.754)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(37.544)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 1.903)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(8.695)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(9.485)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(11.461)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(14.227)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(15.808)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(17.389)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(21.736)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(22.527)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(24.898)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(28.85)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(30.826)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(32.802)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.568)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(36.359)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(37.544)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 3.681)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(7.509)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(8.299)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(9.485)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(15.018)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(17.389)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(18.575)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(20.946)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(24.108)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(25.688)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(29.64)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(31.221)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(32.407)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(34.383)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.173)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(37.149)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 5.46)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(7.904)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(8.695)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(11.066)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(15.413)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(16.599)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(18.575)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(22.527)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(23.712)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(24.503)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(29.64)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(30.431)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(31.616)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(34.778)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(35.568)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(37.94)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 7.238)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(7.904)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(8.695)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(11.856)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(14.227)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(15.018)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(17.389)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(22.131)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(24.108)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(26.084)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(28.455)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(30.036)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(30.826)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.568)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(36.359)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(38.335)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 9.017)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(9.09)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(9.88)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(11.856)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(14.227)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(15.018)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(16.203)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(22.131)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(24.108)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(24.898)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(28.85)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(30.036)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(30.826)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.568)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(36.359)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(38.73)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 10.795)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(8.299)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(9.485)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(11.066)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(15.413)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(17.389)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(18.97)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(21.736)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(23.712)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(25.688)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(29.245)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(30.036)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(31.616)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.173)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(36.359)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(37.94)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 12.573)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(9.485)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(10.671)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(11.461)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(15.808)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(17.389)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(19.365)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(22.131)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(23.712)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(25.688)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(28.455)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(29.245)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(30.826)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(34.383)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(35.173)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(37.94)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-              <g transform="translate(3.888 14.352)">
-                <rect width="3.162" height="1.778" fill="#fff" />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(3.557)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(4.347)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(5.138)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(6.718)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(9.485)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(10.671)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(12.251)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(13.437)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(14.623)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(16.994)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(19.365)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(20.155)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.371"
-                  height="1.778"
-                  transform="translate(21.736)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.79"
-                  height="1.778"
-                  transform="translate(24.503)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(25.688)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(26.874)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(28.455)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(29.245)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.581"
-                  height="1.778"
-                  transform="translate(30.826)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.976"
-                  height="1.778"
-                  transform="translate(33.592)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(35.964)"
-                  fill="#fff"
-                />
-                <rect
-                  width="1.186"
-                  height="1.778"
-                  transform="translate(37.149)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(38.73)"
-                  fill="#fff"
-                />
-                <rect
-                  width="2.766"
-                  height="1.778"
-                  transform="translate(40.311)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(43.472)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.053)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(45.844)"
-                  fill="#fff"
-                />
-                <rect
-                  width="0.395"
-                  height="1.778"
-                  transform="translate(47.029)"
-                  fill="#fff"
-                />
-              </g>
-            </g>
-            <g
-              transform="translate(136 293)"
-              fill="none"
-              stroke="#fff"
-              stroke-width="1"
-            >
-              <rect width="90" height="49" stroke="none" />
-              <rect x="0.5" y="0.5" width="89" height="48" fill="none" />
-            </g>
-            <rect
-              width="70"
-              height="1"
-              transform="translate(146 303)"
-              fill="#fff"
-            />
-            <rect
-              width="70"
-              height="1"
-              transform="translate(146 307)"
-              fill="#fff"
-            />
-            <rect
-              width="15"
-              height="1"
-              transform="translate(201 320)"
-              fill="#fff"
-            />
-            <rect
-              width="15"
-              height="1"
-              transform="translate(201 324)"
-              fill="#fff"
-            />
-          </g>
+      <div class="loadingCameraImg" v-show="isLoadingCamera">
+        <svg class="dbrScanner-bg-loading" viewBox="0 0 1792 1792">
+          <path
+            d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"
+          />
         </svg>
+        <div></div>
       </div>
-      <div class="tipText">Scan barcode on the back of license</div>
-    </div>
-    <div class="loadingImg" v-show="isShowLoadingImg">
-      <a-icon type="loading" />
-    </div>
-    <div class="loadingCameraImg" v-show="isLoadingCamera">
-      <svg class="dbrScanner-bg-loading" viewBox="0 0 1792 1792">
-        <path
-          d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z"
-        />
-      </svg>
-      <div></div>
-    </div>
-    <div class="qrcode" v-show="!ifHasCamera">
-      <div>
-        <h2>
-          <a-icon type="warning" style="margin-right: 10px" />No camera detected
-        </h2>
-        <div id="qrcode" ref="qrcode"></div>
+      <div class="qrcode" v-show="!ifHasCamera">
         <div>
-          <p>Scan the QR Code above, and try the demo on your phone</p>
-          <p @click="triggerUploadImg">OR Upload from local</p>
-        </div>
-        <button style="display: none" @click="triggerUploadImg">
-          UPLOAD IMAGE FROM LOCAL
-        </button>
-      </div>
-    </div>
-    <div class="decodeRes" v-show="isUploadImage">
-      <div class="resContainer">
-        <div class="imgContainer" ref="imgContainer">
-          <div class="resultsPanel" ref="resultsPanel"></div>
-        </div>
-        <div class="resList">
-          <p style="font-size: 24px; margin-bottom: 15px">Results:</p>
-          <ul v-for="(item, index) in results" :key="index">
-            <li v-for="(result, i) in item.results" :key="i">
-              <ul class="dlInfo" v-if="selectedUseCase === 'dl' && result.json">
-                {{ result.barcodeFormat + ": "}}
-                <li v-for="(info, infoIndex) in getDLInfo(result.json)" :key="infoIndex">
-                  <span class="description"> {{ info.description }}: </span>
-                  <span class="value">
-                    {{ info.value }}
-                  </span>
-                </li>
-              </ul>
-              <template v-else>
-                {{ result.barcodeFormat + ": " + result.text }}
-              </template>
-              <a
-                href="javascript:void(0)"
-                v-show="!isCopied[i]"
-                @click="copyResText(selectedUseCase === 'dl'?copiedDLInfo(getDLInfo(result.json)):result.text, i)"
-              >
-                Copy
-              </a>
-              <a
-                href="javascript:void(0)"
-                v-show="isCopied[i]"
-                class="orangeFont"
-                @click="copyResText(selectedUseCase === 'dl'?copiedDLInfo(getDLInfo(result.json)):result.text, i)"
-              >
-                Copied
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div class="restartVideo">
-          <button @click="hideResults">RESTART VIDEO</button>
-          <a href="javascript:void(0)" @click="triggerUploadImg"
-            >Upload Image from local</a
-          >
+          <h2>
+            <a-icon type="warning" style="margin-right: 10px" />No camera detected
+          </h2>
+          <div id="qrcode" ref="qrcode"></div>
+          <div>
+            <p>Scan the QR Code above, and try the demo on your phone</p>
+            <p @click="triggerUploadImg">OR Upload from local</p>
+          </div>
+          <button style="display: none" @click="triggerUploadImg">
+            UPLOAD IMAGE FROM LOCAL
+          </button>
         </div>
       </div>
-    </div>
-    <ul class="cameraList" v-show="isShowCameraList">
-      <!-- <li>
-        <from-image />
-      </li> -->
-      <li
-        v-for="(item, index) in cameraAndResolutionList"
-        :key="index"
-        @click="onChangeCameraAndResolution(item)"
-        :class="{
-          selected:
-            currentCamera &&
-            item[0].deviceId == currentCamera.deviceId &&
-            item[1] === judgeCurResolution()
-        }"
-      >
-        <div
-          class="cameraOption"
-          :style="{
-            color:
+      <div class="decodeRes" v-show="isUploadImage">
+        <div class="resContainer">
+          <div class="imgContainer" ref="imgContainer">
+            <div class="resultsPanel" ref="resultsPanel"></div>
+          </div>
+          <div class="resList">
+            <p style="font-size: 24px; margin-bottom: 15px">Results:</p>
+            <ul v-for="(item, index) in results" :key="index">
+              <li v-for="(result, i) in item.results" :key="i">
+                <ul class="dlInfo" v-if="selectedUseCase === 'dl' && result.json">
+                  {{
+                    result.barcodeFormat + ": "
+                  }}
+                  <li
+                    v-for="(info, infoIndex) in getDLInfo(result.json)"
+                    :key="infoIndex"
+                  >
+                    <span class="description"> {{ info.description }}: </span>
+                    <span class="value">{{ info.value }}</span>
+                  </li>
+                </ul>
+                <template v-else>
+                  {{ result.barcodeFormat + ": " + result.text }}
+                </template>
+                <a
+                  href="javascript:void(0)"
+                  v-show="!isCopied[i]"
+                  @click="
+                    copyResText(
+                      selectedUseCase === 'dl'
+                        ? copiedDLInfo(getDLInfo(result.json))
+                        : result.text,
+                      i
+                    )
+                  "
+                >
+                  Copy
+                </a>
+                <a
+                  href="javascript:void(0)"
+                  v-show="isCopied[i]"
+                  class="orangeFont"
+                  @click="
+                    copyResText(
+                      selectedUseCase === 'dl'
+                        ? copiedDLInfo(getDLInfo(result.json))
+                        : result.text,
+                      i
+                    )
+                  "
+                >
+                  Copied
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="restartVideo">
+            <button @click="hideResults">RESTART VIDEO</button>
+            <a href="javascript:void(0)" @click="triggerUploadImg"
+              >Upload Image from local</a
+            >
+          </div>
+        </div>
+      </div>
+      <ul class="cameraList" v-show="isShowCameraList">
+        <!-- <li>
+          <from-image />
+        </li> -->
+        <li
+          v-for="(item, index) in cameraAndResolutionList"
+          :key="index"
+          @click="onChangeCameraAndResolution(item)"
+          :class="{
+            selected:
               currentCamera &&
               item[0].deviceId == currentCamera.deviceId &&
-              item[1] === judgeCurResolution()
-                ? '#fe8e14'
-                : '#aaaaaa',
+              item[1] === judgeCurResolution(),
           }"
         >
-          {{ item[0].label }}({{ item[1] }})
-        </div>
-      </li>
-    </ul>
-  </div> 
+          <div
+            class="cameraOption"
+            :style="{
+              color:
+                currentCamera &&
+                item[0].deviceId == currentCamera.deviceId &&
+                item[1] === judgeCurResolution()
+                  ? '#fe8e14'
+                  : '#aaaaaa',
+            }"
+          >
+            {{ item[0].label }}({{ item[1] }})
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
 </template>
 
 <script>
 import Vue from "vue";
 import {BarcodeScanner,EnumGrayscaleTransformationMode,EnumDPMCodeReadingMode,EnumLocalizationMode} from "dynamsoft-javascript-barcode";
-import {CodeParser} from "dynamsoft-code-parser"
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { CodeParser } from "dynamsoft-code-parser";
 import musicIcon from "../assets/image/music.svg";
 import checkedMusicIcon from "../assets/image/music-check.svg";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
@@ -1824,8 +1900,9 @@ import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 // import DriverLicenseFields from "../assets/enum/DriverLicenseFields.js";
 import CodeParserFields from "../assets/enum/CodeParserFields";
 import FromImage from "./FromImage.vue";
+import Home from "./Home.vue";
+import Sidebar from "./Sidebar.vue";
 import Clipboard from "clipboard";
-
 // generate qr code
 import QRCode from "qrcodejs2";
 
@@ -1833,6 +1910,8 @@ export default Vue.extend({
   name: "BarcodeScanner",
   components: {
     FromImage,
+    Home,
+    Sidebar,
   },
   data() {
     return {
@@ -1841,9 +1920,7 @@ export default Vue.extend({
       parser: null,
       isDestroyed: false,
       resultsInfo: [],
-      resolutionList: [
-        "HD", "FULL HD"
-      ],
+      resolutionList: ["HD", "FULL HD"],
       currentResolution: [],
       cameraList: [],
       currentCamera: null,
@@ -1859,21 +1936,29 @@ export default Vue.extend({
       dlText: "",
       changeClientTimeoutId: null,
       changeRuntimeSettingsTimeoutId: null,
-      isResizing: false,
+      isResizing: true,
       ifHasCamera: true,
       isShowTipImg: true,
       isShowLoadingImg: true,
       isLoadingCamera: false,
+      ifSaveImages: false,
+      saveImagesCount: 0,
       results: [],
       curImg: null,
       isCopied: [],
       isUploadImage: false,
       pharmacodeResult: [],
       oriRes: [],
+      downloadImg: [],
+      isShowMask: false,
     };
   },
 
   async mounted() {
+    let useCaseName = location.pathname.split("/")[location.pathname.split("/").length - 1];
+    this.$store.commit("startScanning", useCaseName.substring(0, useCaseName.indexOf(".")));
+    this.$refs.screenshot.style.display = "none";
+
     // this.clientHeight = window.innerHeight;
     // this.clientWidth = window.innerWidth;
     this.clientHeight = document.body.clientHeight;
@@ -1888,38 +1973,36 @@ export default Vue.extend({
     } else {
       this.isShowTorchIcon = false;
     }
-    window.addEventListener('resize', async() => {
-      await this.drawResults();
-      if(this.scanner && this.scanner.isOpen()) {
+    window.addEventListener("resize", () => {
+      if (this.isUploadImage) {
+        this.drawResults();
+        return;
+      }
+      if (this.scanner && this.scanner.isOpen() && !this.scanner._bPauseScan) {
         this.scanner.pauseScan();
       }
       this.changeClientTimeoutId && clearTimeout(this.changeClientTimeoutId);
-      if(document.querySelector('.dce-video-container .cvs-scan-region')) {
-        document.querySelector('.dce-video-container .cvs-scan-region').style.display = "none";
-      }
-      if(document.querySelector('.dce-scanarea').style.display === "") {
-        document.querySelector('.dce-scanarea').style.display = "none";
-      }
-      this.changeClientTimeoutId = setTimeout(async() => {
+      this.scanner.ifShowScanRegionMask = false;
+      this.$refs.scanArea.style.display = "none";
+      this.changeClientTimeoutId = setTimeout(async () => {
         this.clientHeight = document.body.clientHeight;
         this.clientWidth = document.body.clientWidth;
-        if(this.scanner && this.scanner.isOpen()) {
+        if (this.scanner && this.scanner.isOpen()) {
           this.currentResolution = this.scanner.getResolution();
           this.visibleRegionInPixels = this.getVisibleRegion();
-          this.scanner.resumeScan(); 
+          if(this.dlText.length === 0) {
+            this.scanner.resumeScan();
+          }
         }
-        if(document.querySelector('.dce-video-container .cvs-scan-region')) {
-          document.querySelector('.dce-video-container .cvs-scan-region').style.display = "";
-        }
-        document.querySelector('.dce-scanarea').style.display = "";
-        
+        this.scanner.ifShowScanRegionMask = true;
+        this.$refs.scanArea.style.display = "";
       }, 1000);
-    })
+    });
     document.addEventListener("click", () => {
       this.hideCameraList();
     });
     await this.showScanner();
-    if(this.scanner && this.scanner.isOpen()) {
+    if (this.scanner && this.scanner.isOpen()) {
       this.visibleRegionInPixels = this.getVisibleRegion();
     }
     try {
@@ -1967,60 +2050,105 @@ export default Vue.extend({
   methods: {
     closeDLResult() {
       this.dlText = "";
+      this.scanner.resumeScan();
     },
     getDLInfo(txt) {
       let dlInfo = [];
-      if(!txt) {
-        return dlInfo
+      if (!txt) {
+        return dlInfo;
       }
       const json = JSON.parse(txt);
       let originaInfo = {};
-      if(json.resultInfo.AAMVADLInfo){
-        originaInfo = {...json.basicPersonalInfo, ...json.resultInfo, ...json.resultInfo.AAMVADLInfo};
+      if (json.resultInfo && json.resultInfo.AAMVADLInfo) {
+        originaInfo = {
+          ...json.basicPersonalInfo,
+          ...json.resultInfo,
+          ...json.resultInfo.AAMVADLInfo,
+        };
         Reflect.deleteProperty(originaInfo, "AAMVADLInfo");
       } else {
-        originaInfo = {...json.basicPersonalInfo, ...json.resultInfo}
+        originaInfo = { ...json.basicPersonalInfo, ...json.resultInfo };
       }
-      // if("exception" in originaInfo){
-      //   dlInfo = [{
-      //     description: "An Error Occurred",
-      //     value: originaInfo.description
-      //   }];
-      // }
       let abbrs = Object.keys(originaInfo);
       const dataDictionary = {
         issuedDay: {
           description: "Document Issue Date",
-          value: ["issuedDay", "issuedMonth", "issuedYear"]
+          value: ["issuedDay", "issuedMonth", "issuedYear"],
         },
         birthDay: {
           description: "Date of Birth",
-          value: ["birthDay", "birthMonth", "birthYear"]
+          value: ["birthDay", "birthMonth", "birthYear"],
         },
         expirationDay: {
           description: "Document Expiration Date",
-          value: ["expirationDay", "expirationMonth", "expirationYear"]
-        }
-      }
-      abbrs.forEach((abbr)=>{
-        if(originaInfo[abbr]){
-          if(abbr in CodeParserFields){
+          value: ["expirationDay", "expirationMonth", "expirationYear"],
+        },
+      };
+      abbrs.forEach((abbr) => {
+        if (originaInfo[abbr]) {
+          if (abbr in CodeParserFields) {
             dlInfo.push({
               description: CodeParserFields[abbr],
               value: originaInfo[abbr],
-            })
-          } else if(abbr in dataDictionary) {
-            const value = this.toTwoDigit(originaInfo[dataDictionary[abbr].value[0]]) +
-             "/" + this.toTwoDigit(originaInfo[dataDictionary[abbr].value[1]]) +
-             "/" + originaInfo[dataDictionary[abbr].value[2]];
+            });
+          } else if (abbr in dataDictionary) {
+            const value =
+              this.toTwoDigit(originaInfo[dataDictionary[abbr].value[0]]) +
+              "/" +
+              this.toTwoDigit(originaInfo[dataDictionary[abbr].value[1]]) +
+              "/" +
+              originaInfo[dataDictionary[abbr].value[2]];
             dlInfo.push({
               description: dataDictionary[abbr].description,
-              value
-            })
+              value,
+            });
           }
         }
-      })
+      });
       return dlInfo;
+    },
+    async getImages() {
+      if(this.isUploadImage) return;
+      this.isShowMask = true;
+      this.scanner.pauseScan();
+      let config = {};
+      config.content = "Capturing...";
+      config.icon = (
+        <a-icon type="loading" style={{ color: "#FE8E14" }}></a-icon>
+      );
+      config.duration = 0;
+      this.$message.open(config);
+      await this.saveImages();
+      const zip = new JSZip();
+      for(let i=0;i<this.downloadImg.length;i++) {
+        zip.file(this.downloadImg[i].name, this.downloadImg[i].blob);
+      }
+      const content = await zip.generateAsync({type: "blob"});
+      saveAs(content, `screenshot-${this.getDate()}.zip`);
+      this.downloadImg = [];
+      this.$message.destroy();
+      this.isShowMask = false;
+      this.scanner.resumeScan();
+    },
+    async saveImages() {
+      return new Promise(async (rs,rj)=>{
+        let index = 0;
+        while(index < 8) {
+          const cvs = this.scanner.dce.getFrame().toCanvas();
+          if (cvs != null) {
+            const blob = cvs.convertToBlob ? await cvs.convertToBlob() : await new Promise(resolve => {
+              cvs.toBlob(blob => resolve(blob));
+            });
+            this.downloadImg.push({ name: "Screenshot - " + new Date().toISOString() + ".png", blob});
+            index++;
+          }
+        }
+        rs();
+      })
+    },
+    getDate() {
+      const date = new Date();
+      return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
     },
     showCameraList() {
       this.isShowCameraList = !this.isShowCameraList;
@@ -2110,16 +2238,17 @@ export default Vue.extend({
     },
     async initDcp() {
       this.parser || (this.parser = await CodeParser.createInstance());
-      // this.parser.setCodeFormat(EnumCodeFormat.CF_DL_AAMVA_ANSI);
     },
     async showScanner() {
       this.isLoadingCamera = true;
       try {
         this.scanner || (this.scanner = await BarcodeScanner.createInstance());
-        this.scanner.setVideoFit('cover');
-        if(this.selectedUseCase === "dl") {
-          await this.initDcp()
-      }
+        this.scanner.bPlaySoundOnSuccessfulRead = this.soundEffectsOn;
+        // this.scanner.intervalTime = 1000;
+        this.scanner.setVideoFit("cover");
+        if (this.selectedUseCase === "dl") {
+          await this.initDcp();
+        }
       } catch (e) {
         let config = {};
         config.content = e.message;
@@ -2135,11 +2264,7 @@ export default Vue.extend({
       try {
         if (this.scanner) {
           await this.scanner.setUIElement(this.$refs.videoContainer);
-
-          this.scanner.regionMaskLineWidth = 0;
-          this.scanner.regionMaskStrokeStyle = "transparent";
-          this.scanner.regionMaskFillStyle = "transparent";
-
+          this.scanner.ifSaveOriginalImageInACanvas = true;
           this.scanner.setResolution([1280, 720]);
           if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
             this.scanner.setResolution([1920, 1080]);
@@ -2147,25 +2272,39 @@ export default Vue.extend({
           this.scanner.onFrameRead = async (results) => {
             for (let i = 0; i < results.length; i++) {
               let result = results[i];
-              if (this.selectedUseCase === "dl" && result.barcodeFormatString === "PDF417") {
-                // this.dlText = result.barcodeText;
+              if (
+                this.selectedUseCase === "dl" &&
+                result.barcodeFormatString === "PDF417"
+              ) {
                 const data = await this.parser.parseData(result.barcodeBytes);
                 this.dlText = JSON.stringify(data); // use stringify to avoid render ui everytime
-              } else if(result.barcodeFormatString_2 === "PHARMACODE_ONE_TRACK"){
-                if(result.localizationResult.x1 < result.localizationResult.x2) {
+                if(!JSON.parse(this.dlText).exception) {
+                  this.scanner.pauseScan();
+                }
+              } else if (
+                result.barcodeFormatString_2 === "PHARMACODE_ONE_TRACK"
+              ) {
+                if (
+                  result.localizationResult.x1 < result.localizationResult.x2
+                ) {
                   this.pharmacodeResult = result.barcodeText;
-                } else if(result.localizationResult.x1 > result.localizationResult.x2) {
+                } else if (
+                  result.localizationResult.x1 > result.localizationResult.x2
+                ) {
                   this.getPharmacodeResult(result);
-                }  
-              } else if(result.barcodeFormatString_2 === "PHARMACODE_TWO_TRACK") {
+                }
+              } else if (
+                result.barcodeFormatString_2 === "PHARMACODE_TWO_TRACK"
+              ) {
                 this.getPharmacodeResult(result);
               }
             }
           };
-
           let callBackInfo = await this.scanner.open();
           this.currentResolution = [callBackInfo.width, callBackInfo.height];
           this.isLoadingCamera = false;
+          this.isResizing = false;
+          this.$refs.screenshot.style.display = "";
         }
       } catch (e) {
         let config = {};
@@ -2176,19 +2315,17 @@ export default Vue.extend({
         this.ifHasCamera = false;
         this.generateQRcode();
         this.$message.warning(config);
-
-
         return Promise.reject(e.message);
       }
     },
 
     getPharmacodeResult(result) {
-      for(let i = 0; i < 2; i++) {
-        let res = '';
-        for(let j = 0; j < result.results[i].bytes.length; j++) {
+      for (let i = 0; i < 2; i++) {
+        let res = "";
+        for (let j = 0; j < result.results[i].bytes.length; j++) {
           res += String.fromCharCode(result.results[i].bytes[j]);
         }
-        if(res !== result.barcodeText) {
+        if (res !== result.barcodeText) {
           this.pharmacodeResult = res;
           break;
         }
@@ -2198,7 +2335,7 @@ export default Vue.extend({
     async onChangeCameraAndResolution(item) {
       let config = {};
       this.isLoadingCamera = true;
-      let resulution = item[1] === 'HD' ? [1280, 720] : [1920, 1080];
+      let resulution = item[1] === "HD" ? [1280, 720] : [1920, 1080];
       await this.scanner.setCurrentCamera(item[0].deviceId);
       await this.scanner.setResolution(resulution);
       this.currentResolution = this.scanner.getResolution();
@@ -2211,8 +2348,10 @@ export default Vue.extend({
       } else if (this.judgeCurResolution() !== item[1]) {
         config.icon = <a-icon type="meh" style={{ color: "#FE8E14" }}></a-icon>;
         config.content =
-          "Switch resolution failed. " + item[1] +
+          "Switch resolution failed. " +
+          item[1] +
           " might be unsupported in the camera.";
+      } else {
         config.icon = (
           <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
         );
@@ -2252,47 +2391,52 @@ export default Vue.extend({
     // show decode results
     async showResults(results, image, oriRes) {
       this.$refs.imgContainer.appendChild(image);
+      this.$refs.scanArea.style.display = "none";
       this.isCopied = [];
       this.isUploadImage = true;
       this.results = results;
       this.curImg = image;
       this.oriRes = oriRes;
-      Vue.nextTick(async ()=>{
-        await this.drawResults();
-      })
+      await this.scanner.close();
+      Vue.nextTick(() => {
+        this.drawResults();
+      });
     },
 
-    async drawResults() {
-      if(!this.curImg) return;
+    drawResults() {
+      if (!this.curImg) return;
       this.clearResultsCvs();
+      let widthZoom;
+      let heightZoom;
       let oriWidth = this.curImg.width;
       let oriHeight = this.curImg.height;
       let oriWHRatio = oriWidth / oriHeight;
       let imgWidth = parseInt(getComputedStyle(this.curImg).width);
       let imgHeight = parseInt(getComputedStyle(this.curImg).height);
       let imgWHRatio = imgWidth / imgHeight;
-      let widthZoom;
-      let heightZoom;
-      for(let i=0;i<this.oriRes.length;i++){
+      for (let i = 0; i < this.oriRes.length; i++) {
         let cvs = document.createElement("canvas");
         let ctx = cvs.getContext("2d");
         ctx.globalCompositeOperation = "destination-over";
         let loc = this.oriRes[i].localizationResult;
-        let locXArr = [loc.x1,loc.x2,loc.x3,loc.x4];
-        let locYArr = [loc.y1,loc.y2,loc.y3,loc.y4];
-        let maxX = Math.max(loc.x1,loc.x2,loc.x3,loc.x4);
-        let minX = Math.min(loc.x1,loc.x2,loc.x3,loc.x4);
-        let maxY = Math.max(loc.y1,loc.y2,loc.y3,loc.y4);
-        let minY = Math.min(loc.y1,loc.y2,loc.y3,loc.y4);
+        let locXArr = [loc.x1, loc.x2, loc.x3, loc.x4];
+        let locYArr = [loc.y1, loc.y2, loc.y3, loc.y4];
+        let maxX = Math.max(loc.x1, loc.x2, loc.x3, loc.x4);
+        let minX = Math.min(loc.x1, loc.x2, loc.x3, loc.x4);
+        let maxY = Math.max(loc.y1, loc.y2, loc.y3, loc.y4);
+        let minY = Math.min(loc.y1, loc.y2, loc.y3, loc.y4);
         let minXToY = locYArr[locXArr.indexOf(minX)];
         let minYToX = locXArr[locYArr.indexOf(minY)];
         let maxXToY = locYArr[locXArr.indexOf(maxX)];
         let maxYToX = locXArr[locYArr.indexOf(maxY)];
 
-        if(/* oriWidth >= oriHeight && document.body.clientWidth > 600 && document.body.clientHeight > 900 */ oriWHRatio > imgWHRatio) {
+        if (oriWHRatio > imgWHRatio) {
           widthZoom = imgWidth / oriWidth;
-          heightZoom = (imgWidth / oriWHRatio) / oriHeight;
-          cvs.style.top = minY * heightZoom + (imgHeight - imgWidth / oriWHRatio) * 0.5 + "px";
+          heightZoom = imgWidth / oriWHRatio / oriHeight;
+          cvs.style.top =
+            minY * heightZoom +
+            (imgHeight - imgWidth / oriWHRatio) * 0.5 +
+            "px";
           cvs.style.left = minX * widthZoom + "px";
           cvs.width = (maxX - minX) * widthZoom;
           cvs.height = (maxY - minY) * widthZoom;
@@ -2302,33 +2446,47 @@ export default Vue.extend({
           heightZoom = imgHeight / oriHeight;
           widthZoom = (imgHeight * oriWHRatio) / oriWidth;
           cvs.style.top = minY * heightZoom + "px";
-          cvs.style.left = minX * widthZoom + (imgWidth - imgHeight * oriWHRatio) * 0.5 + "px";
+          cvs.style.left =
+            minX * widthZoom + (imgWidth - imgHeight * oriWHRatio) * 0.5 + "px";
           cvs.width = (maxX - minX) * heightZoom;
           cvs.height = (maxY - minY) * heightZoom;
           cvs.style.width = (maxX - minX) * heightZoom + "px";
-          cvs.style.height =(maxY - minY) * heightZoom + "px";
+          cvs.style.height = (maxY - minY) * heightZoom + "px";
         }
         cvs.style.position = "absolute";
-        ctx.fillStyle = "rgba(97, 189, 79, 0.5)";
-        let allowAngle = [359,0,1,179,180,181,89,90,91];
-        if(!allowAngle.includes(loc.angle)) {
+        if (this.oriRes[i].barcodeFormatString === "PatchCode") {
+          ctx.fillStyle = "rgba(97, 189, 79, 0.2)";
+          cvs.style.zIndex = 1;
+        } else {
+          ctx.fillStyle = "rgba(97, 189, 79, 0.5)";
+          cvs.style.zIndex = 2;
+        }
+        let allowAngle = [358, 359, 0, 1, 268, 269, 270, 271, 272, 178, 179, 180, 181, 182, 88, 89, 90, 91, 92];
+        if (!allowAngle.includes(loc.angle)) {
           ctx.moveTo(0, minXToY * heightZoom - minY * heightZoom);
-          ctx.lineTo(minYToX * widthZoom - minX * widthZoom,0);
+          ctx.lineTo(minYToX * widthZoom - minX * widthZoom, 0);
           ctx.lineTo(cvs.width, maxXToY * heightZoom - minY * heightZoom);
           ctx.lineTo(maxYToX * widthZoom - minX * widthZoom, cvs.height);
           ctx.fill();
         } else {
-          ctx.fillRect(0,0,cvs.width,cvs.height);
+          ctx.fillRect(0, 0, cvs.width, cvs.height);
         }
-        cvs.title = this.oriRes[i].barcodeText;
+        cvs.title =
+          this.oriRes[i].barcodeFormatString +
+          " : " +
+          this.oriRes[i].barcodeText;
         this.$refs.resultsPanel.appendChild(cvs);
       }
     },
 
     // hide decode results
-    hideResults() {
+    async hideResults() {
       this.isUploadImage = false;
       this.$store.commit("finishDecodingFile");
+      this.isLoadingCamera = true;
+      await this.scanner.open();
+      this.scanner.pauseScan();
+      this.isLoadingCamera = false;
     },
 
     // copy decoded result
@@ -2338,186 +2496,205 @@ export default Vue.extend({
     },
 
     judgeCurResolution() {
-      let minValue = Math.min(this.currentResolution[0], this.currentResolution[1]);
-      let maxValue = Math.max(this.currentResolution[0], this.currentResolution[1]);
-      if(minValue > 480 && minValue < 960 && maxValue > 960 && maxValue < 1440) {
-        return 'HD'
-      } else if(minValue > 900 && minValue < 1440 && maxValue > 1400 && maxValue < 2160) {
-        return 'FULL HD'
+      let minValue = Math.min(
+        this.currentResolution[0],
+        this.currentResolution[1]
+      );
+      let maxValue = Math.max(
+        this.currentResolution[0],
+        this.currentResolution[1]
+      );
+      if (
+        minValue > 480 &&
+        minValue < 960 &&
+        maxValue > 960 &&
+        maxValue < 1440
+      ) {
+        return "HD";
+      } else if (
+        minValue > 900 &&
+        minValue < 1440 &&
+        maxValue > 1400 &&
+        maxValue < 2160
+      ) {
+        return "FULL HD";
       }
     },
 
     // get visible region
     getVisibleRegion() {
-      if(!this.scanner.isOpen()) return;
+      if (!this.scanner.isOpen()) return;
       let width, height;
-      width = document.querySelector('.dce-video-container video').videoWidth;
-      height = document.querySelector('.dce-video-container video').videoHeight;
-      const getVisibleRegionInPixels = ()=>{
-        const videoCSSWidth = parseFloat(window.getComputedStyle(document.querySelector('.dce-video-container video')).width),
-        videoCSSHeight = parseFloat(window.getComputedStyle(document.querySelector('.dce-video-container video')).height);
-        const videoCSSRatio = videoCSSWidth/videoCSSHeight,
-        videoRatio = width/height;
+      width = this.scanner.video.videoWidth;
+      height = this.scanner.video.videoHeight;
+      const getVisibleRegionInPixels = () => {
+        const videoCSSWidth = parseFloat(
+            window.getComputedStyle(this.scanner.video).width
+          ),
+          videoCSSHeight = parseFloat(
+            window.getComputedStyle(this.scanner.video).height
+          );
+        const videoCSSRatio = videoCSSWidth / videoCSSHeight,
+          videoRatio = width / height;
         let resizedRatio;
         let regionInPixels = {
-            regionBottom: height,
-            regionRight: width,
-            regionLeft: 0,
-            regionTop: 0,
-            regionMeasuredByPercentage: false
+          regionBottom: height,
+          regionRight: width,
+          regionLeft: 0,
+          regionTop: 0,
+          regionMeasuredByPercentage: false,
         };
-        if(videoCSSRatio < videoRatio) {
-            // a part of length is invisible
-            resizedRatio = height/videoCSSHeight;
-            regionInPixels.regionLeft = Math.floor((width-resizedRatio*videoCSSWidth)/2);
-            regionInPixels.regionRight = Math.ceil(width - regionInPixels.regionLeft);
-            regionInPixels.regionTop = 0;
-            regionInPixels.regionBottom = height;
-            // return regionInPixels;
+        if (videoCSSRatio < videoRatio) {
+          // a part of length is invisible
+          resizedRatio = height / videoCSSHeight;
+          regionInPixels.regionLeft = Math.floor(
+            (width - resizedRatio * videoCSSWidth) / 2
+          );
+          regionInPixels.regionRight = Math.ceil(
+            width - regionInPixels.regionLeft
+          );
+          regionInPixels.regionTop = 0;
+          regionInPixels.regionBottom = height;
         } else {
-            // a part of height is invisible
-            resizedRatio = width/videoCSSWidth;
-            regionInPixels.regionTop = Math.floor((height-resizedRatio*videoCSSHeight)/2);
-            regionInPixels.regionBottom = Math.ceil(height - regionInPixels.regionTop);
-            regionInPixels.regionLeft = 0;
-            regionInPixels.regionRight = width;
-            // return regionInPixels;
+          // a part of height is invisible
+          resizedRatio = width / videoCSSWidth;
+          regionInPixels.regionTop = Math.floor(
+            (height - resizedRatio * videoCSSHeight) / 2
+          );
+          regionInPixels.regionBottom = Math.ceil(
+            height - regionInPixels.regionTop
+          );
+          regionInPixels.regionLeft = 0;
+          regionInPixels.regionRight = width;
         }
         return regionInPixels;
       };
       let visibleRegion = getVisibleRegionInPixels();
       return visibleRegion;
-    }
-  },
+    },
 
-  asyncComputed: {
-    runtimeSettings: {
-      async get() {
-        if (!this.scanner) {
-          return null;
-        }
-        if(!this.scanner.isOpen()) {
-          return null;
-        }
-        if (this.isLoadingCamera) {
-          this.isShowLoadingImg = false;
-        } else {
-          this.isShowLoadingImg = true;
-        }
+    removeDLResults() {
+      this.dlText = "";
+    },
+
+    // change runtimeSettings
+    changeSettings() {
+      if (!this.scanner) return null;
+      if (!this.scanner.isOpen()) return null;
+      this.isShowLoadingImg = true;
+      if(!this.scanner._bPauseScan) {
         this.scanner.pauseScan();
-        document.querySelector('.dce-video-container .cvs-scan-region').style.display = "none";
-        let runtimeSettings = null;
-        this.changeRuntimeSettingsTimeoutId && clearTimeout(this.changeRuntimeSettingsTimeoutId);
-        this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
-          // scan mode
-          if (this.scanMode === "bestSpeed") {
-            await this.scanner.updateRuntimeSettings("speed");
-          } else if (this.scanMode === "balance") {
-            await this.scanner.updateRuntimeSettings("balance");
-          } else if (this.scanMode === "bestCoverage") {
-            await this.scanner.updateRuntimeSettings("coverage");
+      }
+      this.$refs.scanArea.style.display = "none";
+      this.scanner.ifShowScanRegionMask = false;
+      let runtimeSettings = null;
+      this.changeRuntimeSettingsTimeoutId &&
+        clearTimeout(this.changeRuntimeSettingsTimeoutId);
+      this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
+        // scan mode
+        if (this.scanMode === "bestSpeed") {
+          await this.scanner.updateRuntimeSettings("speed");
+        } else if (this.scanMode === "balance") {
+          await this.scanner.updateRuntimeSettings("balance");
+        } else if (this.scanMode === "bestCoverage") {
+          await this.scanner.updateRuntimeSettings("coverage");
+        }
+        runtimeSettings = await this.scanner.getRuntimeSettings();
+        // colour invert
+        runtimeSettings.furtherModes.grayscaleTransformationModes = [
+          this.invertColourOn
+            ? EnumGrayscaleTransformationMode.GTM_INVERTED
+            : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+        ];
+
+        // set scan region
+        if (this.isFullImageLocalization) {
+          runtimeSettings.region = {
+            regionLeft: 0,
+            regionRight: 100,
+            regionTop: 0,
+            regionBottom: 100,
+            regionMeasuredByPercentage: 1,
+          };
+        } else {
+          this.$refs.scanArea.style.display = "";
+          runtimeSettings.region = this.region;
+        }
+        // barcode format part
+        runtimeSettings.barcodeFormatIds = 0;
+        runtimeSettings.barcodeFormatIds_2 = 0;
+        let newValue = this.selectedBarcodes;
+        for (let i = 0; i < newValue.length; i++) {
+          let n1 = BarcodeFormatMap.get(newValue[i]);
+          let n2 = BarcodeFormatMap_2.get(newValue[i]);
+          if (n1 !== undefined) {
+            runtimeSettings.barcodeFormatIds |= n1;
           }
-          runtimeSettings = await this.scanner.getRuntimeSettings();
-          // colour invert
-          runtimeSettings.furtherModes.grayscaleTransformationModes = [
-            this.invertColourOn
-              ? EnumGrayscaleTransformationMode.GTM_INVERTED
-              : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
+          if (n2 !== undefined) {
+            runtimeSettings.barcodeFormatIds_2 |= n2;
+          }
+        }
+
+        if (this.selectedUseCase === "vin") {
+          runtimeSettings.localizationModes = [32, 8, 2, 0, 0, 0, 0, 0];
+          runtimeSettings.deblurLevel = 9;
+          runtimeSettings.scaleDownThreshold = 100000;
+          runtimeSettings.furtherModes.barcodeColourModes = [
+            1, 2, 32, 0, 0, 0, 0, 0,
           ];
-          // sound effects
-          this.scanner.bPlaySoundOnSuccessfulRead = this.soundEffectsOn;
-
-          // set scan region
-          if (this.isFullImageLocalization) {
-            this.$refs.scanArea.style.display = "none";
-            runtimeSettings.region = [null];
-          } else {
-            this.$refs.scanArea.style.display = "";
-            runtimeSettings.region = this.region;
-          }
-          // barcode format part
-          runtimeSettings.barcodeFormatIds = 0;
-          runtimeSettings.barcodeFormatIds_2 = 0;
-          let newValue = this.selectedBarcodes;
-          for (let i = 0; i < newValue.length; i++) {
-            let n1 = BarcodeFormatMap.get(newValue[i]);
-            let n2 = BarcodeFormatMap_2.get(newValue[i]);
-            if (n1 !== undefined) {
-              runtimeSettings.barcodeFormatIds |= n1;
+        } else if (this.selectedUseCase === "dl") {
+          runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
+          runtimeSettings.deblurLevel = 9;
+          runtimeSettings.minResultConfidence = 0;
+        } else if (this.selectedUseCase === "dpm") {
+          runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
+            EnumDPMCodeReadingMode.DPMCRM_GENERAL;
+          let locModes = runtimeSettings.localizationModes;
+          for (let i in locModes) {
+            if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
+              break;
             }
-            if (n2 !== undefined) {
-              runtimeSettings.barcodeFormatIds_2 |= n2;
+            if (locModes[i] == 0) {
+              locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
+              break;
             }
           }
+        }
 
-          if (this.selectedUseCase === "vin") {
-            runtimeSettings.localizationModes = [32, 8, 2, 0, 0, 0, 0, 0];
-            runtimeSettings.deblurLevel = 9;
-            runtimeSettings.scaleDownThreshold = 100000;
-            runtimeSettings.furtherModes.barcodeColourModes = [
-              1, 2, 32, 0, 0, 0, 0, 0,
-            ];
-          } else if (this.selectedUseCase === "dl") {
-            runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
-            runtimeSettings.deblurLevel = 7;
-            runtimeSettings.minResultConfidence = 0;
-          } else if (this.selectedUseCase === "dpm") {
-            runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
-              EnumDPMCodeReadingMode.DPMCRM_GENERAL;
-            let locModes = runtimeSettings.localizationModes;
-            for (let i in locModes) {
-              if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
-                break;
-              }
-              if (locModes[i] == 0) {
-                locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
-                break;
-              }
-            }
-          }
-
-          // single or multiple
-          this.singleOrMul === "single"
-            ? (runtimeSettings.expectedBarcodesCount = 1)
-            : (runtimeSettings.expectedBarcodesCount = 512);
-          await this.scanner.updateRuntimeSettings(runtimeSettings);
-          this.isShowTipImg = true;
-          setTimeout(() => {
-            this.isShowTipImg = false;
-          }, 5000);
-          this.isShowLoadingImg = false;
+        // single or multiple
+        this.singleOrMul === "single"
+          ? (runtimeSettings.expectedBarcodesCount = 1)
+          : (runtimeSettings.expectedBarcodesCount = 512);
+        await this.scanner.updateRuntimeSettings(runtimeSettings);
+        this.isShowTipImg = true;
+        setTimeout(() => {
+          this.isShowTipImg = false;
+        }, 5000);
+        this.isShowLoadingImg = false;
+        if(this.dlText.length === 0) {
           this.scanner.resumeScan();
-          document.querySelector('.dce-video-container .cvs-scan-region').style.display = "";
-          return runtimeSettings;
-        }, 500);
-      },
-      watch: [
-        "selectedBarcodes",
-        "region",
-        "singleOrMul",
-        "scanMode",
-        "invertColourOn",
-        "soundEffectsOn",
-        "isFullImageLocalization",
-      ],
+        }
+        this.scanner.ifShowScanRegionMask = true;
+        return runtimeSettings;
+      }, 500);
     },
   },
   computed: {
     toTwoDigit() {
-      return (num)=> num < 9 ? "0" + num : num;
+      return (num) => (num < 9 ? "0" + num : num);
     },
     driverLicenseTipStyle() {
-      if(this.selectedUseCase !== "dl") return { display: "none"};
-      if(!this.cssRegionLeft || !this.cssRegionTop) return { display: "none"};
-      let width = (100 - 2 * this.cssRegionLeft)/100*this.clientWidth;
-      let height = (100 - 2 * this.cssRegionTop)/100*this.clientHeight;
+      if (this.selectedUseCase !== "dl") return { display: "none" };
+      if (!this.cssRegionLeft || !this.cssRegionTop) return { display: "none" };
+      let width = ((100 - 2 * this.cssRegionLeft) / 100) * this.clientWidth;
+      let height = ((100 - 2 * this.cssRegionTop) / 100) * this.clientHeight;
       return {
         top: this.cssRegionTop + "%",
         height: height + "px",
@@ -2526,10 +2703,11 @@ export default Vue.extend({
     },
     tipImgStyle: {
       get() {
-        if(!this.cssRegionTop) return {};
+        if (!this.cssRegionTop) return {};
         if (this.selectedUseCase !== "dl") return {};
-        if (!this.isShowTipImg) return {display: "none"};
-        let height = (100 - 2 * this.cssRegionTop)/100*this.clientHeight*0.278;
+        if (!this.isShowTipImg) return { display: "none" };
+        let height =
+          ((100 - 2 * this.cssRegionTop) / 100) * this.clientHeight * 0.278;
         return {
           marginTop: "50%",
           height: height + "px",
@@ -2540,13 +2718,21 @@ export default Vue.extend({
       },
     },
     cameraInfo() {
-      const minValue = Math.min(this.currentResolution[0],this.currentResolution[1]);
-      const maxValue = Math.max(this.currentResolution[0],this.currentResolution[1]);
+      const minValue = Math.min(
+        this.currentResolution[0],
+        this.currentResolution[1]
+      );
+      const maxValue = Math.max(
+        this.currentResolution[0],
+        this.currentResolution[1]
+      );
       if (this.currentCamera) {
         return (
           this.currentCamera.label +
           " " +
-          ((minValue > 480 && minValue < 960 && maxValue > 960 && maxValue < 1440) ? "HD" : "FULL HD")
+          (minValue > 480 && minValue < 960 && maxValue > 960 && maxValue < 1440
+            ? "HD"
+            : "FULL HD")
         );
       } else {
         return "";
@@ -2567,9 +2753,7 @@ export default Vue.extend({
       }
     },
     isDLResultShow() {
-      return (
-        this.selectedUseCase === "dl" && this.dlInfo.length !== 0
-      );
+      return this.selectedUseCase === "dl" && this.dlInfo.length !== 0;
     },
     dlInfo() {
       if (this.selectedUseCase === "dl") {
@@ -2585,13 +2769,17 @@ export default Vue.extend({
           copiedDLInfo += data[i].description + ": " + data[i].value + "\n";
         }
         return copiedDLInfo;
-      }
+      };
     },
     isDecodingFile() {
       return this.$store.state.isDecodingFile;
     },
     decodeRecords() {
-      if (this.selectedUseCase !== "dl" && this.scanner && this.scanner.decodeRecords) {
+      if (
+        this.selectedUseCase !== "dl" &&
+        this.scanner &&
+        this.scanner.decodeRecords
+      ) {
         return this.scanner.decodeRecords;
       } else {
         return {};
@@ -2601,6 +2789,7 @@ export default Vue.extend({
       // if(this.$store.state.selectedUseCase === "dl"){
       //   this.initDcp();
       // }
+
       return this.$store.state.selectedUseCase;
     },
     selectedBarcodes() {
@@ -2623,65 +2812,84 @@ export default Vue.extend({
       return this.$store.state.isFullImageLocalization;
     },
     regionEdgeLength() {
-      if(!this.visibleRegionInPixels) return 0;
-      if(!this.scanner || !this.scanner.isOpen()) return 0;
-      const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
-      const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
-      let regionEdgeLength = this.regionScale * Math.min(visibleRegionWidth, visibleRegionHeight);
+      if (!this.visibleRegionInPixels) return 0;
+      if (!this.scanner || !this.scanner.isOpen()) return 0;
+      const visibleRegionWidth =
+        this.visibleRegionInPixels.regionRight -
+        this.visibleRegionInPixels.regionLeft;
+      const visibleRegionHeight =
+        this.visibleRegionInPixels.regionBottom -
+        this.visibleRegionInPixels.regionTop;
+      let regionEdgeLength =
+        this.regionScale * Math.min(visibleRegionWidth, visibleRegionHeight);
       return Math.round(regionEdgeLength);
     },
     regionLeft() {
-      if(!this.visibleRegionInPixels) return 0;
-      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      if (!this.visibleRegionInPixels) return 0;
+      if (
+        !this.scanner ||
+        !this.scanner.isOpen() ||
+        this.currentResolution.length != 2
+      )
+        return 0;
       const vw = this.currentResolution[0];
-      const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
-      let left = 0.5-this.regionEdgeLength/vw/2;
+      const visibleRegionWidth =
+        this.visibleRegionInPixels.regionRight -
+        this.visibleRegionInPixels.regionLeft;
+      let left = 0.5 - this.regionEdgeLength / vw / 2;
       if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
         if (this.clientWidth > this.clientHeight) {
-          left = Math.round((left-0.25*visibleRegionWidth/vw) * 100);
+          left = Math.round((left - (0.25 * visibleRegionWidth) / vw) * 100);
         } else {
-          left = Math.round((left-0.2*visibleRegionWidth/vw) * 100);
+          left = Math.round((left - (0.2 * visibleRegionWidth) / vw) * 100);
         }
-      } else if(this.selectedUseCase === "general") {
+      } else if (this.selectedUseCase === "general") {
         if (this.clientWidth > this.clientHeight) {
-          left = Math.round((left-0.1*visibleRegionWidth/vw) * 100);
+          left = Math.round((left - (0.1 * visibleRegionWidth) / vw) * 100);
         } else {
-          left = Math.round((left-0.2*visibleRegionWidth/vw) * 100);
+          left = Math.round((left - (0.2 * visibleRegionWidth) / vw) * 100);
         }
       } else {
         left = Math.round(left * 100);
       }
-      left = left<0||left>=50?0:left;
+      left = left < 0 || left >= 50 ? 0 : left;
       return left;
     },
     regionTop() {
-      if(!this.visibleRegionInPixels) return 0;
-      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      if (!this.visibleRegionInPixels) return 0;
+      if (
+        !this.scanner ||
+        !this.scanner.isOpen() ||
+        this.currentResolution.length != 2
+      )
+        return 0;
       const vh = this.currentResolution[1];
-      const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
-      let top = 0.5-this.regionEdgeLength/vh/2;
+      const visibleRegionHeight =
+        this.visibleRegionInPixels.regionBottom -
+        this.visibleRegionInPixels.regionTop;
+      let top = 0.5 - this.regionEdgeLength / vh / 2;
       if (this.selectedUseCase === "vin") {
         if (this.clientWidth > this.clientHeight) {
-          top = Math.round((top + 0.05*visibleRegionHeight/vh)*100);
+          top = Math.round((top + (0.05 * visibleRegionHeight) / vh) * 100);
         } else {
-          top = Math.round((top + 0.05*visibleRegionHeight/vh)*100);
+          top = Math.round((top + (0.05 * visibleRegionHeight) / vh) * 100);
         }
       } else if (this.selectedUseCase === "dl") {
         if (this.clientWidth > this.clientHeight) {
-          top = Math.round((top - 0.05*visibleRegionHeight/vh)*100);
+          top = Math.round((top - (0.05 * visibleRegionHeight) / vh) * 100);
         } else {
-          top = Math.round((top - 0.05*visibleRegionHeight/vh)*100);
+          top = Math.round((top - (0.05 * visibleRegionHeight) / vh) * 100);
         }
-      } else if(this.selectedUseCase === "general") {
+      } else if (this.selectedUseCase === "general") {
         if (this.clientWidth > this.clientHeight) {
-          top = Math.round((top - 0.1*visibleRegionHeight/vh)*100);
+          top = Math.round((top - (0.1 * visibleRegionHeight) / vh) * 100);
         } else {
-          top = Math.round((top - 0.1*visibleRegionHeight/vh)*100);
+          top = Math.round((top - (0.1 * visibleRegionHeight) / vh) * 100);
         }
       } else {
         top = Math.round(top * 100);
       }
-      top = top<0||top>=50?0:top;
+      top = top < 0 || top >= 50 ? 0 : top;
       return top;
     },
     region() {
@@ -2695,21 +2903,39 @@ export default Vue.extend({
       return region;
     },
     cssRegionLeft() {
-      if(!this.visibleRegionInPixels) return 0;
-      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      if (!this.visibleRegionInPixels) return 0;
+      if (
+        !this.scanner ||
+        !this.scanner.isOpen() ||
+        this.currentResolution.length != 2
+      )
+        return 0;
       const vw = this.currentResolution[0];
-      const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
-      let left = (this.regionLeft/100*vw-this.visibleRegionInPixels.regionLeft)/visibleRegionWidth;
-      left = Math.round(left*100);
+      const visibleRegionWidth =
+        this.visibleRegionInPixels.regionRight -
+        this.visibleRegionInPixels.regionLeft;
+      let left =
+        ((this.regionLeft / 100) * vw - this.visibleRegionInPixels.regionLeft) /
+        visibleRegionWidth;
+      left = Math.round(left * 100);
       return left;
     },
     cssRegionTop() {
-      if(!this.visibleRegionInPixels) return 0;
-      if(!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
+      if (!this.visibleRegionInPixels) return 0;
+      if (
+        !this.scanner ||
+        !this.scanner.isOpen() ||
+        this.currentResolution.length != 2
+      )
+        return 0;
       const vh = this.currentResolution[1];
-      const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
-      let top = (this.regionTop/100*vh-this.visibleRegionInPixels.regionTop)/visibleRegionHeight;
-      top = Math.round(top*100);
+      const visibleRegionHeight =
+        this.visibleRegionInPixels.regionBottom -
+        this.visibleRegionInPixels.regionTop;
+      let top =
+        ((this.regionTop / 100) * vh - this.visibleRegionInPixels.regionTop) /
+        visibleRegionHeight;
+      top = Math.round(top * 100);
       return top;
     },
     torchContainerStyle() {
@@ -2728,9 +2954,8 @@ export default Vue.extend({
   },
   watch: {
     currentResolution(newValue, oldValue) {
-      this.visibleRegionInPixels = this.getVisibleRegion(); 
+      this.visibleRegionInPixels = this.getVisibleRegion();
     },
-
     isDLResultShow(newValue) {
       if (!newValue) {
         this.dlText = "";
@@ -2745,28 +2970,26 @@ export default Vue.extend({
     },
     soundEffectsOn(newValue) {
       this.soundEffectsIconPath = newValue ? checkedMusicIcon : musicIcon;
+      this.scanner.bPlaySoundOnSuccessfulRead = newValue;
     },
     async selectedUseCase(newUseCase, oldUseCase) {
+      if(!this.scanner) return;
       if (
         (newUseCase === "vin" || newUseCase === "dl") &&
-        this.judgeCurResolution() !== 'FULL HD'
+        this.judgeCurResolution() !== "FULL HD"
       ) {
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1920, 1080]);
         this.currentResolution = this.scanner.getResolution();
-
-        
         this.isLoadingCamera = false;
       }
       if (
         (newUseCase === "general" || newUseCase === "dpm") &&
-        this.judgeCurResolution() !== 'HD'
+        this.judgeCurResolution() !== "HD"
       ) {
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1280, 720]);
         this.currentResolution = this.scanner.getResolution();
-
-        
         this.isLoadingCamera = false;
       }
       if (
@@ -2783,10 +3006,28 @@ export default Vue.extend({
         );
         this.$message.open(config);
       }
-      if(newUseCase === "dl") {
-        await this.initDcp()
+      if (newUseCase === "dl") {
+        await this.initDcp();
       }
     },
+    selectedBarcodes() {
+      this.changeSettings();
+    },
+    region() {
+      this.changeSettings();
+    },
+    singleOrMul() {
+      this.changeSettings();
+    },
+    invertColourOn() {
+      this.changeSettings();
+    },
+    scanMode() {
+      this.changeSettings();
+    },
+    isFullImageLocalization() {
+      this.changeSettings();
+    }
   },
 });
 </script>
@@ -2794,6 +3035,21 @@ export default Vue.extend({
 <style scoped>
 .orangeFont {
   color: #fe8e14 !important;
+}
+
+.mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.3);
+  z-index: 20;
+  display: none;
+}
+
+.maskHidden {
+  display: block;
 }
 
 .barcodeScanner {
@@ -2906,12 +3162,12 @@ export default Vue.extend({
 }
 
 .decodeRes .resList {
-  /* width: 330px; */
+  width: 350px;
   min-width: 330px;
   max-width: 400px;
-  overflow: auto;
   padding: 24px;
   padding-left: 30px;
+  overflow: auto;
   color: white;
 }
 
@@ -2932,8 +3188,9 @@ export default Vue.extend({
 .decodeRes .restartVideo {
   position: absolute;
   left: 50%;
-  bottom: -40%;
+  bottom: -35%;
   transform: translateX(-50%);
+  height: 10vh;
 }
 
 .decodeRes .restartVideo button {
@@ -2994,12 +3251,20 @@ export default Vue.extend({
 .cameraDropdown .cameraInfo {
   word-break: break-all;
 }
-.cameraAndSoundsContainer .soundEffects {
+.cameraAndSoundsContainer .soundEffects, 
+.cameraAndSoundsContainer .web-screenshot {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
   width: 90px;
+}
+.cameraAndSoundsContainer .web-screenshot {
+  border-right: 1px solid rgb(98, 96, 94);
+  background-color: rgba(34, 34, 34);
+}
+.cameraAndSoundsContainer .web-screenshot img {
+  height: 50%;
 }
 .curUseCaseTip {
   position: absolute;
@@ -3068,14 +3333,18 @@ export default Vue.extend({
   top: 50%;
   left: 50%;
   width: 85%;
-  max-height: 70%;
+  max-height: 65vh;
   padding: 20px;
   color: #dddddd;
   background-color: rgba(34, 34, 34, 0.5);
-  padding: 17px 25px 12px;
+  padding: 17px 25px 13px;
   transform: translate(-50%, -50%);
-  overflow: auto;
   z-index: 20;
+}
+.dlResultContainer .dlInfo {
+  height: 100%;
+  max-height: calc(60vh - 25px);
+  overflow: auto;
 }
 .dlResultContainer .dlInfo li,
 .resContainer .dlInfo li {
@@ -3104,7 +3373,6 @@ export default Vue.extend({
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-top: 12px;
   color: #fe8e14;
   font-size: 16px;
 }
@@ -3138,6 +3406,7 @@ export default Vue.extend({
   color: #fff;
   transform: translateX(-50%);
   user-select: none;
+  pointer-events: none;
 }
 
 .cameraList {
@@ -3151,6 +3420,7 @@ export default Vue.extend({
   cursor: pointer;
   user-select: none;
 }
+
 @media (hover: hover) {
   .cameraList li:hover {
     background-color: rgba(50, 50, 52);
@@ -3198,7 +3468,7 @@ export default Vue.extend({
   }
 
   .cameraAndSoundsContainer .cameraDropdown .cameraInfo {
-    margin: 0; 
+    margin: 0;
   }
 
   .localImages,
@@ -3360,6 +3630,40 @@ export default Vue.extend({
     font-size: 16px;
   }
 }
+@media screen and (min-width: 980px) {
+  .screenshot {
+    display: none;
+  }
+}
+@media screen and (max-width: 980px) {
+  .cameraAndSoundsContainer .web-screenshot {
+    display: none;
+  }
+  .screenshot {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(0,0,0,0.6);
+    border-radius: 50%;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 30;
+  }
+
+  .screenshotIcon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    fill: #fff;
+    vertical-align: baseline;
+  }
+}
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .decodeRes .resContainer {
     width: 80%;
@@ -3406,9 +3710,15 @@ export default Vue.extend({
     bottom: 22%;
     font-size: 12px;
   }
-  .dlResultContainer {
+/*   .dlResultContainer {
     max-width: 70%;
     max-height: 60%;
+  } */
+  .dlResultContainer {
+    max-height: 55vh;
+  }
+  .dlResultContainer .dlInfo {
+    max-height: calc(50vh - 25px);
   }
   .result .barcodeFormat {
     padding-left: 5px;
@@ -3501,9 +3811,9 @@ export default Vue.extend({
   }
 }
 @media screen and (max-width: 350px) {
-  .localImages, .cameraAndSoundsContainer .soundEffects {
-    width: 45px;  
+  .localImages,
+  .cameraAndSoundsContainer .soundEffects {
+    width: 45px;
   }
-
 }
 </style>

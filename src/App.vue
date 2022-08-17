@@ -1,19 +1,12 @@
 <template>
   <div id="app">
-    <home v-if="$store.state.isStartScanning" />
-    <sidebar v-if="$store.state.isStartScanning" />
-    <barcode-scanner-component v-if="$store.state.isStartScanning" />
-    <guide v-if="!$store.state.isStartScanning" />
+    <router-view></router-view>
     <copy-right-footer />
   </div>
 </template>
 
 <script >
 import Vue from "vue";
-import Home from "./components/Home.vue";
-import Sidebar from "./components/Sidebar.vue";
-import BarcodeScannerComponent from "./components/BarcodeScanner.vue";
-import Guide from "./components/Guide.vue";
 import CopyRightFooter from "./components/CopyRightFooter.vue";
 import "./dbr";
 import "./dcp";
@@ -21,10 +14,6 @@ import "./dcp";
 export default Vue.extend({
   name: "App",
   components: {
-    Home,
-    Sidebar,
-    BarcodeScannerComponent,
-    Guide,
     CopyRightFooter,
   },
   mounted() {

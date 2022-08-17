@@ -60,7 +60,7 @@ export default new Vuex.Store({
       state.isStartScanning = true;
       state.guideSelection = guideSelection;
       switch (state.guideSelection) {
-        case "common1d":
+        case "common-oned":
           this.commit("onSelectedUseCaseChange", 'general');
           state.selected1dBarcodes = COMMON1D.slice();
           state.selected2dBarcodes = [];
@@ -68,7 +68,7 @@ export default new Vuex.Store({
           state.enableSelectBarcode = true;
           state.previousIsNotGeneral = false;
           break;
-        case "common2d":
+        case "common-twod":
           this.commit("onSelectedUseCaseChange", 'general');
           state.selected1dBarcodes = [];
           state.selected2dBarcodes = COMMON2D.slice();
@@ -76,7 +76,7 @@ export default new Vuex.Store({
           state.enableSelectBarcode = true;
           state.previousIsNotGeneral = false;
           break;
-        case "common1dAnd2d":
+        case "common-oned-twod":
           this.commit("onSelectedUseCaseChange", 'general');
           state.selected1dBarcodes = GENERAL1D.slice();
           state.selected2dBarcodes = GENERAL2D.slice();
@@ -84,7 +84,7 @@ export default new Vuex.Store({
           state.enableSelectBarcode = true;
           state.previousIsNotGeneral = false;
           break;
-        case "dl":
+        case "driver-license":
           this.commit("onSelectedUseCaseChange", 'dl');
           break;
         case "vin":

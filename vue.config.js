@@ -7,7 +7,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 // vue.config.js for less-loader@6.0.0
 module.exports = {
-  publicPath: './',
+  publicPath: process.env.VUE_APP_PUBLIC_PATH,//"./",
 
   configureWebpack: config=>{
     if(config.mode === "production"){

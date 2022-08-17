@@ -32,13 +32,13 @@
         <div class="optionRow1 optionRow">
           <div
             class="optionItemContainer"
-            :class="{ selected: guideSelection == 'common1d' }"
+            :class="{ selected: guideSelection == 'common-oned' }"
           >
             <label>
               <input
                 type="radio"
                 name="guideOptions"
-                value="common1d"
+                value="common-oned"
                 v-model="guideSelection"
               />
               <div class="itemHeader">
@@ -47,7 +47,7 @@
                   <div class="circle">
                     <a-icon
                       type="check"
-                      v-show="guideSelection == 'common1d'"
+                      v-show="guideSelection == 'common-oned'"
                     />
                   </div>
                 </div>
@@ -62,13 +62,13 @@
         <div class="optionRow2 optionRow">
           <div
             class="optionItemContainer"
-            :class="{ selected: guideSelection == 'common2d' }"
+            :class="{ selected: guideSelection == 'common-twod' }"
           >
             <label>
               <input
                 type="radio"
                 name="guideOptions"
-                value="common2d"
+                value="common-twod"
                 v-model="guideSelection"
               />
               <div class="itemHeader">
@@ -77,7 +77,7 @@
                   <div class="circle">
                     <a-icon
                       type="check"
-                      v-show="guideSelection == 'common2d'"
+                      v-show="guideSelection == 'common-twod'"
                     />
                   </div>
                 </div>
@@ -89,13 +89,13 @@
         <div class="optionRow3 optionRow">
           <div
             class="optionItemContainer"
-            :class="{ selected: guideSelection == 'common1dAnd2d' }"
+            :class="{ selected: guideSelection == 'common-oned-twod' }"
           >
             <label>
               <input
                 type="radio"
                 name="guideOptions"
-                value="common1dAnd2d"
+                value="common-oned-twod"
                 v-model="guideSelection"
               />
               <div class="itemHeader">
@@ -104,7 +104,7 @@
                   <div class="circle">
                     <a-icon
                       type="check"
-                      v-show="guideSelection == 'common1dAnd2d'"
+                      v-show="guideSelection == 'common-oned-twod'"
                     />
                   </div>
                 </div>
@@ -113,20 +113,20 @@
           </div>
           <div
             class="optionItemContainer"
-            :class="{ selected: guideSelection == 'dl' }"
+            :class="{ selected: guideSelection == 'driver-license' }"
           >
             <label>
               <input
                 type="radio"
                 name="guideOptions"
-                value="dl"
+                value="driver-license"
                 v-model="guideSelection"
               />
               <div class="itemHeader">
                 <div class="headerLeft">USA/CAN Driver’s License</div>
                 <div class="headerRight">
                   <div class="circle">
-                    <a-icon type="check" v-show="guideSelection == 'dl'" />
+                    <a-icon type="check" v-show="guideSelection == 'driver-license'" />
                   </div>
                 </div>
               </div>
@@ -282,13 +282,13 @@
           <div class="optionColumn1 optionColumn">
             <div
               class="optionItemContainer"
-              :class="{ selected: guideSelection == 'common1d' }"
+              :class="{ selected: guideSelection == 'common-oned' }"
             >
               <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
-                  value="common1d"
+                  value="common-oned"
                   v-model="guideSelection"
                 />
                 <!-- <div class="circle">
@@ -305,13 +305,13 @@
           <div class="optionColumn2 optionColumn">
             <div
               class="optionItemContainer"
-              :class="{ selected: guideSelection == 'common2d' }"
+              :class="{ selected: guideSelection == 'common-twod' }"
             >
               <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
-                  value="common2d"
+                  value="common-twod"
                   v-model="guideSelection"
                 />
                 <!-- <div class="circle">
@@ -323,13 +323,13 @@
             </div>
             <div
               class="optionItemContainer"
-              :class="{ selected: guideSelection == 'common1dAnd2d' }"
+              :class="{ selected: guideSelection == 'common-oned-twod' }"
             >
               <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
-                  value="common1dAnd2d"
+                  value="common-oned-twod"
                   v-model="guideSelection"
                 />
                 <!-- <div class="circle">
@@ -435,13 +435,13 @@
             </div>
             <div
               class="optionItemContainer"
-              :class="{ selected: guideSelection == 'dl' }"
+              :class="{ selected: guideSelection == 'driver-license' }"
             >
               <label @click="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
-                  value="dl"
+                  value="driver-license"
                   v-model="guideSelection"
                 />
                 <!-- <div class="circle">
@@ -494,8 +494,7 @@
     </div>
     <div class="supportedBrowsersInfo">
       <span>
-        Supported Browsers: Safari v11+, Chrome v61+, Firefox v52+(v55+ on Android/IOS) and Edge v16+
-        on Desktop/Android/iOS.
+        Supported Browsers: Safari v11+, Chrome v61+, Firefox v52+ (v55+ on Android/iOS) and Edge v16+ on Desktop/Android/iOS.
       </span>
     </div>
   </div>
@@ -506,24 +505,21 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Guide",
-  components: {
-  },
   data() {
     return {
       guideSelection: "",
     };
   },
   mounted() {
-    
-    this.guideSelection = "common1d";
+    this.guideSelection = "common-oned";
     if (window.location.hash.toLowerCase() === "#general") {
-      this.guideSelection = "common1dAnd2d";
+      this.guideSelection = "common-oned-twod";
       this.startScanning();
     } else if (window.location.hash.toLowerCase() === "#vin") {
       this.guideSelection = "vin";
       this.startScanning();
     } else if (window.location.hash.toLowerCase() === "#driverslicense") {
-      this.guideSelection = "dl";
+      this.guideSelection = "driver-license";
       this.startScanning();
     } else if (window.location.hash.toLowerCase() === "#dpm") {
       this.guideSelection = "dpm";
@@ -532,13 +528,12 @@ export default Vue.extend({
   },
   methods: {
     startScanning() {
-      
-
       setTimeout(() => {
+        if(!this.$store.state.isStartScanning) {
+          this.$router.push(`/${this.guideSelection}.html`);
+        }
         this.$store.commit("startScanning", this.guideSelection);
       }, 0);
-
-      // this.$store.commit("startScanning", this.guideSelection);
     },
   },
   computed: {},
@@ -555,6 +550,7 @@ export default Vue.extend({
   height: 100%;
   background-color: rgba(50, 50, 52);
   z-index: 15;
+  overflow: auto;
 }
 .guide header {
   display: flex;
@@ -585,7 +581,6 @@ header .headerLeft {
   /* justify-content: space-evenly; */
   flex: 1 1 auto;
   color: white;
-  overflow: auto;
 }
 .guideContainer .guideTitle {
   margin-top: 3.8vh;
@@ -619,7 +614,7 @@ header .headerLeft {
 }
 .guideOptions .optionRow:first-child {
   height: 13.5vh;
-  min-height: 70px;
+  min-height: 50px;
   margin-top: 0;
 }
 .guideOptions .optionRow:nth-child(2) {
@@ -790,7 +785,7 @@ header .headerLeft {
   .guideContainer .guideTextPart1 {
     margin: 5vh auto 0;
     width: 60%;
-    min-width: 900px;
+    min-width: 750px;
     max-width: auto;
     font-size: 16px;
     line-height: 26px;
@@ -965,7 +960,6 @@ header .headerLeft {
   .headerLeft .dynamsoftLogo img {
     height: 24px;
   }
-
   .guideContainer {
     justify-content: space-around;
   }
@@ -975,15 +969,20 @@ header .headerLeft {
   .guideContainer .guideTitle img {
     height: 32.7px;
   }
-  .guideContainer .guideTextPart1 {
+  /* .guideContainer .guideTextPart1 {
     display: none;
-  }
+  } */
   /* .guideContainer .guideIntroduction {
     margin: 0 auto;
     width: 80%;
     min-width: 600px;
     font-size: 12px;
   } */
+  .optionRow .optionItemContainer .itemBody {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   .guideContainer .guideOptions {
     display: flex;
   }
@@ -997,8 +996,8 @@ header .headerLeft {
     margin-top: 0;
   }
   .guide .guideOptions .optionRow {
-    height: auto;
-    min-height: auto;
+    height: 9vh;
+    min-height: 50px;
   }
   .optionItemContainer .circle {
     width: 14px;
@@ -1013,7 +1012,7 @@ header .headerLeft {
   }
   .guideContainer .btnContainer .startBtn {
     position: static;
-    height: auto;
+    height: 6vh;
     width: 120px;
     font-size: 14px;
   }
@@ -1022,6 +1021,22 @@ header .headerLeft {
   }
   .copyrightInfo {
     display: none;
+  }
+}
+@media screen and (max-height: 500px) {
+  .guide {
+    padding-bottom: 10px;
+  }
+ /*  .guide header {
+    display: none;
+  } */
+  .guideTitle {
+    padding: 10px 0 0 0;
+  }
+}
+@media screen and (orientation: portrait) {
+  .guideContainer {
+    overflow: auto;
   }
 }
 /* mobile */
@@ -1036,7 +1051,7 @@ header .headerLeft {
     background-color: #222222;
   }
 }
-@media screen and (max-width: 980px) and (orientation: portrait) {
+@media screen and (max-width: 980px) {
   /* .guideContainer .guideTextPart1 {
     display: none;
   } */
@@ -1045,8 +1060,8 @@ header .headerLeft {
     width: 84%;
     min-width: 300px;
     max-width: auto;
-    font-size: 12px;
-    line-height: 18px;
+    font-size: 16px;
+    line-height: 26px;
   }
   /* .guideContainer .guideIntroduction {
     margin: 2.5vh auto 0;
@@ -1080,6 +1095,17 @@ header .headerLeft {
   }
   .copyrightInfo {
     display: none;
+  }
+}
+@media screen and (max-height: 500px) {
+  .supportedBrowsersInfo {
+    display: none;
+  }
+}
+@media screen and (max-width: 500px) {
+  .guideContainer .guideTextPart1 {
+    font-size: 12px;
+    line-height: 20px;
   }
 }
 </style>

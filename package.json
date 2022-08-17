@@ -1,10 +1,12 @@
 {
   "name": "dbr_js_demo_vue",
-  "version": "1.1.0",
+  "version": "9.2.13",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --https true",
     "build": "vue-cli-service build",
+    "build:self-iis-test": "vue-cli-service build --mode self-iis-test",
+    "build:self-final": "vue-cli-service build --mode self-final",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -12,12 +14,14 @@
     "babel-plugin-import": "^1.13.3",
     "clipboard": "^2.0.8",
     "core-js": "^3.6.5",
-    "dynamsoft-code-parser": "^1.0.2",
-    "dynamsoft-javascript-barcode": "9.0.1",
+    "dynamsoft-code-parser": "1.1.0",
+    "dynamsoft-javascript-barcode": "9.2.13",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
     "prerender-spa-plugin": "^3.4.0",
     "qrcodejs2": "^0.0.2",
     "vue": "^2.6.11",
-    "vue-async-computed": "^3.9.0",
+    "vue-router": "^3.5.4",
     "vuex": "^3.4.0"
   },
   "devDependencies": {

@@ -7,43 +7,14 @@
       accept="image/png,image/jpeg,image/bmp,image/gif"
       style="display: none"
     />
-    <!-- style="width: 1px; height: 1px" -->
     <img src="../assets/image/add-image.svg" alt="" />
-
-    <!-- <a-modal title="Result" :visible="visible" cancelText="" :closable="false">
-      <ul class="content">
-        <li v-for="(item, fileIndex) in resultsInfo" :key="fileIndex"> -->
-    <!-- {{ fileIndex + 1 + "." + item.fileName + ":" }} -->
-    <!-- <ul>
-            <li
-              v-for="(result, resultIndex) in item.results"
-              :key="resultIndex"
-            >
-              <span>
-                {{ result.barcodeFormat + ":" }}
-              </span>
-              <span class="resultText" :data-clipboard-text="result.text">
-                {{ result.text }}
-                <a-icon type="copy" @click="copyResult()" />
-              </span>
-            </li>
-          </ul>
-        </li>
-        <div class="currentImg">
-          <img :src="currentImg" alt="" />
-        </div>
-      </ul>
-      <template slot="footer">
-        <a-button type="primary" @click="handleCancel"> OK </a-button>
-      </template>
-    </a-modal> -->
   </div>
 </template>
 
 <script >
 import Vue from "vue";
 import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleTransformationMode} from "dynamsoft-javascript-barcode";
-import {CodeParser} from "dynamsoft-code-parser"
+import { CodeParser } from "dynamsoft-code-parser";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 import Clipboard from "clipboard";
@@ -116,8 +87,8 @@ export default Vue.extend({
       });
     },
     async onIptChange(event) {
+      this.$emit("clearResultsCvs");
       try {
-        this.$emit("clearResultsCvs");
         this.resultsInfo = [];
         let input = event.target;
         let files = input.files;
@@ -130,6 +101,8 @@ export default Vue.extend({
           this.reader.ifSaveOriginalImageInACanvas = true;
           resultInfo.fileName = file.name;
           this.$store.commit("startDecodingFile");
+          this.$emit("removeDLResults");
+
           // show tip
           this.$message.destroy();
           let config = {};
@@ -153,6 +126,9 @@ export default Vue.extend({
               barcodeFormat = result.barcodeFormatString;
             }
             if(this.selectedUseCase === "dl" && result.barcodeFormatString === "PDF417" && result.barcodeFormatString_2.includes("No Barcode Format")){
+              if(!this.parser) {
+                this.parser = await CodeParser.createInstance();
+              }
               resultInfo.results.push({
                 barcodeFormat: barcodeFormat,
                 json: JSON.stringify(await this.parser.parseData(result.barcodeBytes)),
@@ -178,23 +154,15 @@ export default Vue.extend({
             this.$store.commit("finishDecodingFile");
             this.$emit("clearResultList");
           } else {
-            this.$emit("showResults", this.resultsInfo, this.currentImg, results);
             config.content = "Complete!";
             config.duration = 1;
             config.icon = (
               <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
             );
-            // this.visible = true;
-            // config = {};
-            // config.content = "Complete!";
-            // config.duration = 1;
-            // config.icon = (
-            //   <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
-            // );
           }
+          this.$emit("showResults", this.resultsInfo, this.currentImg, results);
           this.$message.open(config);
         }
-        // this.$store.commit("finishDecodingFile");
         input.value = "";
       } catch (ex) {
         this.resultsInfo.push(ex.message);
@@ -207,97 +175,80 @@ export default Vue.extend({
     trigger() {
       this.$refs.uploadImage.click();
     },
-  },
-  asyncComputed: {
-    runtimeSettings: {
-      async get() {
-        if(this.reader) {
-          let runtimeSettings = null;
-          this.changeRuntimeSettingsTimeoutId && clearTimeout(this.changeRuntimeSettingsTimeoutId);
-          this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
-            // scan mode
-            if (this.scanMode === "bestSpeed") {
-              await this.reader.updateRuntimeSettings("speed");
-            } else if (this.scanMode === "balance") {
-              await this.reader.updateRuntimeSettings("balance");
-            } else if (this.scanMode === "bestCoverage") {
-              await this.reader.updateRuntimeSettings("coverage");
+    async changeSettings() {
+      if(this.reader) {
+        let runtimeSettings = null;
+        this.changeRuntimeSettingsTimeoutId && clearTimeout(this.changeRuntimeSettingsTimeoutId);
+        this.changeRuntimeSettingsTimeoutId = setTimeout(async () => {
+          // scan mode
+          if (this.scanMode === "bestSpeed") {
+            await this.reader.updateRuntimeSettings("speed");
+          } else if (this.scanMode === "balance") {
+            await this.reader.updateRuntimeSettings("balance");
+          } else if (this.scanMode === "bestCoverage") {
+            await this.reader.updateRuntimeSettings("coverage");
+          }
+          runtimeSettings = await this.reader.getRuntimeSettings();
+          // colour invert
+          runtimeSettings.furtherModes.grayscaleTransformationModes = [
+            this.invertColourOn
+              ? EnumGrayscaleTransformationMode.GTM_INVERTED
+              : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+          ];
+          // barcode format part
+          runtimeSettings.barcodeFormatIds = 0;
+          runtimeSettings.barcodeFormatIds_2 = 0;
+          let newValue = this.selectedBarcodes;
+          for (let i = 0; i < newValue.length; i++) {
+            let n1 = BarcodeFormatMap.get(newValue[i]);
+            let n2 = BarcodeFormatMap_2.get(newValue[i]);
+            if (n1 !== undefined) {
+              runtimeSettings.barcodeFormatIds |= n1;
             }
-            runtimeSettings = await this.reader.getRuntimeSettings();
-            // colour invert
-            runtimeSettings.furtherModes.grayscaleTransformationModes = [
-              this.invertColourOn
-                ? EnumGrayscaleTransformationMode.GTM_INVERTED
-                : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-            ];
-            // barcode format part
-            runtimeSettings.barcodeFormatIds = 0;
-            runtimeSettings.barcodeFormatIds_2 = 0;
-            let newValue = this.selectedBarcodes;
-            for (let i = 0; i < newValue.length; i++) {
-              let n1 = BarcodeFormatMap.get(newValue[i]);
-              let n2 = BarcodeFormatMap_2.get(newValue[i]);
-              if (n1 !== undefined) {
-                runtimeSettings.barcodeFormatIds |= n1;
-              }
-              if (n2 !== undefined) {
-                runtimeSettings.barcodeFormatIds_2 |= n2;
-              }
+            if (n2 !== undefined) {
+              runtimeSettings.barcodeFormatIds_2 |= n2;
             }
-            if (this.selectedUseCase === "vin") {
-              runtimeSettings.localizationModes = [32, 8, 2, 0, 0, 0, 0, 0];
-              runtimeSettings.deblurLevel = 9;
-              runtimeSettings.scaleDownThreshold = 100000;
-              runtimeSettings.furtherModes.barcodeColourModes = [
-                1, 2, 32, 0, 0, 0, 0, 0,
-              ];
-            } else if (this.selectedUseCase === "dl") {
-              runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
-              runtimeSettings.deblurLevel = 9;
-              runtimeSettings.minResultConfidence = 0;
-            } else if (this.selectedUseCase === "dpm") {
-              runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
-                EnumDPMCodeReadingMode.DPMCRM_GENERAL;
-              let locModes = runtimeSettings.localizationModes;
-              for (let i in locModes) {
-                if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
-                  break;
-                }
-                if (locModes[i] == 0) {
-                  locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
-                  break;
-                }
+          }
+          if (this.selectedUseCase === "vin") {
+            runtimeSettings.localizationModes = [32, 8, 2, 0, 0, 0, 0, 0];
+            runtimeSettings.deblurLevel = 9;
+            runtimeSettings.scaleDownThreshold = 100000;
+            runtimeSettings.furtherModes.barcodeColourModes = [1, 2, 32, 0, 0, 0, 0, 0];
+          } else if (this.selectedUseCase === "dl") {
+            runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];
+            runtimeSettings.deblurLevel = 9;
+            runtimeSettings.minResultConfidence = 0;
+          } else if (this.selectedUseCase === "dpm") {
+            runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
+              EnumDPMCodeReadingMode.DPMCRM_GENERAL;
+            let locModes = runtimeSettings.localizationModes;
+            for (let i in locModes) {
+              if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) {
+                break;
+              }
+              if (locModes[i] == 0) {
+                locModes[i] = EnumLocalizationMode.LM_STATISTICS_MARKS;
+                break;
               }
             }
-            await this.reader.updateRuntimeSettings(runtimeSettings);
-            return runtimeSettings;
-          }, 500);
-        }
-      },
-      watch: [
-        "selectedBarcodes",
-        "invertColourOn",
-        "scanMode",
-      ],
-    },
-    selectedUseCase: {
-      async get() {
-        if(this.$store.state.selectedUseCase === "dl") {
-          this.parser || (this.parser = await CodeParser.createInstance());
-          // this.parser.setCodeFormat(EnumCodeFormat.CF_DL_AAMVA_ANSI);
-        }
-        return this.$store.state.selectedUseCase;
+          }
+          await this.reader.updateRuntimeSettings(runtimeSettings);
+          return runtimeSettings;
+        }, 500);
       }
-    },
+    }
   },
   computed: {
+    selectedUseCase() {
+      return this.$store.state.selectedUseCase;
+    },
     selectedBarcodes() {
       return this.$store.getters.selectedBarcodes;
     },
@@ -307,6 +258,17 @@ export default Vue.extend({
     scanMode() {
       return this.$store.state.scanMode;
     }
+  },
+  watch: {
+    async selectedBarcodes() {
+      this.changeSettings();
+    },
+    invertColourOn() {
+      this.changeSettings();
+    },
+    scanMode() {
+      this.changeSettings();
+    },
   }
 });
 </script>

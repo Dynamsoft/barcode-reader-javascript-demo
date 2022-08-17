@@ -57,7 +57,7 @@ export default Vue.extend({
     bottom: 0;
     height: 7.6vh;
     width: 100%;
-    z-index: 15;
+    z-index: 40;
   }
   .dynamsoftLogo {
     height: 58.2%;

@@ -55,9 +55,9 @@ export default {
     "standardRestrictionCode": "Standard restriction code",
     "standardVehicleCode": "Standard restriction code",
     "transactionNumber": "Transaction Number",
-    "underEighteenUntilDate": "Under 18 Until",
-    "underNineteenUntilDate": "Under 19 Until",
-    "underTwentyOneUntilDate": "Under 20 Until",
+    "under18Until": "Under 18 Until",
+    "under19Until": "Under 19 Until",
+    "under21Until": "Under 21 Until",
     "version": "Version",
     "weight": "Physical Description - Weight"
 }

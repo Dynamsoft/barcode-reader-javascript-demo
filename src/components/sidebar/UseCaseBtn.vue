@@ -176,6 +176,22 @@ export default Vue.extend({
       },
       set(value) {
         this.$store.commit("onSelectedUseCaseChange", value);
+        switch (value) {
+          case "general":
+            this.$router.push("/common-oned-twod.html");
+            break;
+          case "vin":
+            this.$router.push("/vin.html");
+            break;
+          case "dl": 
+            this.$router.push("/driver-license.html");
+            break;
+          case "dpm": 
+            this.$router.push("/dpm.html");
+            break;
+          default:
+            break;
+        }
       },
     },
     curUsecase() {
