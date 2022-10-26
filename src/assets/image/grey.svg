@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+  <g id="grey" transform="translate(0.5 0.5)">
+    <g id="Group_125" data-name="Group 125" transform="translate(0.5 0.5)">
+      <path id="Path_91" data-name="Path 91" d="M20.445,10.445V2.158A1.658,1.658,0,0,0,18.788.5H10.5" transform="translate(6.076 -0.5)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <path id="Path_92" data-name="Path 92" d="M20.445,10.5v8.288a1.658,1.658,0,0,1-1.658,1.658H10.5" transform="translate(6.076 6.076)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <path id="Path_93" data-name="Path 93" d="M.5,10.445V2.158A1.658,1.658,0,0,1,2.158.5h8.288" transform="translate(-0.5 -0.5)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <path id="Path_94" data-name="Path 94" d="M.5,10.5v8.288a1.658,1.658,0,0,0,1.658,1.658h8.288" transform="translate(-0.5 6.076)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <line id="Line_13" data-name="Line 13" y2="10.958" transform="translate(26.521 21.042)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      <line id="Line_14" data-name="Line 14" x2="10.958" transform="translate(21.042 26.524)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+    </g>
+  </g>
+</svg>

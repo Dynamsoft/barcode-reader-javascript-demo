@@ -15,6 +15,7 @@ export default Vue.extend({
   name: "App",
   components: {
     CopyRightFooter,
+    EmailInput
   },
   mounted() {
     this.$message.config({
@@ -63,16 +64,6 @@ li {
 }
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
-  #comm100-float-button-2 {
-    position: fixed !important;
-    top: 43.9vh !important;
-    right: -9px !important;
-    left: auto !important;
-    /* width: 1px !important;
-    height: 1px !important; */
-    overflow: hidden !important;
-    cursor: pointer !important;
-  }
 }
 @media screen and (max-width: 980px) and (orientation: landscape) {
   #comm100-float-button-2 {

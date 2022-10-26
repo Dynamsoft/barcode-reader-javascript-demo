@@ -10,7 +10,7 @@
     >
       <template slot="content">
         <div class="scanSettingsOptions" @click.stop="">
-          <div class="optionRows">
+          <div class="optionRows" v-show="!isShowSettings">
             <div
               class="optionRow1 optionRow"
               v-show="
@@ -226,6 +226,14 @@
               </div>
             </div>
           </div>
+          <div class="settingsContainer" v-show="isShowSettings">
+            <svg @click="$store.state.isShowSettings = false" t="1661248862703" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4901" width="25" height="25"><path d="M509.92 475.968l74.032-74.032a16 16 0 0 1 22.624 0l11.312 11.312a16 16 0 0 1 0 22.64L543.84 509.92l74.032 74.032a16 16 0 0 1 0 22.624l-11.312 11.312a16 16 0 0 1-22.624 0L509.92 543.84l-74.032 74.032a16 16 0 0 1-22.64 0l-11.312-11.312a16 16 0 0 1 0-22.624l74.032-74.032-74.032-74.032a16 16 0 0 1 0-22.64l11.312-11.312a16 16 0 0 1 22.64 0l74.032 74.032z m0 319.856c157.904 0 285.92-128 285.92-285.92C795.84 352 667.808 224 509.92 224 352 224 224 352 224 509.92c0 157.904 128 285.92 285.92 285.92z m0 48C325.504 843.84 176 694.336 176 509.92 176 325.52 325.504 176 509.92 176c184.416 0 333.92 149.504 333.92 333.92 0 184.416-149.504 333.92-333.92 333.92z" p-id="4902"></path></svg>
+            <div class="codeArea" v-html="runtimeSettings"></div>
+            <div class="copyCode" @click="copySettings">{{isCopied ? "Copied" : "Copy code snippets"}}</div>
+          </div>
+          <div class="optionRow5 optionRow" v-show="!isShowSettings">
+            <div @click="viewSettings">View Settings<svg t="1661247660036" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2331" width="20" height="20"><path d="M593.450667 512.128L360.064 278.613333l45.290667-45.226666 278.613333 278.762666L405.333333 790.613333l-45.226666-45.269333z" p-id="2332"></path></svg></div>
+          </div>
         </div>
       </template>
       <div
@@ -282,6 +290,7 @@ export default Vue.extend({
   data() {
     return {
       popoverPlacement: document.body.clientWidth > 980 ? 'rightBottom' : 'topRight',
+      isCopied: false
     };
   },
   mounted() {
@@ -303,8 +312,97 @@ export default Vue.extend({
     disableClick() {
       this.$refs.disableBtn.click();
     },
+    viewSettings() {
+      this.$store.state.runtimeSettings = "";
+      this.$store.state.runtimeSettings += `await scanner.dce.setResolution(${this.$store.state.currentResolution[0]}, ${this.$store.state.currentResolution[1]});<br>`
+      if (this.scanMode === "bestSpeed") {
+        this.$store.state.runtimeSettings += 'await scanner.updateRuntimeSettings(`speed`);<br>';
+      } else if (this.scanMode === "balance") {
+        this.$store.state.runtimeSettings += 'await scanner.updateRuntimeSettings(`balance`);<br>';
+      } else if (this.scanMode === "bestCoverage") {
+        this.$store.state.runtimeSettings += 'await scanner.updateRuntimeSettings(`coverage`);<br>';
+      }
+      
+      this.$store.state.runtimeSettings += 'const runtimeSettings = await scanner.getRuntimeSettings();<br>';
+      if(this.selectedUseCase === "dl") {
+        this.$store.state.runtimeSettings += 'runtimeSettings.barcodeFormatIds = 0x02000000;<br>';
+        this.$store.state.runtimeSettings += 'runtimeSettings.barcodeFormatIds_2 = 0;<br>';
+      } else if(this.selectedUseCase === 'vin') {
+        this.$store.state.runtimeSettings += 'runtimeSettings.barcodeFormatIds = 0x1 | 0x2 | 0x4 | 0x400 | 0x8 | 0x10 | 0x200 | 0x04000000 | 0x08000000;<br>';
+        this.$store.state.runtimeSettings += 'runtimeSettings.barcodeFormatIds_2 = 0;<br>';
+      } else if(this.selectedUseCase === 'dpm') {
+        this.$store.state.runtimeSettings += 'runtimeSettings.barcodeFormatIds = 0x08000000;<br>';
+        this.$store.state.runtimeSettings += 'runtimeSettings.barcodeFormatIds_2 = 0;<br>';
+      }
+
+      if(this.singleOrMul === "single") {
+        this.$store.state.runtimeSettings += 'runtimeSettings.expectedBarcodesCount = 1;<br>';
+      } else {
+        this.$store.state.runtimeSettings += 'runtimeSettings.expectedBarcodesCount = 512;<br>';
+      }
+
+      if(this.invertColourOn) {
+        this.$store.state.runtimeSettings += 'runtimeSettings.furtherModes.grayscaleTransformationModes = [1, 0, 0, 0, 0, 0, 0, 0];<br>';
+      } else {
+        this.$store.state.runtimeSettings += 'runtimeSettings.furtherModes.grayscaleTransformationModes = [2, 0, 0, 0, 0, 0, 0, 0];<br>';
+      }
+
+      switch (this.selectedUseCase) {
+        case "vin":
+          this.$store.state.runtimeSettings += 'runtimeSettings.localizationModes = [32, 8, 2, 0, 0, 0, 0, 0];<br>';
+          this.$store.state.runtimeSettings += 'runtimeSettings.deblurLevel = 9;<br>';
+          this.$store.state.runtimeSettings += 'runtimeSettings.scaleDownThreshold = 100000;<br>';
+          this.$store.state.runtimeSettings += 'runtimeSettings.furtherModes.barcodeColourModes = [1, 2, 32, 0, 0, 0, 0, 0];<br>';
+          break;
+        case "dl": 
+          this.$store.state.runtimeSettings += 'runtimeSettings.localizationModes = [16, 8, 2, 0, 0, 0, 0, 0];<br>';
+          this.$store.state.runtimeSettings += 'runtimeSettings.deblurLevel = 9;<br>';
+          this.$store.state.runtimeSettings += 'runtimeSettings.minResultConfidence = 0;<br>';
+          break;
+        case "dpm":
+          this.$store.state.runtimeSettings += 'runtimeSettings.furtherModes.dpmCodeReadingModes[0] = 2;<br>';
+          this.$store.state.runtimeSettings += 'runtimeSettings.localizationModes = [2, 32, 0, 0, 0, 0, 0, 0];<br>';
+          break;
+        default:
+          break;
+      }
+      this.$store.state.runtimeSettings += 'await scanner.updateRuntimeSettings(runtimeSettings);<br>'
+      this.$store.state.isShowSettings = true;
+    },
+    copySettings() {
+      if(this.isCopied) return;
+      navigator.clipboard.writeText(this.$store.state.runtimeSettings.replace(/<br>/g, "\n").replace(/"/g, "").replace(/&nbsp;/g, " ")).then(res => {
+        this.isCopied = true;
+        setTimeout(()=>{
+          this.isCopied = false;
+        },3000)
+        let config = {};
+        config.content = "Copied!";
+        config.duration = 1;
+        config.icon = (
+          <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
+        );
+        this.$message.open(config);
+      }, err => {
+        let config = {};
+        config.content = "Failed!";
+        config.icon = (
+          <a-icon type="frown" style={{ color: "#FE8E14" }}></a-icon>
+        );
+        this.$message.open(config);
+      });
+    },
   },
   computed: {
+    runtimeSettings() {
+      return this.$store.state.runtimeSettings;
+    },
+    selectedUseCase() {
+      return this.$store.state.selectedUseCase;
+    },
+    isShowSettings() {
+      return this.$store.state.isShowSettings;
+    },
     singleOrMul: {
       get() {
         return this.$store.state.singleOrMul;
@@ -357,6 +455,69 @@ export default Vue.extend({
   width: 100%;
   height: 100%;
 }
+.settingsContainer {
+  width: 100%;
+  height: 450px;
+  background-color: #323234;
+  padding: 0 17px 55px 17px;
+}
+.settingsContainer svg {
+  filter: invert(1);
+  vertical-align: middle;
+  position: absolute;
+  right: 3%;
+  cursor: pointer;
+}
+.settingsContainer .codeArea {
+  position: absolute;
+  top: 6%;
+  left: 5%;
+  right: 5%;
+  bottom: 15%;
+  background-color: #D5D5D5;
+  padding: 5px;
+  word-break: break-all;
+  font-family: OpenSans-Regular;
+  font-size: 14px;
+  overflow: auto;
+}
+.settingsContainer .copyCode {
+  position: absolute;
+  bottom: 8%;
+  color: #AAAAAA;
+  font-size: 14px;
+  cursor: pointer;
+}
+.settingsContainer .sendEmail {
+  position: absolute;
+  right: 5%;
+  bottom: 5%;
+  width: 128px;
+  height: 35px;
+  line-height: 35px;
+  background-color: #FE8E14;
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+.optionRow5 {
+  width: 100%;
+  height: 39px;
+  background-color: black;
+  cursor: pointer;
+}
+.optionRow5 div {
+  line-height: 39px;
+  color: #DDDDDD;
+  font-size: 16px;
+  float: right;
+  padding-right: 20px;
+}
+.optionRow5 div svg {
+  vertical-align: middle;
+  filter: invert(1);
+}
 .optionBtns {
   display: flex;
   flex-direction: row;
@@ -401,16 +562,21 @@ export default Vue.extend({
   }
   .scanSettingsOptions {
     width: 400px;
+    font-size: 18px;
+  }
+  .optionRows {
     padding-top: 25px;
     padding-bottom: 25px;
     padding-left: 25px;
-    font-size: 18px;
   }
   .optionRows .optionRow {
     margin-top: 19px;
   }
   .optionRows .optionRow:nth-child(1) {
     margin-top: 0;
+  }
+  .optionRow5 div {
+    padding-right: 10px;
   }
   .optionRow .optionText .shortIntro {
     font-size: 14px;
@@ -447,12 +613,28 @@ export default Vue.extend({
   }
   .scanSettingsOptions {
     width: 300px;
-    max-height: 80vh;
+    max-height: 65vh;
+    font-size: 14px;
+    overflow: auto;
+  }
+  .settingsContainer {
+    height: 200px;
+  }
+  .settingsContainer .sendEmail {
+    bottom: 8%;
+    width: 128px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 12px;
+  }
+  .settingsContainer .codeArea {
+    top: 12%;
+    bottom: 20%;
+  }
+  .optionRows {
     padding-top: 10px;
     padding-bottom: 10px;
     padding-left: 18px;
-    font-size: 14px;
-    overflow: auto;
   }
   .optionRows .optionRow {
     margin-top: 8px;
@@ -487,10 +669,12 @@ export default Vue.extend({
   }
   .scanSettingsOptions {
     width: 300px;
+    font-size: 14px;
+  }
+  .optionRows {
     padding-top: 25px;
     padding-bottom: 25px;
     padding-left: 18px;
-    font-size: 14px;
   }
   .optionRows .optionRow {
     margin-top: 19px;

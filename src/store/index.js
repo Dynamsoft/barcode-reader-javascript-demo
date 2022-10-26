@@ -41,6 +41,11 @@ export default new Vuex.Store({
     scanMode: 'bestSpeed',
     invertColourOn: false,
     soundEffectsOn: true,
+    isChanged: false,
+    isShowSettings: false,
+    runtimeSettings: "",
+    isShowEmailInput: false,
+    currentResolution: []
   },
   getters: {
     selectedBarcodes: state => {
@@ -108,6 +113,8 @@ export default new Vuex.Store({
       state.isShowUseCasePopover = false;
     },
     onSelectedUseCaseChange(state, newValue) {
+      state.runtimeSettings = "";
+      state.isShowSettings = false;
       state.selectedUseCase = newValue;
       if (state.selectedUseCase === 'general') {
         if (state.previousIsNotGeneral) {

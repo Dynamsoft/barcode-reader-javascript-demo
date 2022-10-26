@@ -40,9 +40,6 @@
               user-select: none;
             "
           ></div>
-          <div class="screenshot" ref="screenshot" v-show="!isUploadImage" @click="getImages">
-            <img class="screenshotIcon" src="../assets/image/capture.png" alt="capture">
-          </div>
         </div>
         <div class="copyright"><span>Powered by Dynamsoft</span></div>
       </div>
@@ -105,10 +102,7 @@
               : '',
           }"
         >
-          <img :src="soundEffectsIconPath" />
-        </div>
-        <div class="web-screenshot" @click="getImages" title="capture video frames">
-          <img src="../assets/image/capture.png" alt="capture">
+          <img :src="soundEffectsIconPath" :class="{ musicSelected: soundEffectsOn, musicUnSelected: !soundEffectsOn }"/>
         </div>
       </div>
       <div class="curUseCaseTip">
@@ -1776,13 +1770,13 @@
       </div>
       <div class="qrcode" v-show="!ifHasCamera">
         <div>
-          <h2>
+          <h2 style="margin-bottom: 50px">
             <a-icon type="warning" style="margin-right: 10px" />No camera detected
           </h2>
-          <div id="qrcode" ref="qrcode"></div>
+          <p class="scan-on-phone">Scan the QR code and try the demo on your phone</p>
+          <div id="qrcode" ref="qrcode" style="margin-bottom: 50px"></div>
           <div>
-            <p>Scan the QR Code above, and try the demo on your phone</p>
-            <p @click="triggerUploadImg">OR Upload from local</p>
+            <p @click="triggerUploadImg" style="font-size: 18px" class="web-upload">OR Upload from local</p>
           </div>
           <button style="display: none" @click="triggerUploadImg">
             UPLOAD IMAGE FROM LOCAL
@@ -1893,8 +1887,8 @@ import {BarcodeScanner,EnumGrayscaleTransformationMode,EnumDPMCodeReadingMode,En
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { CodeParser } from "dynamsoft-code-parser";
-import musicIcon from "../assets/image/music.svg";
-import checkedMusicIcon from "../assets/image/music-check.svg";
+import musicIcon from "../assets/image/music-unselected.svg";
+import checkedMusicIcon from "../assets/image/Music-selected.svg";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 // import DriverLicenseFields from "../assets/enum/DriverLicenseFields.js";
@@ -1951,20 +1945,16 @@ export default Vue.extend({
       oriRes: [],
       downloadImg: [],
       isShowMask: false,
+      dbrTemplate: ""
     };
   },
 
   async mounted() {
-    let useCaseName = location.pathname.split("/")[location.pathname.split("/").length - 1];
+    let splitArr = location.pathname.split("/");
+    let useCaseName = splitArr[splitArr.length - 1];
     this.$store.commit("startScanning", useCaseName.substring(0, useCaseName.indexOf(".")));
-    this.$refs.screenshot.style.display = "none";
-
-    // this.clientHeight = window.innerHeight;
-    // this.clientWidth = window.innerWidth;
     this.clientHeight = document.body.clientHeight;
     this.clientWidth = document.body.clientWidth;
-    // this.maskCanvas = document.getElementById("closeRegionMask");
-
     if (
       BarcodeScanner.browserInfo.OS == "Android" ||
       BarcodeScanner.browserInfo.OS == "iPhone"
@@ -1973,34 +1963,8 @@ export default Vue.extend({
     } else {
       this.isShowTorchIcon = false;
     }
-    window.addEventListener("resize", () => {
-      if (this.isUploadImage) {
-        this.drawResults();
-        return;
-      }
-      if (this.scanner && this.scanner.isOpen() && !this.scanner._bPauseScan) {
-        this.scanner.pauseScan();
-      }
-      this.changeClientTimeoutId && clearTimeout(this.changeClientTimeoutId);
-      this.scanner.ifShowScanRegionMask = false;
-      this.$refs.scanArea.style.display = "none";
-      this.changeClientTimeoutId = setTimeout(async () => {
-        this.clientHeight = document.body.clientHeight;
-        this.clientWidth = document.body.clientWidth;
-        if (this.scanner && this.scanner.isOpen()) {
-          this.currentResolution = this.scanner.getResolution();
-          this.visibleRegionInPixels = this.getVisibleRegion();
-          if(this.dlText.length === 0) {
-            this.scanner.resumeScan();
-          }
-        }
-        this.scanner.ifShowScanRegionMask = true;
-        this.$refs.scanArea.style.display = "";
-      }, 1000);
-    });
-    document.addEventListener("click", () => {
-      this.hideCameraList();
-    });
+    window.addEventListener("resize", ()=>{ this.resizeEvent(1000) });
+    document.addEventListener("click", this.hideCameraList);
     await this.showScanner();
     if (this.scanner && this.scanner.isOpen()) {
       this.visibleRegionInPixels = this.getVisibleRegion();
@@ -2048,6 +2012,39 @@ export default Vue.extend({
     }
   },
   methods: {
+    resizeEvent(delay) {
+      if (this.isUploadImage) {
+        this.drawResults();
+        return;
+      }
+      if(!this.scanner) return;
+      if (this.scanner.isOpen() && !this.scanner._bPauseScan) {
+        this.scanner.pauseScan();
+      }
+      this.changeClientTimeoutId && clearTimeout(this.changeClientTimeoutId);
+      this.scanner.ifShowScanRegionMask = false;
+      this.$refs.scanArea.style.display = "none";
+      this.changeClientTimeoutId = setTimeout(async () => {
+        this.clientHeight = document.body.clientHeight;
+        this.clientWidth = document.body.clientWidth;
+        if (this.scanner && this.scanner.isOpen()) {
+          this.currentResolution = this.scanner.getResolution();
+          this.visibleRegionInPixels = this.getVisibleRegion();
+          if(this.dlText.length === 0) {
+            this.scanner.resumeScan();
+          }
+        }
+        this.scanner.ifShowScanRegionMask = true;
+        this.$refs.scanArea.style.display = "";
+      }, delay);
+      if(document.body.clientWidth > 980 && this.bDebug) {
+        this.$refs.webScreenshot.style.display = "";
+        this.$refs.screenshot.style.display = "none";
+      } else if(document.body.clientWidth <= 980 && this.bDebug) {
+        this.$refs.webScreenshot.style.display = "none";
+        this.$refs.screenshot.style.display = "";
+      }
+    },
     closeDLResult() {
       this.dlText = "";
       this.scanner.resumeScan();
@@ -2111,13 +2108,7 @@ export default Vue.extend({
       if(this.isUploadImage) return;
       this.isShowMask = true;
       this.scanner.pauseScan();
-      let config = {};
-      config.content = "Capturing...";
-      config.icon = (
-        <a-icon type="loading" style={{ color: "#FE8E14" }}></a-icon>
-      );
-      config.duration = 0;
-      this.$message.open(config);
+      this.$message.loading({content: "Capturing...", duration: 0});
       await this.saveImages();
       const zip = new JSZip();
       for(let i=0;i<this.downloadImg.length;i++) {
@@ -2139,7 +2130,7 @@ export default Vue.extend({
             const blob = cvs.convertToBlob ? await cvs.convertToBlob() : await new Promise(resolve => {
               cvs.toBlob(blob => resolve(blob));
             });
-            this.downloadImg.push({ name: "Screenshot - " + new Date().toISOString() + ".png", blob});
+            this.downloadImg.push({ name: "Screenshot - " + new Date().toISOString().replace(/\:/g, "-") + ".png", blob});
             index++;
           }
         }
@@ -2149,6 +2140,12 @@ export default Vue.extend({
     getDate() {
       const date = new Date();
       return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+    },
+    handleString(str) {
+      let strArr = str.split("");
+      strArr[0] = strArr[0].toUpperCase();
+      str = strArr.join("");
+      return str;
     },
     showCameraList() {
       this.isShowCameraList = !this.isShowCameraList;
@@ -2301,10 +2298,11 @@ export default Vue.extend({
             }
           };
           let callBackInfo = await this.scanner.open();
+          this.$store.state.currentResolution[0] = callBackInfo.width;
+          this.$store.state.currentResolution[1] = callBackInfo.height;
           this.currentResolution = [callBackInfo.width, callBackInfo.height];
           this.isLoadingCamera = false;
           this.isResizing = false;
-          this.$refs.screenshot.style.display = "";
         }
       } catch (e) {
         let config = {};
@@ -2315,6 +2313,7 @@ export default Vue.extend({
         this.ifHasCamera = false;
         this.generateQRcode();
         this.$message.warning(config);
+
         return Promise.reject(e.message);
       }
     },
@@ -2356,8 +2355,10 @@ export default Vue.extend({
           <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
         );
         config.content = "Switched to " + this.cameraInfo + " successfully!";
+        this.$store.state.currentResolution = this.scanner.dce.getResolution();
       }
       this.$message.open(config);
+      this.$store.state.isShowSettings = false;
       this.isLoadingCamera = false;
     },
 
@@ -2365,8 +2366,8 @@ export default Vue.extend({
     generateQRcode() {
       // eslint-disable-next-line no-unused-vars
       var qrcode = new QRCode(this.$refs.qrcode, {
-        width: 200,
-        height: 200,
+        width: 160,
+        height: 160,
         text: window.location.href,
         colorDark: "#000000",
         colorLight: "#ffffff",
@@ -2487,6 +2488,7 @@ export default Vue.extend({
       await this.scanner.open();
       this.scanner.pauseScan();
       this.isLoadingCamera = false;
+      this.resizeEvent(0);
     },
 
     // copy decoded result
@@ -2579,8 +2581,10 @@ export default Vue.extend({
 
     // change runtimeSettings
     changeSettings() {
+      if(this.isUploadImage) return null;
       if (!this.scanner) return null;
       if (!this.scanner.isOpen()) return null;
+      this.$store.state.isShowSettings = false;
       this.isShowLoadingImg = true;
       if(!this.scanner._bPauseScan) {
         this.scanner.pauseScan();
@@ -2974,6 +2978,7 @@ export default Vue.extend({
     },
     async selectedUseCase(newUseCase, oldUseCase) {
       if(!this.scanner) return;
+
       if (
         (newUseCase === "vin" || newUseCase === "dl") &&
         this.judgeCurResolution() !== "FULL HD"
@@ -2981,6 +2986,7 @@ export default Vue.extend({
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1920, 1080]);
         this.currentResolution = this.scanner.getResolution();
+
         this.isLoadingCamera = false;
       }
       if (
@@ -2990,6 +2996,7 @@ export default Vue.extend({
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1280, 720]);
         this.currentResolution = this.scanner.getResolution();
+
         this.isLoadingCamera = false;
       }
       if (
@@ -3090,18 +3097,18 @@ export default Vue.extend({
 }
 
 .qrcode p {
-  font-size: 18px;
+  font-size: 24px;
   text-align: center;
 }
 
 .qrcode div:first-child {
-  height: 500px;
+  height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   position: absolute;
-  top: 50%;
+  top: 42%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
@@ -3212,7 +3219,7 @@ export default Vue.extend({
 }
 
 .localImages {
-  width: 90px;
+  width: 100px;
 }
 
 .cameraAndSoundsContainer {
@@ -3257,7 +3264,7 @@ export default Vue.extend({
   justify-content: center;
   align-items: center;
   height: 100%;
-  width: 90px;
+  width: 100px;
 }
 .cameraAndSoundsContainer .web-screenshot {
   border-right: 1px solid rgb(98, 96, 94);
@@ -3265,6 +3272,14 @@ export default Vue.extend({
 }
 .cameraAndSoundsContainer .web-screenshot img {
   height: 50%;
+}
+.cameraAndSoundsContainer .soundEffects .musicUnSelected {
+  height: 50%;
+  margin-top: 0;
+}
+.cameraAndSoundsContainer .soundEffects .musicSelected {
+  height: 60%;
+  margin-top: 7px;
 }
 .curUseCaseTip {
   position: absolute;
@@ -3413,14 +3428,13 @@ export default Vue.extend({
   position: absolute;
   left: 0;
   background-color: rgba(34, 34, 34);
-  z-index: 20;
+  z-index: 50;
 }
 .cameraList li .cameraOption {
   padding: 5px 12px;
   cursor: pointer;
   user-select: none;
 }
-
 @media (hover: hover) {
   .cameraList li:hover {
     background-color: rgba(50, 50, 52);
@@ -3489,14 +3503,23 @@ export default Vue.extend({
   .decodeRes .resContainer {
     width: 90%;
   }
+  #qrcode {
+    display: none;
+  }
+  .qrcode .scan-on-phone {
+    display: none;
+  }
+  .qrcode div:first-child {
+    height: auto !important;
+    top: 48%;
+  }
 }
 
 @media (max-width: 572px) {
-  .qrcode div:first-child {
-    height: auto !important;
-    top: 35%;
-  }
   .qrcode div:nth-child(3) {
+    display: none;
+  }
+  .qrcode .web-upload {
     display: none;
   }
   .qrcode button {
@@ -3507,9 +3530,6 @@ export default Vue.extend({
     background-color: #fe8e14;
     outline: none;
     border: none;
-  }
-  #qrcode {
-    display: none;
   }
   .decodeRes .resContainer {
     display: flex;
@@ -3578,9 +3598,9 @@ export default Vue.extend({
   /* .cameraAndSoundsContainer .soundEffects {
     width: 90px;
   } */
-  .cameraAndSoundsContainer .soundEffects img {
+  /* .cameraAndSoundsContainer .soundEffects img {
     height: 50%;
-  }
+  } */
   .curUseCaseTip {
     top: 3.9vh;
     /* width: calc(100% - 892px); */
@@ -3630,15 +3650,7 @@ export default Vue.extend({
     font-size: 16px;
   }
 }
-@media screen and (min-width: 980px) {
-  .screenshot {
-    display: none;
-  }
-}
 @media screen and (max-width: 980px) {
-  .cameraAndSoundsContainer .web-screenshot {
-    display: none;
-  }
   .screenshot {
     position: absolute;
     bottom: 10px;
@@ -3696,9 +3708,9 @@ export default Vue.extend({
   .cameraAndSoundsContainer .soundEffects {
     width: 60px;
   }
-  .cameraAndSoundsContainer .soundEffects img {
+  /* .cameraAndSoundsContainer .soundEffects img {
     height: 50%;
-  }
+  } */
   .curUseCaseTip {
     top: 12vh;
     width: auto;

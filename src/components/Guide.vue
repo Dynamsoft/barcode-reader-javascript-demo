@@ -284,7 +284,7 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'common-oned' }"
             >
-              <label @click="startScanning">
+              <label @click.once="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
@@ -307,7 +307,7 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'common-twod' }"
             >
-              <label @click="startScanning">
+              <label @click.once="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
@@ -325,7 +325,7 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'common-oned-twod' }"
             >
-              <label @click="startScanning">
+              <label @click.once="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
@@ -347,7 +347,7 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'vin' }"
             >
-              <label @click="startScanning">
+              <label @click.once="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
@@ -437,7 +437,7 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'driver-license' }"
             >
-              <label @click="startScanning">
+              <label @click.once="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
@@ -456,7 +456,7 @@
               class="optionItemContainer"
               :class="{ selected: guideSelection == 'dpm' }"
             >
-              <label @click="startScanning">
+              <label @click.once="startScanning">
                 <input
                   type="radio"
                   name="guideOptions"
@@ -489,12 +489,12 @@
         </div>
       </div>
       <div class="btnContainer">
-        <button class="startBtn" @click="startScanning">START SCAN</button>
+        <button class="startBtn" @click.once="startScanning">START SCAN</button>
       </div>
     </div>
     <div class="supportedBrowsersInfo">
       <span>
-        Supported Browsers: Safari v11+, Chrome v61+, Firefox v52+ (v55+ on Android/iOS) and Edge v16+ on Desktop/Android/iOS.
+        Supported Browsers: Safari v11+, Chrome v59+, Firefox v52+ (v55+ on Android/iOS) and Edge v16+ on Desktop/Android/iOS.
       </span>
     </div>
   </div>
@@ -505,6 +505,7 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Guide",
+  components: {},
   data() {
     return {
       guideSelection: "",
@@ -529,9 +530,7 @@ export default Vue.extend({
   methods: {
     startScanning() {
       setTimeout(() => {
-        if(!this.$store.state.isStartScanning) {
-          this.$router.push(`/${this.guideSelection}.html`);
-        }
+        this.$router.push(`/${this.guideSelection}.html${location.search}`);
         this.$store.commit("startScanning", this.guideSelection);
       }, 0);
     },

@@ -4,10 +4,10 @@
       v-on:change="onIptChange"
       ref="uploadImage"
       type="file"
-      accept="image/png,image/jpeg,image/bmp,image/gif"
+      accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp"
       style="display: none"
     />
-    <img src="../assets/image/add-image.svg" alt="" />
+    <img src="../assets/image/Images-add.svg" alt="images-add" />
   </div>
 </template>
 

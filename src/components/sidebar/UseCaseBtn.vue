@@ -178,16 +178,16 @@ export default Vue.extend({
         this.$store.commit("onSelectedUseCaseChange", value);
         switch (value) {
           case "general":
-            this.$router.push("/common-oned-twod.html");
+            this.$router.push(`/common-oned-twod.html${location.search}`);
             break;
           case "vin":
-            this.$router.push("/vin.html");
+            this.$router.push(`/vin.html${location.search}`);
             break;
           case "dl": 
-            this.$router.push("/driver-license.html");
+            this.$router.push(`/driver-license.html${location.search}`);
             break;
           case "dpm": 
-            this.$router.push("/dpm.html");
+            this.$router.push(`/dpm.html${location.search}`);
             break;
           default:
             break;

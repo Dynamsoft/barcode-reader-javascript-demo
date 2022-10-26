@@ -1,8 +1,5 @@
 <template>
   <div class="sidebar">
-    <div class="screenshot" v-show="$store.state.isFullImageLocalization && !isUploadImage && clientWidth < 980" @click="getImages">
-      <img class="screenshotIcon" src="../assets/image/capture.png" alt="capture">
-    </div>
     <use-case-btn />
     <barcode-format-btn />
     <full-image-localization-btn />
@@ -28,7 +25,8 @@ export default Vue.extend({
   props: ["isUploadImage"],
   data() {
     return {
-      clientWidth: document.body.clientWidth
+      clientWidth: document.body.clientWidth,
+      bDebug: location.search.includes('debug=true')
     }
   },
   mounted() {
@@ -36,11 +34,6 @@ export default Vue.extend({
       this.clientWidth = document.body.clientWidth;
     })
   },
-  methods: {
-    getImages() {
-      this.$emit("getImages");
-    }
-  }
 });
 </script>
 
