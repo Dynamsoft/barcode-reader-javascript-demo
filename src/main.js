@@ -32,6 +32,8 @@ const router = new VueRouter({
   mode: "history",
 })
 
+Vue.use(VueRouter)
+
 new Vue({
   render: h => h(App),
   store,

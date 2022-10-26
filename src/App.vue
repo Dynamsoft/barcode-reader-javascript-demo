@@ -14,8 +14,7 @@ import "./dcp";
 export default Vue.extend({
   name: "App",
   components: {
-    CopyRightFooter,
-    EmailInput
+    CopyRightFooter
   },
   mounted() {
     this.$message.config({
