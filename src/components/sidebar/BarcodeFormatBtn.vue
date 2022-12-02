@@ -1,87 +1,26 @@
 <template>
-  <div
-    class="barcodeFormatBtn"
-    @click.stop="
-      $store.state.enableSelectBarcode &&
-        $store.commit('switchBarcodeFormatPopover')
-    "
-  >
-    <a-popover
-      :placement="popoverPlacement"
-      trigger="click"
-      :visible="$store.state.isShowBarcodeFormatPopover"
-    >
+  <div class="barcodeFormatBtn" @mouseenter="$store.state.curSystem === 'Windows' && $store.state.enableSelectBarcode && !$store.state.isShowBarcodeFormatPopover && $store.commit('switchBarcodeFormatPopover')" @click.stop="!($store.state.curSystem === 'Windows') && $store.state.enableSelectBarcode && $store.commit('switchBarcodeFormatPopover')">
+    <a-popover :placement="popoverPlacement" trigger="click" :visible="$store.state.isShowBarcodeFormatPopover">
       <template slot="content">
         <div class="collapse" @click.stop="">
           <div class="collapsePanel collapsePanel1">
-            <div
-              class="collapsePanelHeader"
-              @click="switchPanelBody('panel1')"
-              :style="{
-                color: $store.state.enableSelectBarcode ? '' : '#676767',
-              }"
-            >
+            <div class="collapsePanelHeader" @click="switchPanelBody('panel1')" :style="{color: $store.state.enableSelectBarcode ? '' : '#676767',}">
               <span class="headerLeft">
-                <a-icon
-                  type="down"
-                  style="font-size: 12px; margin-right: 5px"
-                  :rotate="Panel1BodyHeight === '0' ? 180 : 0"
-                />
+                <a-icon type="down" style="font-size: 12px; margin-right: 5px" :rotate="Panel1BodyHeight === '0' ? 180 : 0"/>
                 <span>1D Barcodes </span>
               </span>
-              <span
-                class="headerRight"
-                @click.stop=""
-                :style="{
-                  display: $store.state.enableSelectBarcode ? '' : 'none',
-                }"
-              >
-                <label
-                  class="selectAllLabel selectAll1dLabel"
-                  for="selectAll1dCheckbox"
-                  :style="{ color: checkAll1dBarcode ? '#FE8E14' : '#999999' }"
-                  >Select All</label
-                >
-                <a-checkbox
-                  id="selectAll1dCheckbox"
-                  @change.stop="onCheckAll1dBarcodeChange"
-                  :checked="checkAll1dBarcode"
-                  :indeterminate="indeterminate1d"
-                >
+              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableSelectBarcode ? '' : 'none'}">
+                <label class="selectAllLabel selectAll1dLabel" for="selectAll1dCheckbox" :style="{ color: checkAll1dBarcode ? '#FE8E14' : '#999999' }">Select All</label>
+                <a-checkbox id="selectAll1dCheckbox" @change.stop="onCheckAll1dBarcodeChange" :checked="checkAll1dBarcode" :indeterminate="indeterminate1d">
                 </a-checkbox>
               </span>
             </div>
-            <div
-              class="collapsePanelBody"
-              :style="{
-                height: Panel1BodyHeight,
-                display: $store.state.enableSelectBarcode ? '' : 'none',
-              }"
-            >
+            <div class="collapsePanelBody" :style="{ height: Panel1BodyHeight, display: $store.state.enableSelectBarcode ? '' : 'none'}">
               <div class="selection1D barcodeSelection">
-                <ul
-                  v-for="(column, index) in selection1DColumn"
-                  :key="index"
-                  class="selectionColumn"
-                >
-                  <li
-                    v-for="item in column"
-                    :key="item.value"
-                    class="selectionItemContainer"
-                  >
-                    <label
-                      :class="{
-                        selected: $store.getters.selectedBarcodes.includes(
-                          item.value
-                        ),
-                      }"
-                    >
-                      <input
-                        type="checkbox"
-                        name=""
-                        :value="item.value"
-                        v-model="selected1dBarcodes"
-                      />
+                <ul v-for="(column, index) in selection1DColumn" :key="index" class="selectionColumn">
+                  <li v-for="item in column" :key="item.value" class="selectionItemContainer">
+                    <label :class="{ selected: $store.getters.selectedBarcodes.includes(item.value)}">
+                      <input type="checkbox" name="" :value="item.value" v-model="selected1dBarcodes"/>
                       {{ item.label }}
                     </label>
                   </li>
@@ -90,13 +29,7 @@
             </div>
           </div>
           <div class="collapsePanel collapsePanel2">
-            <div
-              class="collapsePanelHeader"
-              @click="switchPanelBody('panel2')"
-              :style="{
-                color: $store.state.enableSelectBarcode ? '' : '#676767',
-              }"
-            >
+            <div class="collapsePanelHeader" @click="switchPanelBody('panel2')" :style="{color: $store.state.enableSelectBarcode ? '' : '#676767'}">
               <span class="headerLeft">
                 <a-icon
                   type="down"
@@ -105,59 +38,17 @@
                 />
                 <span>2D Barcodes </span>
               </span>
-              <span
-                class="headerRight"
-                @click.stop=""
-                :style="{
-                  display: $store.state.enableSelectBarcode ? '' : 'none',
-                }"
-              >
-                <label
-                  class="selectAllLabel selectAll2dLabel"
-                  for="selectAll2dCheckbox"
-                  :style="{ color: checkAll2dBarcode ? '#FE8E14' : '#999999' }"
-                  >Select All</label
-                >
-                <a-checkbox
-                  id="selectAll2dCheckbox"
-                  @change.stop="onCheckAll2dBarcodeChange"
-                  :checked="checkAll2dBarcode"
-                  :indeterminate="indeterminate2d"
-                >
-                </a-checkbox>
+              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableSelectBarcode ? '' : 'none'}">
+                <label class="selectAllLabel selectAll2dLabel" for="selectAll2dCheckbox" :style="{ color: checkAll2dBarcode ? '#FE8E14' : '#999999' }">Select All</label>
+                <a-checkbox id="selectAll2dCheckbox" @change.stop="onCheckAll2dBarcodeChange" :checked="checkAll2dBarcode" :indeterminate="indeterminate2d"></a-checkbox>
               </span>
             </div>
-            <div
-              class="collapsePanelBody"
-              :style="{
-                height: Panel2BodyHeight,
-                display: $store.state.enableSelectBarcode ? '' : 'none',
-              }"
-            >
+            <div class="collapsePanelBody" :style="{ height: Panel2BodyHeight, display: $store.state.enableSelectBarcode ? '' : 'none'}">
               <div class="selection2D barcodeSelection">
-                <ul
-                  v-for="(column, index) in selection2DColumn"
-                  :key="index"
-                  class="selectionColumn"
-                >
-                  <li
-                    v-for="item in column"
-                    :key="item.value"
-                    class="selectionItemContainer"
-                  >
-                    <label
-                      :class="{
-                        selected: $store.getters.selectedBarcodes.includes(
-                          item.value
-                        ),
-                      }"
-                    >
-                      <input
-                        type="checkbox"
-                        name=""
-                        :value="item.value"
-                        v-model="selected2dBarcodes"
-                      />
+                <ul v-for="(column, index) in selection2DColumn" :key="index" class="selectionColumn">
+                  <li v-for="item in column" :key="item.value" class="selectionItemContainer">
+                    <label :class="{selected: $store.getters.selectedBarcodes.includes(item.value),}">
+                      <input type="checkbox" name="" :value="item.value" v-model="selected2dBarcodes"/>
                       {{ item.label }}
                     </label>
                   </li>
@@ -166,77 +57,22 @@
             </div>
           </div>
           <div class="collapsePanel collapsePanel3">
-            <div
-              class="collapsePanelHeader"
-              @click="switchPanelBody('panel3')"
-              :style="{
-                color: $store.state.enableSelectBarcode ? '' : '#676767',
-              }"
-            >
+            <div class="collapsePanelHeader" @click="switchPanelBody('panel3')" :style="{color: $store.state.enableSelectBarcode ? '' : '#676767'}">
               <span class="headerLeft">
-                <a-icon
-                  type="down"
-                  style="font-size: 12px; margin-right: 5px"
-                  :rotate="Panel3BodyHeight === '0' ? 180 : 0"
-                />
+                <a-icon type="down" style="font-size: 12px; margin-right: 5px" :rotate="Panel3BodyHeight === '0' ? 180 : 0"/>
                 <span>Other</span>
               </span>
-              <span
-                class="headerRight"
-                @click.stop=""
-                :style="{
-                  display: $store.state.enableSelectBarcode ? '' : 'none',
-                }"
-              >
-                <label
-                  class="selectAllLabel selectAllOtherLabel"
-                  for="selectAllOtherCheckbox"
-                  :style="{
-                    color: checkAllOtherBarcode ? '#FE8E14' : '#999999',
-                  }"
-                  >Select All</label
-                >
-                <a-checkbox
-                  id="selectAllOtherCheckbox"
-                  @change.stop="onCheckAllOtherBarcodeChange"
-                  :checked="checkAllOtherBarcode"
-                  :indeterminate="indeterminateOther"
-                >
-                </a-checkbox>
+              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableSelectBarcode ? '' : 'none'}">
+                <label class="selectAllLabel selectAllOtherLabel" for="selectAllOtherCheckbox" :style="{color: checkAllOtherBarcode ? '#FE8E14' : '#999999',}">Select All</label>
+                <a-checkbox id="selectAllOtherCheckbox" @change.stop="onCheckAllOtherBarcodeChange" :checked="checkAllOtherBarcode" :indeterminate="indeterminateOther"></a-checkbox>
               </span>
             </div>
-            <div
-              class="collapsePanelBody"
-              :style="{
-                height: Panel3BodyHeight,
-                display: $store.state.enableSelectBarcode ? '' : 'none',
-              }"
-            >
+            <div class="collapsePanelBody" :style="{height: Panel3BodyHeight, display: $store.state.enableSelectBarcode ? '' : 'none'}">
               <div class="selectionOther barcodeSelection">
-                <ul
-                  v-for="(column, index) in selectionOtherColumn"
-                  :key="index"
-                  class="selectionColumn"
-                >
-                  <li
-                    v-for="item in column"
-                    :key="item.value"
-                    class="selectionItemContainer"
-                  >
-                    <label
-                      :class="{
-                        selected: $store.getters.selectedBarcodes.includes(
-                          item.value
-                        ),
-                      }"
-                    >
-                      <input
-                        type="checkbox"
-                        name=""
-                        :value="item.value"
-                        v-model="selectedOtherBarcodes"
-                      />
-                      {{ item.label }}
+                <ul v-for="(column, index) in selectionOtherColumn" :key="index" class="selectionColumn">
+                  <li v-for="item in column" :key="item.value" class="selectionItemContainer">
+                    <label :class="{selected: $store.getters.selectedBarcodes.includes(item.value)}">
+                      <input type="checkbox" name="" :value="item.value" v-model="selectedOtherBarcodes"/>{{ item.label }}
                     </label>
                   </li>
                 </ul>
@@ -245,97 +81,10 @@
           </div>
         </div>
       </template>
-      <div
-        class="sidebarBtn"
-        :style="{
-          color: fontAndIconColor,
-          backgroundColor: bgColor,
-          cursor: $store.state.enableSelectBarcode ? '' : 'not-allowed',
-        }"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 16.398 18.178"
-          :style="{ stroke: fontAndIconColor }"
-        >
-          <g transform="translate(-280 -584)">
-            <g transform="translate(280.5 584.5)">
-              <g id="dial-finger">
-                <path
-                  d="M280.5,584.5h1.619"
-                  transform="translate(-280.5 -584.5)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M280.5,588.5h1.619"
-                  transform="translate(-280.5 -585.263)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M280.5,592.5h1.619"
-                  transform="translate(-280.5 -586.025)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M285.5,584.5h1.619"
-                  transform="translate(-281.453 -584.5)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M285.5,588.5h1.619"
-                  transform="translate(-281.453 -585.263)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M285.5,592.5h1.619"
-                  transform="translate(-281.453 -586.025)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M290.5,584.5h1.619"
-                  transform="translate(-282.406 -584.5)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-                <path
-                  d="M295.776,602.45l1.19-5.156a.943.943,0,0,0-.616-1.106l-4.216-1.428v-4.047a1.214,1.214,0,0,0-2.428,0v7.036s-.509-.661-1.024-1.295a1.287,1.287,0,0,0-1-.48h-.4a.948.948,0,0,0-.825,1.412l2.848,5.063"
-                  transform="translate(-281.611 -585.453)"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                />
-              </g>
-            </g>
-          </g>
-        </svg>
-        <label
-          :style="{
-            cursor: $store.state.enableSelectBarcode ? '' : 'not-allowed',
-          }"
-        >
-          Barcode Format
-        </label>
+      <div class="sidebarBtn" :style="{color: fontAndIconColor,backgroundColor: bgColor,cursor: $store.state.enableSelectBarcode ? '' : 'not-allowed'}">
+        <img v-show="$store.state.enableSelectBarcode" src="../../assets/image/icon-web-barcodes.svg" alt="format">
+        <img v-show="!$store.state.enableSelectBarcode" src="../../assets/image/icon-web-barcodes-disable.svg" alt="format-disable">
+        <label :style="{cursor: $store.state.enableSelectBarcode ? '' : 'not-allowed', color: $store.state.enableSelectBarcode ? 'white' : '#676767'}" class="formatLabel">Barcode Format</label>
       </div>
     </a-popover>
   </div>
@@ -424,17 +173,11 @@ export default Vue.extend({
   methods: {
     switchPanelBody(panel) {
       if (panel === "panel1") {
-        this.Panel1BodyHeight == "auto"
-          ? (this.Panel1BodyHeight = "0")
-          : (this.Panel1BodyHeight = "auto");
+        this.Panel1BodyHeight == "auto" ? (this.Panel1BodyHeight = "0") : (this.Panel1BodyHeight = "auto");
       } else if (panel === "panel2") {
-        this.Panel2BodyHeight == "auto"
-          ? (this.Panel2BodyHeight = "0")
-          : (this.Panel2BodyHeight = "auto");
+        this.Panel2BodyHeight == "auto" ? (this.Panel2BodyHeight = "0") : (this.Panel2BodyHeight = "auto");
       } else if (panel === "panel3") {
-        this.Panel3BodyHeight == "auto"
-          ? (this.Panel3BodyHeight = "0")
-          : (this.Panel3BodyHeight = "auto");
+        this.Panel3BodyHeight == "auto" ? (this.Panel3BodyHeight = "0") : (this.Panel3BodyHeight = "auto");
       }
     },
     onCheckAll1dBarcodeChange() {
@@ -585,177 +328,66 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.sidebarBtn {
-  height: 100%;
+.barcodeFormatBtn {border-bottom: 1px solid #222222;font-family: "OpenSans-Regular";}
+.sidebarBtn {height: 100%;}
+.formatLabel {font-family: "OpenSans-Regular";}
+
+.collapse {position: relative;margin: -12px -16px;padding: 8px 19px;background-color: rgba(50, 50, 52);overflow: auto;}
+.collapse .collapsePanel {width: 100%;color: white;margin-bottom: 10px;}
+
+.collapsePanel .collapsePanelHeader {display: flex;flex-direction: row;justify-content: space-between;align-items: center;padding-left: 5px;height: 36px;cursor: pointer;}
+.collapsePanelHeader .headerLeft {display: flex;flex-direction: row;align-items: center;}
+.collapsePanelHeader .headerRight .selectAllLabel {margin-right: 10px;cursor: pointer;}
+.collapsePanel .collapsePanelBody {overflow: hidden;}
+
+.barcodeSelection {display: flex;flex-direction: row;justify-content: space-between;/* align-items: center; */margin: 10px 0;}
+.barcodeSelection .selectionColumn {display: flex;flex-direction: column;}
+.barcodeSelection .selectionItemContainer {display: flex;position: relative;flex-direction: row;justify-content: flex-start;align-items: center;margin-bottom: 5px;}
+.barcodeSelection .selectionItemContainer:last-of-type {margin-bottom: 0;}
+
+.selectionItemContainer input {position: absolute;top: 0;left: 0;opacity: 0;}
+.selectionItemContainer label {display: flex;flex-direction: row;justify-content: center;align-items: center;width: 200px;height: 40px;color: #888888;text-align: center;background-color: rgba(34, 34, 34);transition: all .3s;cursor: pointer;}
+.selectionItemContainer .selected {color: white;background-color: #fe8e14;}
+
+.extraSettings {display: flex;flex-direction: row;flex-wrap: wrap;justify-content: space-between;align-items: center;margin-top: 10px;color: white;}
+.extraSettings .invertColourContainer label {cursor: pointer;}
+.extraSettings .dpmSwitchContainer label {cursor: pointer;}
+
+@media screen and (min-width: 980px) {
+  .barcodeFormatBtn {height: 25%;}
+  .formatLabel {margin-top: 5px;}
 }
-.collapse {
-  position: relative;
-  margin: -12px -16px;
-  padding: 8px 19px;
-  background-color: rgba(50, 50, 52);
-  overflow: auto;
+
+@media (min-width: 981px), screen and (max-width: 980px) and (orientation: landscape) {
+  .sidebarBtn img {width: 28px;height: 28px;}
+
+  .barcodeSelection {margin: 30px 0;justify-content: space-around;}
+
+  .collapse {width:650px;height: 50vh;min-height: 400px;max-height: 600px;font-size: 16px;}
+  .barcodeSelection .selectionItemContainer {margin-bottom: 30px;}
+  .selectionItemContainer label {width: 165px;}
 }
-.collapse .collapsePanel {
-  width: 100%;
-  color: white;
-  margin-bottom: 10px;
-}
-.collapsePanel .collapsePanelHeader {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  padding-left: 5px;
-  height: 36px;
-  cursor: pointer;
-}
-.collapsePanelHeader .headerLeft {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-.collapsePanelHeader .headerRight .selectAllLabel {
-  margin-right: 10px;
-  cursor: pointer;
-}
-.collapsePanel .collapsePanelBody {
-  overflow: hidden;
-}
-.barcodeSelection {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  /* align-items: center; */
-  margin: 10px 0;
-}
-.barcodeSelection .selectionColumn {
-  display: flex;
-  flex-direction: column;
-}
-.barcodeSelection .selectionItemContainer {
-  display: flex;
-  position: relative;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 5px;
-}
-.barcodeSelection .selectionItemContainer:last-of-type {
-  margin-bottom: 0;
-}
-.selectionItemContainer input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0;
-}
-.selectionItemContainer label {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  width: 200px;
-  height: 40px;
-  color: #888888;
-  text-align: center;
-  background-color: rgba(34, 34, 34);
-  transition: all .3s;
-  cursor: pointer;
-}
-.selectionItemContainer .selected {
-  color: white;
-  background-color: #fe8e14;
-}
-.extraSettings {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  color: white;
-}
-.extraSettings .invertColourContainer label {
-  cursor: pointer;
-}
-.extraSettings .dpmSwitchContainer label {
-  cursor: pointer;
-}
-@media (min-width: 981px),
-  screen and (max-width: 980px) and (orientation: landscape) {
-  .sidebarBtn svg {
-    width: 22.55px;
-    height: 24.93px;
-  }
-  .barcodeFormatBtn {
-    flex-grow: 1;
-  }
-  .barcodeSelection {
-    margin: 30px 0;
-    justify-content: space-around;
-  }
-  .collapse {
-    width: 70vw;
-    max-width: 800px;
-    min-width: 680px;
-    height: 50vh;
-    min-height: 400px;
-    max-height: 600px;
-    font-size: 18px;
-  }
-  .barcodeSelection .selectionItemContainer {
-    margin-bottom: 30px;
-  }
-  .selectionItemContainer label {
-    width: 140px;
-  }
-}
+
 @media screen and (max-width: 980px) and (orientation: landscape) {
-  .barcodeFormatBtn {
-    flex-grow: 2;
-  }
-  .barcodeSelection {
-    margin: 18px 0;
-  }
-  .collapse {
-    width: 500px;
-    height: 220px;
-    max-width: auto;
-    min-width: auto;
-    min-height: auto;
-    max-height: auto;
-    font-size: 12px;
-  }
-  .barcodeSelection .selectionItemContainer {
-    margin-bottom: 10px;
-  }
-  .selectionItemContainer label {
-    width: 120px;
-    height: 30px;
-  }
-  .sidebarBtn svg {
-    width: 15.38px;
-    height: 17px;
-  }
+  .barcodeFormatBtn {width: 25%;}
+  .barcodeSelection {margin: 18px 0;}
+  .barcodeSelection .selectionItemContainer {margin-bottom: 10px;}
+
+  .collapse {width: 500px;height: 220px;max-width: auto;min-width: auto;min-height: auto;max-height: auto;font-size: 12px;}
+  .selectionItemContainer label {width: 120px;height: 30px;}
+  .sidebarBtn img {width: 15.38px;height: 17px;}
 }
+
 /* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
-  .barcodeFormatBtn {
-    flex-grow: 2;
-  }
-  .collapse {
-    width: 300px;
-    height: 400px;
-  }
-  .barcodeSelection .selectionItemContainer {
-    margin-bottom: 10px;
-  }
-  .selectionItemContainer label {
-    width: 80px;
-  }
-  .sidebarBtn svg {
-    width: 15.38px;
-    height: 17px;
-  }
+  .barcodeFormatBtn {width: 25%;}
+  .collapse {width: 300px;height: 400px;}
+  .barcodeSelection .selectionItemContainer {margin-bottom: 10px;}
+  .selectionItemContainer label {width: 80px;}
+  .sidebarBtn img {width: 18px;height: 18px;}
+}
+
+@media screen and (max-width: 420px) {
+  .formatLabel {font-family: "Oswald-Regular";}
 }
 </style>

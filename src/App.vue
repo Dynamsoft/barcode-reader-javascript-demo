@@ -8,20 +8,30 @@
 <script >
 import Vue from "vue";
 import CopyRightFooter from "./components/CopyRightFooter.vue";
+import {BarcodeScanner} from "dynamsoft-javascript-barcode";
 import "./dbr";
 import "./dcp";
 
 export default Vue.extend({
   name: "App",
   components: {
-    CopyRightFooter
+    CopyRightFooter,
   },
+  async beforeMount() {
+    await this.getCurrentEnv();
+  }, 
   mounted() {
     this.$message.config({
       top: `80%`,
       maxCount: 3,
     });
   },
+  methods: {
+    async getCurrentEnv() {
+      const curEnv = await BarcodeScanner.detectEnvironment();
+      this.$store.state.curSystem = curEnv.OS;
+    }
+  }
 });
 </script>
 
@@ -60,6 +70,12 @@ li {
 #app {
   position: relative;
   height: 100%;
+}
+.ant-popover {
+  font-family: "OpenSans-Regular";
+}
+.ant-popover-inner {
+  background-color: #222222;
 }
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {

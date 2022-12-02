@@ -19,15 +19,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" sizes="192x192" href="./dynamsoft-192x192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="./dynamsoft-512x512.png" />
-  <link rel="manifest" href="./manifest.json" />
 </head>
 
 <body>
-  <noscript>
-    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
-      Please enable it to continue.</strong>
-  </noscript>
   <div id="app"></div>
+  <!--hooks insert pushState-->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js" onerror="!window.__PRERENDER_INJECTED&&(location.href='./index-cn.html')"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuex@3.4.0/dist/vuex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.3.1/dist/dbr.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-code-parser@1.1.0/dist/dcp.js"></script>
+
   <script type="application/ld+json">
     [{
       "@context": "http://schema.org",
@@ -47,25 +50,16 @@
     }]
   </script>
 
-  <!-- built files will be auto injected -->
-
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register("service-worker.js").then(function (registration) {
-          // Registration was successful
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, function (err) {
-          // registration failed :(
-          console.log('ServiceWorker registration failed: ', err);
-        }).catch(function (err) {
-          console.log(err)
-        });
-      });
-    } else {
-      console.log('service worker is not supported');
-    }
+    // only wait 10s during prerender
+    setTimeout(()=>document.dispatchEvent(new Event('render-event')),10000);
+    // set `engineResourcePath` should after `setTimeout render-event`, because `Dynamsoft` may not exist when cdn is unavailable
+    Dynamsoft.DBR.BarcodeReader.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.3.1/dist/";
+    Dynamsoft.DCP.CodeParser.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-code-parser@1.1.0/dist/";
+    /*hooks warning unpkg CDN*/
   </script>
+
+  <!-- built files will be auto injected -->
 </body>
 
 </html>

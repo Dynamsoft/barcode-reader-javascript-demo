@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "build:self-iis-test": "vue-cli-service build --mode self-iis-test",
-    "build:self-final": "vue-cli-service build --mode self-final",
+    "build:publish": "vue-cli-service build --mode publish",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -16,9 +16,6 @@
     "core-js": "^3.6.5",
     "dynamsoft-code-parser": "1.1.0",
     "dynamsoft-javascript-barcode": "9.3.1",
-    "file-saver": "^2.0.5",
-    "jszip": "^3.10.1",
-    "prerender-spa-plugin": "^3.4.0",
     "qrcodejs2": "^0.0.2",
     "vue": "^2.6.11",
     "vue-router": "^3.5.4",
@@ -28,12 +25,14 @@
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-vuex": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
+    "@vue/compiler-dom": "^3.2.44",
     "babel-eslint": "^10.1.0",
     "compression-webpack-plugin": "^5.0.1",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
     "less": "^4.1.1",
     "less-loader": "^6.0.0",
+    "prerender-spa-plugin": "^3.4.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "vue-template-compiler": "^2.6.11",
     "webpack-bundle-analyzer": "^4.4.2"

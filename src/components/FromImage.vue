@@ -1,17 +1,11 @@
 <template>
   <div class="fromImage" @click="trigger">
-    <input
-      v-on:change="onIptChange"
-      ref="uploadImage"
-      type="file"
-      accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp"
-      style="display: none"
-    />
+    <input v-on:change="onIptChange" ref="uploadImage" type="file" accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp" style="display: none"/>
     <img src="../assets/image/Images-add.svg" alt="images-add" />
   </div>
 </template>
 
-<script >
+<script>
 import Vue from "vue";
 import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleTransformationMode} from "dynamsoft-javascript-barcode";
 import { CodeParser } from "dynamsoft-code-parser";
@@ -190,18 +184,7 @@ export default Vue.extend({
           }
           runtimeSettings = await this.reader.getRuntimeSettings();
           // colour invert
-          runtimeSettings.furtherModes.grayscaleTransformationModes = [
-            this.invertColourOn
-              ? EnumGrayscaleTransformationMode.GTM_INVERTED
-              : EnumGrayscaleTransformationMode.GTM_ORIGINAL,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-          ];
+          runtimeSettings.furtherModes.grayscaleTransformationModes = [this.invertColourOn ? EnumGrayscaleTransformationMode.GTM_INVERTED : EnumGrayscaleTransformationMode.GTM_ORIGINAL,0,0,0,0,0,0,0,];
           // barcode format part
           runtimeSettings.barcodeFormatIds = 0;
           runtimeSettings.barcodeFormatIds_2 = 0;
@@ -274,25 +257,9 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.fromImage {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+.fromImage {height: 100%;width: 100%;display: flex;justify-content: center;align-items: center;}
+.fromImage img {height: 50%;}
 
-.fromImage img {
-  height: 50%;
-}
-
-.currentImg {
-  width: 100%;
-  height: 100%;
-}
-
-.currentImg img {
-  width: 100%;
-  height: 100%;
-}
+.currentImg {width: 100%;height: 100%;}
+.currentImg img {width: 100%;height: 100%;}
 </style>

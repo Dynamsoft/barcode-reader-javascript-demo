@@ -5,11 +5,9 @@ const PrerenderSPAPlugin = require('prerender-spa-plugin')
 const Renderer = PrerenderSPAPlugin.PuppeteerRenderer;
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
-
 // vue.config.js for less-loader@6.0.0
 module.exports = {
   publicPath: process.env.VUE_APP_PUBLIC_PATH,//"./",
-
 
   configureWebpack: config=>{
     if(config.mode === "production"){
@@ -43,7 +41,13 @@ module.exports = {
           })
         );	
     }
-
+    config.externals = {
+      'vue': 'Vue',
+      'vuex':'Vuex',
+      'clipboard': 'ClipboardJS',
+      'dynamsoft-javascript-barcode': 'Dynamsoft.DBR',
+      'dynamsoft-code-parser': 'Dynamsoft.DCP'
+    }
   },
   chainWebpack: config => {
     config.plugins.delete('preload');

@@ -41,11 +41,13 @@ export default new Vuex.Store({
     scanMode: 'bestSpeed',
     invertColourOn: false,
     soundEffectsOn: true,
+    isShowAdvancedSettings: false,
     isChanged: false,
     isShowSettings: false,
     runtimeSettings: "",
     isShowEmailInput: false,
-    currentResolution: []
+    currentResolution: [],
+    curSystem: ""
   },
   getters: {
     selectedBarcodes: state => {

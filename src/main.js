@@ -32,14 +32,8 @@ const router = new VueRouter({
   mode: "history",
 })
 
-Vue.use(VueRouter)
-
 new Vue({
   render: h => h(App),
   store,
-  router,
-  mounted() {
-    // You'll need this for renderAfterDocumentEvent.
-    document.dispatchEvent(new Event('render-event'))
-},
+  router
 }).$mount('#app')
