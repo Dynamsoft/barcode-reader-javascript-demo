@@ -228,6 +228,8 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Guide",
+  components: {
+  },
   data() {
     return {
       guideSelection: "",
@@ -361,7 +363,6 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   header .headerLeft {display: flex;}
   .headerLeft .dynamsoftLogo {margin-left: 4vw;}
   .headerLeft .dynamsoftLogo img {height: 24px;}
-  
   .guideContainer {justify-content: space-around;}
   .guideContainer .guideTitle {margin-top: 0;}
   .guideContainer .guideTitle img {height: 32.7px;}

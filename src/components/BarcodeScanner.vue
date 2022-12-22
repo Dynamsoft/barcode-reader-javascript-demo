@@ -3,7 +3,7 @@
     <div :class="{mask: true, maskHidden: isShowMask}"></div>
     <advanced-settings @getAdvancedSettings="getAdvancedSettings" v-show="$store.state.isShowAdvancedSettings"/>
     <home />
-    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" />
+    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" :bSupportFocus="bSupportFocus"/>
     <div class="barcodeScanner">
       <div v-once class="videoContainer" ref="videoContainer" style="width: 100%;height: 100%;min-width: 100px;min-height: 100px;background: #ddd;position: absolute;">
         <div class="dce-video-container" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%"></div>
@@ -28,15 +28,13 @@
           </div>
         </div>
         <div class="localImages">
-          <from-image
-            ref="fromimage" @showResults="showResults" :selectedUseCase="selectedUseCase" @clearResultsCvs="clearResultsCvs" @clearResultList="clearResultList" @removeDLResults="removeDLResults"
-          />
+          <from-image ref="fromimage" @showResults="showResults" :isUploadImage="isUploadImage" :selectedUseCase="selectedUseCase" @clearResultsCvs="clearResultsCvs" @clearResultList="clearResultList" @removeDLResults="removeDLResults"/>
         </div>
         <div class="soundEffects" @click="soundEffectsSwitch" :style="{backgroundColor: $store.state.soundEffectsOn? 'rgba(110, 110, 110, .8)': '',}">
           <img :src="soundEffectsIconPath" :class="{ musicSelected: soundEffectsOn, musicUnSelected: !soundEffectsOn }"/>
         </div>
       </div>
-      <div class="curUseCaseTip">
+      <div class="curUseCaseTip" v-show="!isUploadImage">
         {{ this.curUseCase }}
       </div>
       <ul class="resultContainer" v-show="selectedUseCase !== 'dl' && !isUploadImage">
@@ -108,25 +106,27 @@
             <div class="resultsPanel" ref="resultsPanel"></div>
           </div>
           <div class="resList">
-            <p style="font-size: 24px; margin-bottom: 15px">Results:</p>
+            <div class="results-header">
+              <div class="results-header-title">Results</div>
+              <div v-show="(selectedUseCase === 'dl' && results.length && results[0].results.length)" class="copyBtnForDl" @click="copyDLResult(copiedDLInfo(getDLInfo(results[0].results[0].json)))">Copy</div>
+            </div>
             <ul v-for="(item, index) in results" :key="index">
+              <div class="no-pdf417" v-if="selectedUseCase === 'dl' && !item.results.length && !item.parseFailed">No PDF417 code is found !</div>
+              <div class="parse-failed" v-if="selectedUseCase === 'dl' && item.parseFailed">Driver's License parse failed !</div>
+              <div class="no-barcode" v-if="!item.results.length && selectedUseCase !== 'dl'">No barcodes found !</div>
               <li v-for="(result, i) in item.results" :key="i">
-                <ul class="dlInfo" v-if="selectedUseCase === 'dl' && result.json">
-                  {{ result.barcodeFormat + ": " }}
+                <ul class="dlInfo" v-if="(selectedUseCase === 'dl' && result.json)">
                   <li v-for="(info, infoIndex) in getDLInfo(result.json)" :key="infoIndex">
-                    <span class="description"> {{ info.description }}: </span>
+                    <span class="description">{{ info.description }}: </span>
                     <span class="value">{{ info.value }}</span>
                   </li>
                 </ul>
                 <template v-else>
-                  {{ result.barcodeFormat + ": " + result.text }}
+                  <span :title="result.text">{{ i+1 + ". " + result.barcodeFormat + ": " + result.text }}</span>
                 </template>
-                <a href="javascript:void(0)" v-show="!isCopied[i]" @click="copyResText(selectedUseCase === 'dl' ? copiedDLInfo(getDLInfo(result.json)) : result.text, i)">
-                  Copy
-                </a>
-                <a href="javascript:void(0)" v-show="isCopied[i]" class="orangeFont" @click="copyResText(selectedUseCase === 'dl' ? copiedDLInfo(getDLInfo(result.json)) : result.text,i)">
-                  Copied
-                </a>
+                <div v-show="selectedUseCase !== 'dl'" class="resListCopyBtn" @click="copyResText(result.text, i)">
+                  <div :class="[{orangeFont: isCopied[i]}]">{{!isCopied[i] ? "Copy" : "Copied"}}</div>
+                </div>
               </li>
             </ul>
           </div>
@@ -161,8 +161,8 @@ import musicIcon from "../assets/image/music-unselected.svg";
 import checkedMusicIcon from "../assets/image/Music-selected.svg";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
-// import DriverLicenseFields from "../assets/enum/DriverLicenseFields.js";
 import CodeParserFields from "../assets/enum/CodeParserFields";
+import CodeParserFieldsZA from "../assets/enum/CodeParserFieldsZA"
 import FromImage from "./FromImage.vue";
 import Home from "./Home.vue";
 import Sidebar from "./Sidebar.vue";
@@ -219,6 +219,8 @@ export default Vue.extend({
       isShowMask: false,
       isShowAdvancedSettingsBtn: false,
       dbrTemplate: "",
+      bSettings: location.search.includes('settings=true'),
+      bSupportFocus: true
     };
   },
 
@@ -228,7 +230,7 @@ export default Vue.extend({
     this.$store.commit("startScanning", useCaseName.substring(0, useCaseName.indexOf(".")));
     this.clientHeight = document.body.clientHeight;
     this.clientWidth = document.body.clientWidth;
-    if (BarcodeScanner.browserInfo.OS == "Android" || (BarcodeScanner.browserInfo.OS == "iPhone" && BarcodeScanner.browserInfo.version >= 17)) {
+    if (["Android", "iPhone"].includes(BarcodeScanner.browserInfo.OS) && BarcodeScanner.browserInfo.version >= 17) {
       this.isShowTorchIcon = true;
     } else {
       this.isShowTorchIcon = false;
@@ -260,7 +262,7 @@ export default Vue.extend({
         this.isShowTipImg = false;
       }, 5000);
     }
-    if ((BarcodeScanner.browserInfo.OS === "Android" || BarcodeScanner.browserInfo.OS === "iPhone") && (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") && (window.orientation === 0 || window.orientation === 180)) {
+    if (["Android", "iPhone"].includes(BarcodeScanner.browserInfo.OS) && ["vin", "dl"].includes(this.selectedUseCase) && [0,180].includes(window.orientation)) {
       let config = {};
       config.duration = 2;
       config.content = "Rotate your device.";
@@ -299,6 +301,13 @@ export default Vue.extend({
         }
         this.scanner.ifShowScanRegionMask = true;
       }, delay);
+      if(document.body.clientWidth > 980 && this.bDebug) {
+        this.$refs.webScreenshot.style.display = "";
+        this.$refs.screenshot.style.display = "none";
+      } else if(document.body.clientWidth <= 980 && this.bDebug) {
+        this.$refs.webScreenshot.style.display = "none";
+        this.$refs.screenshot.style.display = "";
+      }
     },
     closeDLResult() {
       this.dlText = "";
@@ -310,6 +319,10 @@ export default Vue.extend({
         return dlInfo;
       }
       const json = JSON.parse(txt);
+      let fieldsMap = CodeParserFields;
+      if(json.resultInfoType === 4) {
+        fieldsMap = CodeParserFieldsZA;
+      }
       let originaInfo = {};
       if (json.resultInfo && json.resultInfo.AAMVADLInfo) {
         originaInfo = {
@@ -338,9 +351,9 @@ export default Vue.extend({
       };
       abbrs.forEach((abbr) => {
         if (originaInfo[abbr]) {
-          if (abbr in CodeParserFields) {
+          if (abbr in fieldsMap) {
             dlInfo.push({
-              description: CodeParserFields[abbr],
+              description: fieldsMap[abbr],
               value: originaInfo[abbr],
             });
           } else if (abbr in dataDictionary) {
@@ -517,7 +530,6 @@ export default Vue.extend({
         this.scanner || (this.scanner = await BarcodeScanner.createInstance());
         window.scanner = this.scanner;
         this.scanner.bPlaySoundOnSuccessfulRead = this.soundEffectsOn;
-        // this.scanner.intervalTime = 1000;
         this.scanner.setVideoFit("cover");
         if (this.selectedUseCase === "dl") {
           await this.initDcp();
@@ -539,7 +551,7 @@ export default Vue.extend({
           await this.scanner.setUIElement(this.$refs.videoContainer);
           this.scanner.ifSaveOriginalImageInACanvas = true;
           this.scanner.setResolution([1280, 720]);
-          if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
+          if (["vin", "dl"].includes(this.selectedUseCase)) {
             this.scanner.setResolution([1920, 1080]);
           }
           this.scanner.onFrameRead = async (results) => {
@@ -563,6 +575,8 @@ export default Vue.extend({
             }
           };
           let callBackInfo = await this.scanner.open();
+          const capabilities = this.scanner.getCapabilities();
+          this.bSupportFocus = !!capabilities.focusDistance;
           this.$store.state.currentResolution[0] = callBackInfo.width;
           this.$store.state.currentResolution[1] = callBackInfo.height;
           this.currentResolution = [callBackInfo.width, callBackInfo.height];
@@ -601,6 +615,8 @@ export default Vue.extend({
       let resulution = item[1] === "HD" ? [1280, 720] : [1920, 1080];
       await this.scanner.setCurrentCamera(item[0].deviceId);
       await this.scanner.setResolution(resulution);
+      const capabilities = this.scanner.getCapabilities();
+      this.bSupportFocus = !!capabilities.focusDistance;
       this.currentResolution = this.scanner.getResolution();
       this.currentCamera = await this.scanner.getCurrentCamera();
       if (this.currentCamera.deviceId !== item[0].deviceId) {
@@ -610,10 +626,7 @@ export default Vue.extend({
         config.content = "Switch camera failed!";
       } else if (this.judgeCurResolution() !== item[1]) {
         config.icon = <a-icon type="meh" style={{ color: "#FE8E14" }}></a-icon>;
-        config.content =
-          "Switch resolution failed. " +
-          item[1] +
-          " might be unsupported in the camera.";
+        config.content = "Switch resolution failed. " + item[1] + " might be unsupported in the camera.";
       } else {
         config.icon = (
           <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
@@ -750,8 +763,17 @@ export default Vue.extend({
 
     // copy decoded result
     copyResText(text, index) {
+      if(this.isCopied[index]) return;
       navigator.clipboard.writeText(text);
       this.$set(this.isCopied, index, true);
+      setTimeout(()=>{
+        this.$set(this.isCopied, index, false);
+      },5000)
+    },
+
+    copyDLResult(text) {
+      this.$message.success({content: "Copied!", duration: 1});
+      navigator.clipboard.writeText(text);
     },
 
     judgeCurResolution() {
@@ -840,13 +862,7 @@ export default Vue.extend({
         runtimeSettings.furtherModes.grayscaleTransformationModes = [this.invertColourOn ? EnumGrayscaleTransformationMode.GTM_INVERTED : EnumGrayscaleTransformationMode.GTM_ORIGINAL,0,0,0,0,0,0,0,];
         // set scan region
         if (this.isFullImageLocalization) {
-          runtimeSettings.region = {
-            regionLeft: 0,
-            regionRight: 100,
-            regionTop: 0,
-            regionBottom: 100,
-            regionMeasuredByPercentage: 1,
-          };
+          runtimeSettings.region = null;
         } else {
           this.$refs.scanArea.style.display = "";
           runtimeSettings.region = this.region;
@@ -876,8 +892,7 @@ export default Vue.extend({
           runtimeSettings.deblurLevel = 9;
           runtimeSettings.minResultConfidence = 0;
         } else if (this.selectedUseCase === "dpm") {
-          runtimeSettings.furtherModes.dpmCodeReadingModes[0] =
-            EnumDPMCodeReadingMode.DPMCRM_GENERAL;
+          runtimeSettings.furtherModes.dpmCodeReadingModes[0] = EnumDPMCodeReadingMode.DPMCRM_GENERAL;
           let locModes = runtimeSettings.localizationModes;
           for (let i in locModes) {
             if (locModes[i] == EnumLocalizationMode.LM_STATISTICS_MARKS) break;
@@ -901,7 +916,7 @@ export default Vue.extend({
         }
         this.scanner.ifShowScanRegionMask = true;
         return runtimeSettings;
-      }, 500);
+      }, 300);
     },
   },
   computed: {
@@ -1002,6 +1017,15 @@ export default Vue.extend({
     scanMode() {
       return this.$store.state.scanMode;
     },
+    autoZoom() {
+      return this.$store.state.autoZoom;
+    },
+    autoFocus() {
+      return this.$store.state.autoFocus;
+    },
+    autoSuggestTip() {
+      return this.$store.state.autoSuggestTip;
+    },
     invertColourOn() {
       return this.$store.state.invertColourOn;
     },
@@ -1025,7 +1049,7 @@ export default Vue.extend({
       const vw = this.currentResolution[0];
       const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
       let left = 0.5 - this.regionEdgeLength / vw / 2;
-      if (this.selectedUseCase === "vin" || this.selectedUseCase === "dl") {
+      if (["vin", "dl"].includes(this.selectedUseCase)) {
         if (this.clientWidth > this.clientHeight) {
           left = Math.round((left - (0.25 * visibleRegionWidth) / vw) * 100);
         } else {
@@ -1137,22 +1161,20 @@ export default Vue.extend({
     },
     async selectedUseCase(newUseCase, oldUseCase) {
       if(!this.scanner) return;
-
-      if ((newUseCase === "vin" || newUseCase === "dl") && this.judgeCurResolution() !== "FULL HD") {
+      this.results = [];
+      if (["vin", "dl"].includes(newUseCase) && this.judgeCurResolution() !== "FULL HD") {
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1920, 1080]);
         this.currentResolution = this.scanner.getResolution();
-
         this.isLoadingCamera = false;
       }
-      if ((newUseCase === "general" || newUseCase === "dpm") && this.judgeCurResolution() !== "HD") {
+      if (["general", "dpm"].includes(newUseCase) && this.judgeCurResolution() !== "HD") {
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1280, 720]);
         this.currentResolution = this.scanner.getResolution();
-
         this.isLoadingCamera = false;
       }
-      if ((BarcodeScanner.browserInfo.OS === "Android" || BarcodeScanner.browserInfo.OS === "iPhone") && (newUseCase === "vin" || newUseCase === "dl") && (window.orientation === 0 || window.orientation === 180)) {
+      if (["Android", "iPhone"].includes(BarcodeScanner.browserInfo.OS) && ["vin","dl"].includes(newUseCase) && [0,180].includes(window.orientation)) {
         let config = {};
         config.duration = 2;
         config.content = "Rotate your device.";
@@ -1179,6 +1201,16 @@ export default Vue.extend({
     },
     scanMode() {
       this.changeSettings();
+    },
+    async autoZoom(newValue,_) {
+      const s = await this.scanner.getScanSettings();
+      s.autoZoom = newValue;
+      await this.scanner.updateScanSettings(s);
+    },
+    async autoFocus(newValue,_) {
+      const s = await this.scanner.getScanSettings();
+      s.autoFocus = newValue;
+      await this.scanner.updateScanSettings(s);
     },
     isFullImageLocalization() {
       this.changeSettings();
@@ -1208,15 +1240,22 @@ export default Vue.extend({
 .qrcode h2:first-child {width: 300px;height: 55px;padding: 10px 20px;background-color: #222222;color: white;text-align: center;font-size: 24px;}
 .qrcode #qrcode {background-color: white;padding: 44px;}
 
-.decodeRes {position: absolute;overflow: auto;width: 100%;height: 100%;background-color: #585757;}
-.decodeRes .resContainer {position: absolute;left: 50%;top: 19.5vh;transform: translateX(-50%);width: auto;display: flex;height: 40%;background-color: #464545;}
-.decodeRes .imgContainer {position: relative;width: 470px;background-color: #262626;/* padding: 30px; */display: flex;justify-content: center;align-items: center;}
+.decodeRes {position: absolute;width: 100%;height: 100%;background-color: #585757;}
+.decodeRes .resContainer {position: absolute;left: 50%;top: 19.5vh;transform: translateX(-50%);width: 70%;height: 50%;background-color: #464545;}
+.decodeRes .imgContainer {width: 50%;position: relative;background-color: #262626;display: flex;justify-content: center;align-items: center;}
 .decodeRes .imgContainer .resultsPanel {position: absolute;width: 100%;height: 100%;}
-.decodeRes .resList {width: 350px;min-width: 330px;max-width: 400px;padding: 24px;padding-left: 30px;overflow: auto;color: white;}
-.decodeRes .resList li {font-size: 16px;font-family: OpenSans-Regular;margin-bottom: 7px;overflow: auto;}
-.decodeRes .resList li a {font-size: 16px;color: #aaaaaa;float: right;font-family: Oswald-Regular;}
-.decodeRes .restartVideo {position: absolute;left: 50%;bottom: -35%;transform: translateX(-50%);height: 10vh;}
-.decodeRes .restartVideo button {background: #fe8e14;width: 166px;height: 50px;padding: 12px 20px;font-size: 18px;text-align: center;outline: none;border: none;color: white;margin-right: 17px;cursor: pointer;}
+.decodeRes .resList {width: 50%;padding: 10px 20px 24px 20px;color: white;}
+.decodeRes .resList .results-header {display: flex;align-items: center;margin-bottom:15px;font-size:16px;}
+.decodeRes .resList .results-header .results-header-title {margin-right: 15px;}
+.decodeRes .resList .results-header .copyBtnForDl {color: rgb(254,142,20);cursor: pointer;}
+.decodeRes .resList .parse-failed, .decodeRes .resList .no-barcode, .decodeRes .resList .no-pdf417 {font-family: "OpenSans-Regular";}
+.decodeRes .resList ul {width:100%;height: 88%;padding-right: 15px;overflow: auto;}
+.decodeRes .resList li {display:flex;justify-content: space-between;font-size: 16px;font-family: OpenSans-Regular;margin-bottom: 7px;word-break: break-all;white-space: pre-wrap;}
+.decodeRes .resList li span{display: inline-block;width: calc(100% - 45px);}
+.decodeRes .resList li .resListCopyBtn {width:45px;position:relative;}
+.decodeRes .resList li .resListCopyBtn div {position:absolute;bottom: 0;}
+.decodeRes .resList li div {font-size: 16px;color: #aaaaaa;font-family: Oswald-Regular;cursor: pointer;}
+.decodeRes .restartVideo button {background: #fe8e14;width: 166px;height: 50px;font-size: 18px;text-align: center;outline: none;border: none;color: white;margin-right: 17px;cursor: pointer;}
 .decodeRes .restartVideo a {font-size: 16px;}
 
 .localImages {width: 100px;}
@@ -1247,14 +1286,11 @@ export default Vue.extend({
 
 .dlResultContainer {position: absolute;top: 50%;left: 50%;width: 85%;max-height: 65vh;padding: 20px;color: #dddddd;background-color: rgba(34, 34, 34, 0.5);padding: 17px 25px 13px;transform: translate(-50%, -50%);z-index: 20;}
 .dlResultContainer .dlInfo {height: 100%;max-height: calc(60vh - 25px);overflow: auto;}
+.resContainer .dlInfo li span {word-break: break-word;}
 .resContainer .dlInfo li .description {width: 55%;color: #cccccc;}
-.dlResultContainer .dlInfo li,
-.resContainer .dlInfo li {display: flex;flex-direction: row;align-items: center;justify-content: space-around;padding-bottom: 2px;font-size: 14px;}
+.dlResultContainer .dlInfo li, .resContainer .dlInfo li {display: flex;flex-direction: row;align-items: center;justify-content: space-around;padding-bottom: 2px;font-size: 14px;}
 
-.dlResultContainer .dlInfo li .description,
-.dlResultContainer .dlInfo li .value,
-.resContainer .dlInfo li .value {width: 40%;color: white;}
-.resContainer .dlInfo li .value {word-break: break-all;}
+.dlResultContainer .dlInfo li .description, .dlResultContainer .dlInfo li .value, .resContainer .dlInfo li .value {width: 40%;color: white;}
 
 .dlResultContainer .footer {display: flex;flex-direction: row;align-items: center;justify-content: space-between;color: #fe8e14;font-size: 16px;}
 .dlResultContainer .footer .copyBtn,
@@ -1276,9 +1312,7 @@ export default Vue.extend({
 .dbrScanner-bg-loading {animation: 1s linear infinite dbrScanner-rotate;width: 40vmin;height: 40vmin;position: absolute;margin: auto;left: 0;top: 0;right: 0;bottom: 0;fill: #aaa;}
 
 @media (hover: hover) {.cameraList li:hover {background-color: rgba(50, 50, 52);}}
-
 @keyframes dbrScanner-rotate {from {transform: rotate(0turn);}to {transform: rotate(1turn);}}
-
 @keyframes dbrScanner-scanlight {from {top: 0;}to {top: 97%;}}
 
 @media screen and (max-width: 1199px) {
@@ -1302,18 +1336,9 @@ export default Vue.extend({
   .qrcode div:nth-child(3) {display: none;}
   .qrcode .web-upload {display: none;}
   .qrcode button {display: block !important;width: 200px;height: 46px;margin: 40px 0 0 0;background-color: #fe8e14;outline: none;border: none;}
-
-  .decodeRes .resContainer {display: flex;flex-direction: column;height: 300px;width: 100%;}
-  .decodeRes .resContainer .imgContainer,
-  .decodeRes .resContainer .resList {width: 100%;}
-  .decodeRes .resContainer .imgContainer {max-height: 150px;}
-  .decodeRes .resContainer .resList {padding-top: 10px;}
-  .decodeRes .resContainer .restartVideo button {width: 140px;font-size: 16px;}
-  .decodeRes .resContainer .restartVideo a {width: auto;bottom: -35%;}
 }
 
-@media (min-width: 981px),
-  screen and (max-width: 980px) and (orientation: landscape) {
+@media (min-width: 981px), screen and (max-width: 980px) and (orientation: landscape) {
   .copyright {display: none;}
 
   .cameraDropdown {padding-left: 43px;}
@@ -1346,15 +1371,27 @@ export default Vue.extend({
 
 @media screen and (min-width: 980px) {
   .cameraAndSoundsContainer {height: 70px;}
+
+  .decodeRes .resList .results-header {justify-content: space-between;margin-top: 10px;}
+  .decodeRes .resList .results-header .results-header-title {font-size:20px;}
+  .decodeRes .resContainer {display: flex;}
+  .decodeRes .restartVideo {position: absolute;left: 50%;bottom: -35%;transform: translateX(-50%);height: 10vh;}
 }
 
 @media screen and (max-width: 980px) {
   .screenshot {position: absolute;bottom: 10px;right: 10px;width: 50px;height: 50px;background-color: rgba(0,0,0,0.6);border-radius: 50%;color: #ffffff;cursor: pointer;font-size: 18px;z-index: 30;}
   .screenshotIcon {position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);width: 20px;height: 20px;fill: #fff;vertical-align: baseline;}
+
+  .decodeRes .resContainer {top: 6.9vh;width: 100%;height: calc(100% - 15.9vh);}
+  .decodeRes .resContainer .imgContainer {width: 100%;height: 30%;}
+  .decodeRes .resContainer .resList {width: 100%;height: calc(70% - 80px);margin-bottom: 20px;padding-top: 10px;}
+  .decodeRes .resContainer .resList ul {height: calc(100% - 30px);overflow: auto;padding-right: 10px;}
+  .decodeRes .resContainer .restartVideo button {width: 140px;height: 40px;font-size: 14px;}
+  .decodeRes .resContainer .restartVideo a {width: auto;bottom: -35%;}
 }
 
 @media screen and (max-width: 980px) and (orientation: landscape) {
-  .decodeRes .resContainer {width: 80%;}
+  .decodeRes .resContainer {top: 7.7vh;width: 100%;height: calc(100% - 17.7vh);}
 
   .copyright {display: block;font-size: 12px;bottom: 18%;}
   .cameraAndSoundsContainer {height: 7.7vh;}
@@ -1384,7 +1421,6 @@ export default Vue.extend({
   .cameraList {top: 7.7vh;font-size: 14px;}
 }
 
-/* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
   .copyright {bottom: 11.7vh;}
   .cameraAndSoundsContainer {height: 6.9vh;}
@@ -1392,9 +1428,9 @@ export default Vue.extend({
   .cameraAndSoundsContainer .soundEffects {width: 60px;}
 
   .cameraDropdown .cameraInfo {display: none;}
-  .curUseCaseTip {top: 8.5vh;font-size: 14px;}
   .resultContainer {width: 73.9%;bottom: 17.1%;font-size: 12px;}
   .localImages {background-color: rgba(34, 34, 34);width: 60px;height: 100%;border-left: 1px solid rgb(98, 96, 94);}
+  .curUseCaseTip {top: 8.5vh;font-size: 14px;}
 
   .result .barcodeFormat {padding-left: 5px;}
   .result .resultMain {padding-left: 5px;}
@@ -1405,6 +1441,13 @@ export default Vue.extend({
   .driverLicenseTip .tipText {margin-bottom: 10px;font-size: 14px;transform: scale(0.7);}
   .loadingImg {font-size: 30px;}
   .cameraList {top: 6.9vh;font-size: 14px;}
+}
+
+@media screen and (max-width: 980px) and (max-height: 500px) {
+  .decodeRes .resContainer {display: flex;position: absolute;top: 15%;}
+  .decodeRes .resContainer .imgContainer {width: 50%;height: 60%;}
+  .decodeRes .resContainer .resList {width: 50%;height: 60%;background-color: #303030;}
+  .decodeRes .resContainer .restartVideo {position: absolute;left: 50%;bottom: 20%;transform: translateX(-50%);height: 10vh;}
 }
 
 @media screen and (max-width: 350px) {

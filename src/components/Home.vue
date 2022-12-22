@@ -28,7 +28,17 @@
 import Vue from "vue";
 
 export default Vue.extend({
+  components: {
+  },
   name: "Home",
+  props: {},
+  data() {
+    return {
+    };
+  },
+
+  methods: {
+  },
 });
 </script>
 

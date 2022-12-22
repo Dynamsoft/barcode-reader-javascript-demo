@@ -11,7 +11,7 @@
           </div>
         </div>
       </template>
-      <div class="sidebarBtn" :style="{color: $store.state.isShowUseCasePopover ? '#fe8e14' : '',backgroundColor: $store.state.isShowUseCasePopover? 'rgba(34, 34, 34, .8)': ''}">
+      <div class="sidebarBtn" :style="{color: $store.state.isShowUseCasePopover ? '#fe8e14' : '',backgroundColor: $store.state.isShowUseCasePopover? 'rgba(64, 63, 63, .8)': ''}">
         <img class="generalIcon" v-show="curUsecase === 'General'" src="../../assets/image/icon-web-general.svg">
         <img class="vinIcon" v-show="curUsecase === 'VIN'" src="../../assets/image/icon-web-vin.svg">
         <img class="dlIcon" v-show="curUsecase === `Driver's License`" src="../../assets/image/icon-web-driver's-license.svg">
@@ -130,6 +130,7 @@ export default Vue.extend({
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .useCaseBtn {width: 25%;}
   .sidebarBtn .generalIcon, .sidebarBtn .vinIcon, .sidebarBtn .dlIcon, .sidebarBtn .dpmIcon {width: 25px;height: 15px;}
+  .sidebarBtn img {display: none;}
   .useCaseOption label {height: 40px;font-size: 14px;}
 }
 

@@ -53,8 +53,7 @@ src: url("./assets/font/OpenSans-Regular.ttf");
   margin: 0;
   box-sizing: border-box;
 }
-html,
-body {
+html, body {
   width: 100%;
   height: 100%;
   min-width: 300px;
@@ -77,6 +76,12 @@ li {
 .ant-popover-inner {
   background-color: #222222;
 }
+.ant-popover-placement-right > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-rightTop > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-rightBottom > .ant-popover-content > .ant-popover-arrow {
+  display: none;
+}
+/* .ant-popover-placement-top > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-topLeft > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-topRight > .ant-popover-content > .ant-popover-arrow {
+  display: none;
+} */
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
 }
@@ -97,4 +102,8 @@ li {
     overflow: hidden !important;
   }
 }
+
+::-webkit-scrollbar{width: 19px;background-color: transparent;padding: 0 5px;}
+::-webkit-scrollbar-thumb{background-color:#272626;border: 7px solid transparent;background-clip: content-box;}
+::-webkit-scrollbar-corner{background-color: rgba(0,0,0,1);}
 </style>

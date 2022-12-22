@@ -3,7 +3,7 @@
     <use-case-btn />
     <barcode-format-btn />
     <full-image-localization-btn />
-    <scan-settings-btn />
+    <scan-settings-btn :isUploadImage="isUploadImage" :bSupportFocus="bSupportFocus"/>
   </div>
 </template>
 
@@ -22,7 +22,7 @@ export default Vue.extend({
     ScanSettingsBtn,
     UseCaseBtn,
   },
-  props: ["isUploadImage"],
+  props: ["isUploadImage", "bSupportFocus"],
   data() {
     return {
       clientWidth: document.body.clientWidth,
@@ -44,13 +44,12 @@ export default Vue.extend({
 
 .screenshotIcon {position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);width: 20px;height: 20px;fill: #fff;vertical-align: baseline;}
 
-@media (min-width: 981px),
-  screen and (max-width: 980px) and (orientation: landscape) {
-    .sidebar {flex-direction: column;top: 19.5vh;left: 3.2vw;width: 140px;min-width: 140px;height: 40vh;min-height: 360px;}
+@media (min-width: 981px), screen and (max-width: 980px) and (orientation: landscape) {
+  .sidebar {flex-direction: column;top: 19.5vh;left: 3.2vw;width: 140px;min-width: 140px;height: 40vh;min-height: 360px;}
 }
 
 @media screen and (max-width: 980px) and (orientation: landscape) {
-  .sidebar {flex-direction: row;top: auto;left: 50%;bottom: 0;width: 70%;min-height: auto;height: 15%;min-height: auto;transform: translateX(-50%);}
+  .sidebar {flex-direction: row;top: auto;left: 50%;bottom: 0;width: 100%;min-height: auto;height: 10%;min-height: auto;transform: translateX(-50%);}
 }
 
 /* mobile */

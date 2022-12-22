@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import Guide from "./components/Guide.vue";
 import store from './store'
-import { Button, Icon, Popover, Checkbox, message, Modal } from 'ant-design-vue'
+import { Button, Icon, Popover, Checkbox, message, Modal, Switch } from 'ant-design-vue'
 import BarcodeScannerComponent from "./components/BarcodeScanner.vue"
 import VueRouter from 'vue-router'
 
@@ -10,6 +10,7 @@ Vue.use(Button)
 Vue.use(Icon)
 Vue.use(Popover)
 Vue.use(Checkbox)
+Vue.use(Switch)
 Vue.use(message)
 Vue.prototype.$message = message;
 Vue.use(Modal)
@@ -35,5 +36,9 @@ const router = new VueRouter({
 new Vue({
   render: h => h(App),
   store,
-  router
+  router,
+  mounted() {
+    // You'll need this for renderAfterDocumentEvent.
+    document.dispatchEvent(new Event('render-event'))
+},
 }).$mount('#app')

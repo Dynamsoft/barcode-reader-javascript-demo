@@ -4,7 +4,7 @@ export default {
     "addressStreet_1": "Address - Street 1",
     "addressStreet_2": "Address - Street 2",
     "birthPlace": "Place of birth",
-    "firstName": "Customer First Name",
+    "firstName": "Initials", // todo
     "givenNameAlias": "Alias / AKA Given Name",
     "idNo": "License Number",
     "issuingCountry": "Country Identification",

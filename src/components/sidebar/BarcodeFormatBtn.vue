@@ -1,21 +1,21 @@
 <template>
-  <div class="barcodeFormatBtn" @mouseenter="$store.state.curSystem === 'Windows' && $store.state.enableSelectBarcode && !$store.state.isShowBarcodeFormatPopover && $store.commit('switchBarcodeFormatPopover')" @click.stop="!($store.state.curSystem === 'Windows') && $store.state.enableSelectBarcode && $store.commit('switchBarcodeFormatPopover')">
+  <div class="barcodeFormatBtn" @mouseenter="$store.state.curSystem === 'Windows' && $store.state.enableBtn && !$store.state.isShowBarcodeFormatPopover && $store.commit('switchBarcodeFormatPopover')" @click.stop="!($store.state.curSystem === 'Windows') && $store.state.enableBtn && $store.commit('switchBarcodeFormatPopover')">
     <a-popover :placement="popoverPlacement" trigger="click" :visible="$store.state.isShowBarcodeFormatPopover">
       <template slot="content">
         <div class="collapse" @click.stop="">
           <div class="collapsePanel collapsePanel1">
-            <div class="collapsePanelHeader" @click="switchPanelBody('panel1')" :style="{color: $store.state.enableSelectBarcode ? '' : '#676767',}">
+            <div class="collapsePanelHeader" @click="switchPanelBody('panel1')" :style="{color: $store.state.enableBtn ? '' : '#676767',}">
               <span class="headerLeft">
                 <a-icon type="down" style="font-size: 12px; margin-right: 5px" :rotate="Panel1BodyHeight === '0' ? 180 : 0"/>
                 <span>1D Barcodes </span>
               </span>
-              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableSelectBarcode ? '' : 'none'}">
+              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableBtn ? '' : 'none'}">
                 <label class="selectAllLabel selectAll1dLabel" for="selectAll1dCheckbox" :style="{ color: checkAll1dBarcode ? '#FE8E14' : '#999999' }">Select All</label>
                 <a-checkbox id="selectAll1dCheckbox" @change.stop="onCheckAll1dBarcodeChange" :checked="checkAll1dBarcode" :indeterminate="indeterminate1d">
                 </a-checkbox>
               </span>
             </div>
-            <div class="collapsePanelBody" :style="{ height: Panel1BodyHeight, display: $store.state.enableSelectBarcode ? '' : 'none'}">
+            <div class="collapsePanelBody" :style="{ height: Panel1BodyHeight, display: $store.state.enableBtn ? '' : 'none'}">
               <div class="selection1D barcodeSelection">
                 <ul v-for="(column, index) in selection1DColumn" :key="index" class="selectionColumn">
                   <li v-for="item in column" :key="item.value" class="selectionItemContainer">
@@ -29,21 +29,17 @@
             </div>
           </div>
           <div class="collapsePanel collapsePanel2">
-            <div class="collapsePanelHeader" @click="switchPanelBody('panel2')" :style="{color: $store.state.enableSelectBarcode ? '' : '#676767'}">
+            <div class="collapsePanelHeader" @click="switchPanelBody('panel2')" :style="{color: $store.state.enableBtn ? '' : '#676767'}">
               <span class="headerLeft">
-                <a-icon
-                  type="down"
-                  style="font-size: 12px; margin-right: 5px"
-                  :rotate="Panel2BodyHeight === '0' ? 180 : 0"
-                />
-                <span>2D Barcodes </span>
+                <a-icon type="down" style="font-size: 12px; margin-right: 5px" :rotate="Panel2BodyHeight === '0' ? 180 : 0"/>
+                <span>2D Barcodes</span>
               </span>
-              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableSelectBarcode ? '' : 'none'}">
+              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableBtn ? '' : 'none'}">
                 <label class="selectAllLabel selectAll2dLabel" for="selectAll2dCheckbox" :style="{ color: checkAll2dBarcode ? '#FE8E14' : '#999999' }">Select All</label>
                 <a-checkbox id="selectAll2dCheckbox" @change.stop="onCheckAll2dBarcodeChange" :checked="checkAll2dBarcode" :indeterminate="indeterminate2d"></a-checkbox>
               </span>
             </div>
-            <div class="collapsePanelBody" :style="{ height: Panel2BodyHeight, display: $store.state.enableSelectBarcode ? '' : 'none'}">
+            <div class="collapsePanelBody" :style="{ height: Panel2BodyHeight, display: $store.state.enableBtn ? '' : 'none'}">
               <div class="selection2D barcodeSelection">
                 <ul v-for="(column, index) in selection2DColumn" :key="index" class="selectionColumn">
                   <li v-for="item in column" :key="item.value" class="selectionItemContainer">
@@ -57,17 +53,17 @@
             </div>
           </div>
           <div class="collapsePanel collapsePanel3">
-            <div class="collapsePanelHeader" @click="switchPanelBody('panel3')" :style="{color: $store.state.enableSelectBarcode ? '' : '#676767'}">
+            <div class="collapsePanelHeader" @click="switchPanelBody('panel3')" :style="{color: $store.state.enableBtn ? '' : '#676767'}">
               <span class="headerLeft">
                 <a-icon type="down" style="font-size: 12px; margin-right: 5px" :rotate="Panel3BodyHeight === '0' ? 180 : 0"/>
                 <span>Other</span>
               </span>
-              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableSelectBarcode ? '' : 'none'}">
+              <span class="headerRight" @click.stop="" :style="{display: $store.state.enableBtn ? '' : 'none'}">
                 <label class="selectAllLabel selectAllOtherLabel" for="selectAllOtherCheckbox" :style="{color: checkAllOtherBarcode ? '#FE8E14' : '#999999',}">Select All</label>
                 <a-checkbox id="selectAllOtherCheckbox" @change.stop="onCheckAllOtherBarcodeChange" :checked="checkAllOtherBarcode" :indeterminate="indeterminateOther"></a-checkbox>
               </span>
             </div>
-            <div class="collapsePanelBody" :style="{height: Panel3BodyHeight, display: $store.state.enableSelectBarcode ? '' : 'none'}">
+            <div class="collapsePanelBody" :style="{height: Panel3BodyHeight, display: $store.state.enableBtn ? '' : 'none'}">
               <div class="selectionOther barcodeSelection">
                 <ul v-for="(column, index) in selectionOtherColumn" :key="index" class="selectionColumn">
                   <li v-for="item in column" :key="item.value" class="selectionItemContainer">
@@ -81,10 +77,10 @@
           </div>
         </div>
       </template>
-      <div class="sidebarBtn" :style="{color: fontAndIconColor,backgroundColor: bgColor,cursor: $store.state.enableSelectBarcode ? '' : 'not-allowed'}">
-        <img v-show="$store.state.enableSelectBarcode" src="../../assets/image/icon-web-barcodes.svg" alt="format">
-        <img v-show="!$store.state.enableSelectBarcode" src="../../assets/image/icon-web-barcodes-disable.svg" alt="format-disable">
-        <label :style="{cursor: $store.state.enableSelectBarcode ? '' : 'not-allowed', color: $store.state.enableSelectBarcode ? 'white' : '#676767'}" class="formatLabel">Barcode Format</label>
+      <div class="sidebarBtn" :style="{color: fontAndIconColor,backgroundColor: bgColor,cursor: $store.state.enableBtn ? '' : 'not-allowed'}">
+        <img v-show="$store.state.enableBtn" src="../../assets/image/icon-web-barcodes.svg" alt="format">
+        <img v-show="!$store.state.enableBtn" src="../../assets/image/icon-web-barcodes-disable.svg" alt="format-disable">
+        <label :style="{cursor: $store.state.enableBtn ? '' : 'not-allowed', color: $store.state.enableBtn ? 'white' : '#676767'}" class="formatLabel">Barcode Format</label>
       </div>
     </a-popover>
   </div>
@@ -246,18 +242,18 @@ export default Vue.extend({
       },
     },
     bgColor() {
-      if (!this.$store.state.enableSelectBarcode) {
+      if (!this.$store.state.enableBtn) {
         return "#4D4D4D";
       } else {
         if (this.$store.state.isShowBarcodeFormatPopover) {
-          return "rgba(34,34,34,.9)";
+          return "rgba(64,63,63,.8)";
         } else {
           return "";
         }
       }
     },
     fontAndIconColor() {
-      if (!this.$store.state.enableSelectBarcode) {
+      if (!this.$store.state.enableBtn) {
         return "#676767";
       } else {
         if (this.$store.state.isShowBarcodeFormatPopover) {
@@ -375,7 +371,7 @@ export default Vue.extend({
 
   .collapse {width: 500px;height: 220px;max-width: auto;min-width: auto;min-height: auto;max-height: auto;font-size: 12px;}
   .selectionItemContainer label {width: 120px;height: 30px;}
-  .sidebarBtn img {width: 15.38px;height: 17px;}
+  .sidebarBtn img {/* width: 15.38px;height: 17px; */display: none;}
 }
 
 /* mobile */

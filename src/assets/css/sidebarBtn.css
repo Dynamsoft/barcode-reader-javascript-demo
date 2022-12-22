@@ -12,7 +12,7 @@
 @media(hover: hover) {
   .sidebarBtn:hover {
     color: rgb(254, 142, 20);
-    background-color: rgba(34, 34, 34, 0.8);
+    background-color: rgba(64, 63, 63, 0.8);
   }
   .sidebarBtn:hover svg{
     stroke: rgb(254, 142, 20);

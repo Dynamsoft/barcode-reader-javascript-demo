@@ -23,7 +23,7 @@ export default new Vuex.Store({
     previousSelected1d: [],
     previousSelected2d: [],
     previousSelectedOther: [],
-    enableSelectBarcode: true,
+    enableBtn: true,
     previousIsNotGeneral: false,
     // barcode format part  
     isShowBarcodeFormatPopover: false,
@@ -39,6 +39,9 @@ export default new Vuex.Store({
     isShowScanSettingsPopover: false,
     singleOrMul: 'single',
     scanMode: 'bestSpeed',
+    autoZoom: false,
+    autoFocus: false,
+    autoSuggestTip: true,
     invertColourOn: false,
     soundEffectsOn: true,
     isShowAdvancedSettings: false,
@@ -72,7 +75,7 @@ export default new Vuex.Store({
           state.selected1dBarcodes = COMMON1D.slice();
           state.selected2dBarcodes = [];
           state.selectedOtherBarcodes = [];
-          state.enableSelectBarcode = true;
+          state.enableBtn = true;
           state.previousIsNotGeneral = false;
           break;
         case "common-twod":
@@ -80,7 +83,7 @@ export default new Vuex.Store({
           state.selected1dBarcodes = [];
           state.selected2dBarcodes = COMMON2D.slice();
           state.selectedOtherBarcodes = [];
-          state.enableSelectBarcode = true;
+          state.enableBtn = true;
           state.previousIsNotGeneral = false;
           break;
         case "common-oned-twod":
@@ -88,7 +91,7 @@ export default new Vuex.Store({
           state.selected1dBarcodes = GENERAL1D.slice();
           state.selected2dBarcodes = GENERAL2D.slice();
           state.selectedOtherBarcodes = [];
-          state.enableSelectBarcode = true;
+          state.enableBtn = true;
           state.previousIsNotGeneral = false;
           break;
         case "driver-license":
@@ -124,7 +127,7 @@ export default new Vuex.Store({
           state.selected2dBarcodes = GENERAL2D.slice();
           state.selectedOtherBarcodes = [];
         }
-        state.enableSelectBarcode = true;
+        state.enableBtn = true;
         state.previousIsNotGeneral = false;
       }
       else if (state.selectedUseCase === 'vin') {
@@ -139,7 +142,7 @@ export default new Vuex.Store({
         // set invert colour off
         this.commit("invertColourSwitch", "false");
 
-        state.enableSelectBarcode = false;
+        state.enableBtn = false;
         state.previousIsNotGeneral = true;
       }
       else if (state.selectedUseCase === "dl") {
@@ -154,7 +157,7 @@ export default new Vuex.Store({
         // set invert colour off
         this.commit("invertColourSwitch", "false");
 
-        state.enableSelectBarcode = false;
+        state.enableBtn = false;
         state.previousIsNotGeneral = true;
       }
       else if (state.selectedUseCase === "dpm") {
@@ -163,7 +166,7 @@ export default new Vuex.Store({
         state.selected2dBarcodes = DPM.slice();
         state.selectedOtherBarcodes = [];
 
-        state.enableSelectBarcode = false;
+        state.enableBtn = false;
         state.previousIsNotGeneral = true;
       }
     },
@@ -252,6 +255,15 @@ export default new Vuex.Store({
     },
     scanModeSwitch(state, newValue) {
       state.scanMode = newValue;
+    },
+    autoZoomSwitch(state, newValue) {
+      state.autoZoom = newValue;
+    },
+    autoFocusSwitch(state, newValue) {
+      state.autoFocus = newValue;
+    },
+    autoSuggestTipSwitch(state, newValue) {
+      state.autoSuggestTip = newValue;
     },
     invertColourSwitch(state, newValue) {
       if (newValue === "true") {
