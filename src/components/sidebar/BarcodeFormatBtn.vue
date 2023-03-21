@@ -1,6 +1,6 @@
 <template>
   <div class="barcodeFormatBtn" @mouseenter="$store.state.curSystem === 'Windows' && $store.state.enableBtn && !$store.state.isShowBarcodeFormatPopover && $store.commit('switchBarcodeFormatPopover')" @click.stop="!($store.state.curSystem === 'Windows') && $store.state.enableBtn && $store.commit('switchBarcodeFormatPopover')">
-    <a-popover :placement="popoverPlacement" trigger="click" :visible="$store.state.isShowBarcodeFormatPopover">
+    <a-popover :placement="popoverPlacement" :visible="$store.state.isShowBarcodeFormatPopover">
       <template slot="content">
         <div class="collapse" @click.stop="">
           <div class="collapsePanel collapsePanel1">
@@ -371,7 +371,10 @@ export default Vue.extend({
 
   .collapse {width: 500px;height: 220px;max-width: auto;min-width: auto;min-height: auto;max-height: auto;font-size: 12px;}
   .selectionItemContainer label {width: 120px;height: 30px;}
-  .sidebarBtn img {/* width: 15.38px;height: 17px; */display: none;}
+}
+
+@media screen and (max-height: 500px) {
+  .sidebarBtn img {width: 17px;height: 17px;display: none;}
 }
 
 /* mobile */

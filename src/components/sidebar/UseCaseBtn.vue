@@ -1,6 +1,6 @@
 <template>
   <div class="useCaseBtn" @mouseenter="$store.state.curSystem === 'Windows' && !$store.state.isShowUseCasePopover && $store.commit('switchUseCasePopover')" @click.stop="!($store.state.curSystem === 'Windows') && $store.commit('switchUseCasePopover')">
-    <a-popover :placement="popoverPlacement" trigger="click" :visible="$store.state.isShowUseCasePopover">
+    <a-popover :placement="popoverPlacement" :visible="$store.state.isShowUseCasePopover">
       <template slot="content">
         <div class="useCaseOptions">
           <div class="useCaseOption" v-for="item in useCaseuseCaseOptions" :key="item.id" style="color: white">
@@ -129,9 +129,12 @@ export default Vue.extend({
 
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .useCaseBtn {width: 25%;}
-  .sidebarBtn .generalIcon, .sidebarBtn .vinIcon, .sidebarBtn .dlIcon, .sidebarBtn .dpmIcon {width: 25px;height: 15px;}
-  .sidebarBtn img {display: none;}
+  /* .sidebarBtn .generalIcon, .sidebarBtn .vinIcon, .sidebarBtn .dlIcon, .sidebarBtn .dpmIcon {width: 25px;height: 15px;} */
   .useCaseOption label {height: 40px;font-size: 14px;}
+}
+
+@media screen and (max-height: 500px) {
+  .sidebarBtn img {width: 17px;height: 17px;display: none;}
 }
 
 /* mobile */

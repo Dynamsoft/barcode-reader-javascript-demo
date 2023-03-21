@@ -44,7 +44,6 @@ export default new Vuex.Store({
     autoSuggestTip: true,
     invertColourOn: false,
     soundEffectsOn: true,
-    isShowAdvancedSettings: false,
     isChanged: false,
     isShowSettings: false,
     runtimeSettings: "",

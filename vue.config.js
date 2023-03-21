@@ -1,5 +1,8 @@
+const path = require('path');
 const CompressionWebpackPlugin = require('compression-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const PrerenderSPAPlugin = require('prerender-spa-plugin')
+const Renderer = PrerenderSPAPlugin.PuppeteerRenderer;
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 // vue.config.js for less-loader@6.0.0

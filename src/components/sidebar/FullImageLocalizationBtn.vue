@@ -46,7 +46,10 @@ export default Vue.extend({
 
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .fullImageLocalizationBtn {width: 25%;}
-  .sidebarBtn img {/* width: 20.58px;height: 17px; */display: none;}
+}
+
+@media screen and (max-height: 500px) {
+  .sidebarBtn img {width: 17px;height: 17px;display: none;}
 }
 
 @media screen and (max-width: 980px) and (orientation: portrait) {

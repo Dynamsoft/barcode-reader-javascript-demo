@@ -1,8 +1,9 @@
 <template>
   <div>
     <div :class="{mask: true, maskHidden: isShowMask}"></div>
+    <focus-box @switchFocusBoxShow="switchFocusBoxShow" v-if="bMountFocusBox && currentEnv.OS === 'Android' && currentEnv.browser === 'Chrome'"></focus-box>
     <home />
-    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" :bSupportFocus="bSupportFocus"/>
+    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" :bSupportFocus="bSupportFocus" :bScannerCreated="bScannerCreated"/>
     <div class="barcodeScanner">
       <div v-once class="videoContainer" ref="videoContainer" style="width: 100%;height: 100%;min-width: 100px;min-height: 100px;background: #ddd;position: absolute;">
         <div class="dce-video-container" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%"></div>
@@ -17,17 +18,13 @@
             <svg viewBox="0 0 29.308 17"><g transform="translate(-346.925 -627.702)"><g transform="translate(347.425 628.202)"><g><path d="M365.791,644.2H348.656a1.231,1.231,0,0,1-1.231-1.231V629.433a1.231,1.231,0,0,1,1.231-1.231h16a1.231,1.231,0,0,1,1.231,1.231v14.733" transform="translate(-347.425 -628.202)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/><path d="M371.81,640.606a1.23,1.23,0,0,1-1.781,1.1l-4.923-2.462a1.229,1.229,0,0,1-.681-1.1v-4.633a1.232,1.232,0,0,1,.681-1.1l4.923-2.462a1.231,1.231,0,0,1,1.781,1.1Z" transform="translate(-343.502 -627.828)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/></g></g></g></svg>
             <label>Camera</label>
           </div>
-          <a-icon
-            type="down"
-            style="margin-right: 8px; font-size: 16px"
-            :rotate="isShowCameraList ? 180 : 0"
-          />
+          <a-icon type="down" style="margin-right: 8px; font-size: 16px" :rotate="isShowCameraList ? 180 : 0"/>
           <div class="cameraInfo">
             {{ this.cameraInfo }}
           </div>
         </div>
         <div class="localImages">
-          <from-image ref="fromimage" @showResults="showResults" :isUploadImage="isUploadImage" :selectedUseCase="selectedUseCase" @clearResultsCvs="clearResultsCvs" @clearResultList="clearResultList" @removeDLResults="removeDLResults"/>
+          <from-image ref="fromimage" @showResults="showResults" :isUploadImage="isUploadImage" :bScannerCreated="bScannerCreated" :selectedUseCase="selectedUseCase" @clearResultsCvs="clearResultsCvs" @clearResultList="clearResultList" @removeDLResults="removeDLResults"/>
         </div>
         <div class="soundEffects" @click="soundEffectsSwitch" :style="{backgroundColor: $store.state.soundEffectsOn? 'rgba(110, 110, 110, .8)': '',}">
           <img :src="soundEffectsIconPath" :class="{ musicSelected: soundEffectsOn, musicUnSelected: !soundEffectsOn }"/>
@@ -152,16 +149,19 @@
 <script>
 import Vue from "vue";
 import {BarcodeScanner,EnumGrayscaleTransformationMode,EnumDPMCodeReadingMode,EnumLocalizationMode} from "dynamsoft-javascript-barcode";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { CodeParser } from "dynamsoft-code-parser";
 import musicIcon from "../assets/image/music-unselected.svg";
 import checkedMusicIcon from "../assets/image/Music-selected.svg";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 import CodeParserFields from "../assets/enum/CodeParserFields";
-import CodeParserFieldsZA from "../assets/enum/CodeParserFieldsZA"
-import FromImage from "./FromImage.vue";
-import Home from "./Home.vue";
-import Sidebar from "./Sidebar.vue";
+import CodeParserFieldsZA from "../assets/enum/CodeParserFieldsZA";
+import FromImage from "../components/FromImage.vue";
+import Home from "../components/Home.vue";
+import Sidebar from "../components/Sidebar.vue";
+import FocusBox from "../components/FocusBox.vue";
 import Clipboard from "clipboard";
 // generate qr code
 import QRCode from "qrcodejs2";
@@ -171,7 +171,8 @@ export default Vue.extend({
   components: {
     FromImage,
     Home,
-    Sidebar
+    Sidebar,
+    FocusBox
   },
   data() {
     return {
@@ -181,7 +182,6 @@ export default Vue.extend({
       isDestroyed: false,
       resultsInfo: [],
       resolutionList: ["HD", "FULL HD"],
-      currentResolution: [],
       cameraList: [],
       currentCamera: null,
       cameraAndResolutionList: [],
@@ -212,8 +212,10 @@ export default Vue.extend({
       downloadImg: [],
       isShowMask: false,
       dbrTemplate: "",
-      bSettings: location.search.includes('settings=true'),
-      bSupportFocus: true
+      bSupportFocus: false,
+      bScannerCreated: false,
+      bMountFocusBox: false,
+      currentEnv : BarcodeScanner.browserInfo
     };
   },
 
@@ -285,7 +287,7 @@ export default Vue.extend({
         this.clientHeight = document.body.clientHeight;
         this.clientWidth = document.body.clientWidth;
         if (this.scanner && this.scanner.isOpen()) {
-          this.currentResolution = this.scanner.getResolution();
+          this.$store.state.currentResolution = this.scanner.getResolution();
           this.visibleRegionInPixels = this.getVisibleRegion();
           if(this.dlText.length === 0) {
             this.scanner.resumeScan();
@@ -363,6 +365,43 @@ export default Vue.extend({
         }
       });
       return dlInfo;
+    },
+    async getImages() {
+      if(this.isUploadImage) return;
+      this.isShowMask = true;
+      this.scanner.pauseScan();
+      this.$message.loading({content: "Capturing...", duration: 0});
+      await this.saveImages();
+      const zip = new JSZip();
+      for(let i=0;i<this.downloadImg.length;i++) {
+        zip.file(this.downloadImg[i].name, this.downloadImg[i].blob);
+      }
+      const content = await zip.generateAsync({type: "blob"});
+      saveAs(content, `screenshot-${this.getDate()}.zip`);
+      this.downloadImg = [];
+      this.$message.destroy();
+      this.isShowMask = false;
+      this.scanner.resumeScan();
+    },
+    async saveImages() {
+      return new Promise(async (rs,rj)=>{
+        let index = 0;
+        while(index < 8) {
+          const cvs = this.scanner.dce.getFrame().toCanvas();
+          if (cvs != null) {
+            const blob = cvs.convertToBlob ? await cvs.convertToBlob() : await new Promise(resolve => {
+              cvs.toBlob(blob => resolve(blob));
+            });
+            this.downloadImg.push({ name: "Screenshot - " + new Date().toISOString().replace(/\:/g, "-") + ".png", blob});
+            index++;
+          }
+        }
+        rs();
+      })
+    },
+    getDate() {
+      const date = new Date();
+      return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
     },
     handleString(str) {
       let strArr = str.split("");
@@ -510,11 +549,13 @@ export default Vue.extend({
             }
           };
           let callBackInfo = await this.scanner.open();
+          this.bScannerCreated = true;
+          this.bMountFocusBox = true;
           const capabilities = this.scanner.getCapabilities();
           this.bSupportFocus = !!capabilities.focusDistance;
+          this.$store.commit('autoFocusSwitch', this.bSupportFocus);
           this.$store.state.currentResolution[0] = callBackInfo.width;
           this.$store.state.currentResolution[1] = callBackInfo.height;
-          this.currentResolution = [callBackInfo.width, callBackInfo.height];
           this.isLoadingCamera = false;
           this.isResizing = false;
         }
@@ -530,7 +571,6 @@ export default Vue.extend({
         return Promise.reject(e.message);
       }
     },
-
     getPharmacodeResult(result) {
       for (let i = 0; i < 2; i++) {
         let res = "";
@@ -543,7 +583,6 @@ export default Vue.extend({
         }
       }
     },
-
     async onChangeCameraAndResolution(item) {
       let config = {};
       this.isLoadingCamera = true;
@@ -552,7 +591,8 @@ export default Vue.extend({
       await this.scanner.setResolution(resulution);
       const capabilities = this.scanner.getCapabilities();
       this.bSupportFocus = !!capabilities.focusDistance;
-      this.currentResolution = this.scanner.getResolution();
+      this.$store.commit('autoFocusSwitch', this.bSupportFocus);
+      this.$store.state.currentResolution = this.scanner.getResolution();
       this.currentCamera = await this.scanner.getCurrentCamera();
       if (this.currentCamera.deviceId !== item[0].deviceId) {
         config.icon = (
@@ -567,13 +607,12 @@ export default Vue.extend({
           <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
         );
         config.content = "Switched to " + this.cameraInfo + " successfully!";
-        this.$store.state.currentResolution = this.scanner.dce.getResolution();
+        this.$store.state.currentResolution = this.scanner.getResolution();
       }
       this.$message.open(config);
       this.$store.state.isShowSettings = false;
       this.isLoadingCamera = false;
     },
-
     //qrcode
     generateQRcode() {
       // eslint-disable-next-line no-unused-vars
@@ -586,21 +625,17 @@ export default Vue.extend({
         correctLevel: QRCode.CorrectLevel.H,
       });
     },
-
     // trigger upload images from local files
     triggerUploadImg() {
       this.$refs.fromimage.trigger();
     },
-
     clearResultsCvs() {
       this.$refs.resultsPanel.innerHTML = "";
     },
-
     clearResultList() {
       this.results = [];
       this.curImg = null;
     },
-
     // show decode results
     async showResults(results, image, oriRes) {
       this.$refs.imgContainer.appendChild(image);
@@ -615,7 +650,6 @@ export default Vue.extend({
         this.drawResults();
       });
     },
-
     drawResults() {
       if (!this.curImg) return;
       this.clearResultsCvs();
@@ -680,11 +714,10 @@ export default Vue.extend({
         } else {
           ctx.fillRect(0, 0, cvs.width, cvs.height);
         }
-        cvs.title = this.oriRes[i].barcodeFormatString + " : " + this.oriRes[i].barcodeText;
+        cvs.title = i+1 + ". " + this.oriRes[i].barcodeFormatString + " : " + this.oriRes[i].barcodeText;
         this.$refs.resultsPanel.appendChild(cvs);
       }
     },
-
     // hide decode results
     async hideResults() {
       this.isUploadImage = false;
@@ -695,38 +728,50 @@ export default Vue.extend({
       this.isLoadingCamera = false;
       this.resizeEvent(0);
     },
-
     // copy decoded result
     copyResText(text, index) {
       if(this.isCopied[index]) return;
-      navigator.clipboard.writeText(text);
-      this.$set(this.isCopied, index, true);
-      setTimeout(()=>{
-        this.$set(this.isCopied, index, false);
-      },5000)
+      let clipboard = new Clipboard(".resListCopyBtn", {
+        text: () => {
+          return text;
+        },
+      });
+      clipboard.on("success", () => {
+        this.$set(this.isCopied, index, true);
+        setTimeout(()=>{
+          this.$set(this.isCopied, index, false);
+        },5000);
+        clipboard.destroy();
+      });
+      clipboard.on("error", () => {
+        this.$message.success({content: "Failed!", duration: 1});
+        clipboard.destroy();
+      })
     },
-
     copyDLResult(text) {
-      this.$message.success({content: "Copied!", duration: 1});
-      navigator.clipboard.writeText(text);
+      let clipboard = new Clipboard(".copyBtnForDl", {
+        text: () => {
+          return text;
+        },
+      });
+      clipboard.on("success", () => {
+        this.$message.success({content: "Copied!", duration: 1});
+        clipboard.destroy();
+      });
+      clipboard.on("error", () => {
+        this.$message.success({content: "Failed!", duration: 1});
+        clipboard.destroy();
+      })
     },
-
     judgeCurResolution() {
-      let minValue = Math.min(
-        this.currentResolution[0],
-        this.currentResolution[1]
-      );
-      let maxValue = Math.max(
-        this.currentResolution[0],
-        this.currentResolution[1]
-      );
+      let minValue = Math.min(this.$store.state.currentResolution[0],this.$store.state.currentResolution[1]);
+      let maxValue = Math.max(this.$store.state.currentResolution[0],this.$store.state.currentResolution[1]);
       if (minValue > 480 && minValue < 960 && maxValue > 960 && maxValue < 1440) {
         return "HD";
       } else if (minValue > 900 && minValue < 1440 && maxValue > 1400 && maxValue < 2160) {
         return "FULL HD";
       }
     },
-
     // get visible region
     getVisibleRegion() {
       if (!this.scanner.isOpen()) return;
@@ -764,11 +809,9 @@ export default Vue.extend({
       let visibleRegion = getVisibleRegionInPixels();
       return visibleRegion;
     },
-
     removeDLResults() {
       this.dlText = "";
     },
-
     // change runtimeSettings
     changeSettings() {
       if(this.isUploadImage) return null;
@@ -852,7 +895,7 @@ export default Vue.extend({
         this.scanner.ifShowScanRegionMask = true;
         return runtimeSettings;
       }, 300);
-    },
+    }
   },
   computed: {
     toTwoDigit() {
@@ -885,8 +928,8 @@ export default Vue.extend({
       },
     },
     cameraInfo() {
-      const minValue = Math.min(this.currentResolution[0],this.currentResolution[1]);
-      const maxValue = Math.max(this.currentResolution[0],this.currentResolution[1]);
+      const minValue = Math.min(this.$store.state.currentResolution[0],this.$store.state.currentResolution[1]);
+      const maxValue = Math.max(this.$store.state.currentResolution[0],this.$store.state.currentResolution[1]);
       if (this.currentCamera) {
         return this.currentCamera.label + " " + (minValue > 480 && minValue < 960 && maxValue > 960 && maxValue < 1440 ? "HD" : "FULL HD");
       } else {
@@ -980,8 +1023,8 @@ export default Vue.extend({
     },
     regionLeft() {
       if (!this.visibleRegionInPixels) return 0;
-      if (!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
-      const vw = this.currentResolution[0];
+      if (!this.scanner || !this.scanner.isOpen() || this.$store.state.currentResolution.length != 2) return 0;
+      const vw = this.$store.state.currentResolution[0];
       const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
       let left = 0.5 - this.regionEdgeLength / vw / 2;
       if (["vin", "dl"].includes(this.selectedUseCase)) {
@@ -1004,8 +1047,8 @@ export default Vue.extend({
     },
     regionTop() {
       if (!this.visibleRegionInPixels) return 0;
-      if (!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
-      const vh = this.currentResolution[1];
+      if (!this.scanner || !this.scanner.isOpen() || this.$store.state.currentResolution.length != 2) return 0;
+      const vh = this.$store.state.currentResolution[1];
       const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
       let top = 0.5 - this.regionEdgeLength / vh / 2;
       if (this.selectedUseCase === "vin") {
@@ -1044,8 +1087,8 @@ export default Vue.extend({
     },
     cssRegionLeft() {
       if (!this.visibleRegionInPixels) return 0;
-      if (!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
-      const vw = this.currentResolution[0];
+      if (!this.scanner || !this.scanner.isOpen() || this.$store.state.currentResolution.length != 2) return 0;
+      const vw = this.$store.state.currentResolution[0];
       const visibleRegionWidth = this.visibleRegionInPixels.regionRight - this.visibleRegionInPixels.regionLeft;
       let left = ((this.regionLeft / 100) * vw - this.visibleRegionInPixels.regionLeft) / visibleRegionWidth;
       left = Math.round(left * 100);
@@ -1053,8 +1096,8 @@ export default Vue.extend({
     },
     cssRegionTop() {
       if (!this.visibleRegionInPixels) return 0;
-      if (!this.scanner || !this.scanner.isOpen() || this.currentResolution.length != 2) return 0;
-      const vh = this.currentResolution[1];
+      if (!this.scanner || !this.scanner.isOpen() || this.$store.state.currentResolution.length != 2) return 0;
+      const vh = this.$store.state.currentResolution[1];
       const visibleRegionHeight = this.visibleRegionInPixels.regionBottom - this.visibleRegionInPixels.regionTop;
       let top = ((this.regionTop / 100) * vh - this.visibleRegionInPixels.regionTop) / visibleRegionHeight;
       top = Math.round(top * 100);
@@ -1073,6 +1116,9 @@ export default Vue.extend({
       };
       return style;
     },
+    currentResolution() {
+      return this.$store.state.currentResolution;
+    }
   },
   watch: {
     currentResolution(newValue, oldValue) {
@@ -1100,13 +1146,13 @@ export default Vue.extend({
       if (["vin", "dl"].includes(newUseCase) && this.judgeCurResolution() !== "FULL HD") {
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1920, 1080]);
-        this.currentResolution = this.scanner.getResolution();
+        this.$store.state.currentResolution = this.scanner.getResolution();
         this.isLoadingCamera = false;
       }
       if (["general", "dpm"].includes(newUseCase) && this.judgeCurResolution() !== "HD") {
         this.isLoadingCamera = true;
         await this.scanner.setResolution([1280, 720]);
-        this.currentResolution = this.scanner.getResolution();
+        this.$store.state.currentResolution = this.scanner.getResolution();
         this.isLoadingCamera = false;
       }
       if (["Android", "iPhone"].includes(BarcodeScanner.browserInfo.OS) && ["vin","dl"].includes(newUseCase) && [0,180].includes(window.orientation)) {
@@ -1149,6 +1195,9 @@ export default Vue.extend({
     },
     isFullImageLocalization() {
       this.changeSettings();
+    },
+    isUploadImage() {
+      this.$store.state.isShowSettings = false;
     }
   },
 });
@@ -1231,13 +1280,11 @@ export default Vue.extend({
 .dlResultContainer .footer .copyBtn,
 .dlResultContainer .footer .closeBtn {cursor: pointer;}
 
-.scanLight {position: absolute;width: 100%;height: 3px;animation: 3s infinite dbrScanner-scanlight;border-radius: 50%;box-shadow: 0px 0px 2vw 1px #fe8e14;background: #fe8e14;user-select: none;}
-
 .torchContainer {position: absolute;user-select: none;transform: translateY(35px);}
 
 .driverLicenseTip {display: flex;position: absolute;flex-direction: column;align-items: center;justify-content: space-between;left: 50%;font-family: "OpenSans-Regular";color: #fff;transform: translateX(-50%);user-select: none;pointer-events: none;}
 
-.cameraList {position: absolute;left: 0;background-color: rgba(34, 34, 34);z-index: 50;}
+.cameraList {position: absolute;left: 0;background-color: rgba(34, 34, 34);z-index: 50;animation: show 0.2s;}
 .cameraList li .cameraOption {padding: 5px 12px;cursor: pointer;user-select: none;}
 .cameraList .selected {background-color: black !important;}
 
@@ -1246,6 +1293,7 @@ export default Vue.extend({
 @media (hover: hover) {.cameraList li:hover {background-color: rgba(50, 50, 52);}}
 @keyframes dbrScanner-rotate {from {transform: rotate(0turn);}to {transform: rotate(1turn);}}
 @keyframes dbrScanner-scanlight {from {top: 0;}to {top: 97%;}}
+@keyframes show {from {opacity: 0;} to {opacity: 1;}}
 
 @media screen and (max-width: 1199px) {
   .cameraAndSoundsContainer .cameraDropdown {width: 210px;}
@@ -1325,7 +1373,7 @@ export default Vue.extend({
 @media screen and (max-width: 980px) and (orientation: landscape) {
   .decodeRes .resContainer {top: 7.7vh;width: 100%;height: calc(100% - 17.7vh);}
 
-  .copyright {display: block;font-size: 12px;bottom: 18%;}
+  .copyright {display: block;font-size: 12px;bottom: 13%;}
   .cameraAndSoundsContainer {height: 7.7vh;}
   .cameraAndSoundsContainer .cameraDropdown {padding-left: 10px;width: 100px;}
   .cameraAndSoundsContainer .soundEffects {width: 60px;}

@@ -5,7 +5,7 @@
     </a>
     <div class="copyrightInfo">
       <div>
-        © 2003 – 2022 Dynamsoft. All rights reserved.
+        © 2003 – 2023 Dynamsoft. All rights reserved.
         <a href="https://www.dynamsoft.com/PrivacyStatement.aspx" target="_blank" >Privacy Statement</a>
         /
         <a href="https://www.dynamsoft.com/SiteMap.aspx" target="_blank">Site Map</a>
@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script>
+<script >
 import Vue from "vue";
 
 export default Vue.extend({

@@ -1,6 +1,6 @@
 <template>
   <div class="fromImage" @click="trigger">
-    <input v-on:change="onIptChange" ref="uploadImage" type="file" accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp" style="display: none"/>
+    <input @change="onIptChange" @click="onIptClick" ref="uploadImage" type="file" accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp" style="display: none"/>
     <img src="../assets/image/Images-add.svg" alt="images-add" />
   </div>
 </template>
@@ -11,11 +11,10 @@ import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleT
 import { CodeParser } from "dynamsoft-code-parser";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
-import Clipboard from "clipboard";
 
 export default Vue.extend({
   name: "FromImage",
-  props: ["isUploadImage"],
+  props: ["isUploadImage", "bScannerCreated"],
   data() {
     return {
       reader: null,
@@ -34,27 +33,10 @@ export default Vue.extend({
     }
   },
   methods: {
-    copyResult() {
-      let clipboard = new Clipboard(".resultText");
-      clipboard.on("success", () => {
-        let config = {};
-        config.content = "Copied!";
-        config.duration = 1;
-        config.icon = (
-          <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
-        );
-        this.$message.open(config);
-        clipboard.destroy();
-      });
-      clipboard.on("error", () => {
-        let config = {};
-        config.content = "Failed!";
-        config.icon = (
-          <a-icon type="frown" style={{ color: "#FE8E14" }}></a-icon>
-        );
-        this.$message.open(config);
-        clipboard.destroy();
-      });
+    onIptClick(e) {
+      if(!this.bScannerCreated) {
+        e.preventDefault();
+      }
     },
     async onIptChange(event) {
       this.$emit("clearResultsCvs");

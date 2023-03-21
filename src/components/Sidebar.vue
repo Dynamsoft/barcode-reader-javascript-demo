@@ -3,7 +3,7 @@
     <use-case-btn />
     <barcode-format-btn />
     <full-image-localization-btn />
-    <scan-settings-btn :isUploadImage="isUploadImage" :bSupportFocus="bSupportFocus"/>
+    <scan-settings-btn :isUploadImage="isUploadImage" :bSupportFocus="bSupportFocus" :bScannerCreated="bScannerCreated"/>
   </div>
 </template>
 
@@ -22,7 +22,7 @@ export default Vue.extend({
     ScanSettingsBtn,
     UseCaseBtn,
   },
-  props: ["isUploadImage", "bSupportFocus"],
+  props: ["isUploadImage", "bSupportFocus", "bScannerCreated"],
   data() {
     return {
       clientWidth: document.body.clientWidth,
