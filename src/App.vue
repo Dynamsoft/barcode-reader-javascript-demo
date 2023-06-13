@@ -15,7 +15,11 @@ import "./dcp";
 export default Vue.extend({
   name: "App",
   components: {
-    CopyRightFooter
+    CopyRightFooter,
+  },
+  data() {
+    return {
+    };
   },
   beforeMount() {
     this.getCurrentEnv();
@@ -30,7 +34,7 @@ export default Vue.extend({
     getCurrentEnv() {
       const curEnv = BarcodeScanner.browserInfo;
       this.$store.state.curSystem = curEnv.OS;
-    }
+    },
   }
 });
 </script>

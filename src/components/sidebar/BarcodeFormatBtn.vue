@@ -80,7 +80,10 @@
       <div class="sidebarBtn" :style="{color: fontAndIconColor,backgroundColor: bgColor,cursor: $store.state.enableBtn ? '' : 'not-allowed'}">
         <img v-show="$store.state.enableBtn" src="../../assets/image/icon-web-barcodes.svg" alt="format">
         <img v-show="!$store.state.enableBtn" src="../../assets/image/icon-web-barcodes-disable.svg" alt="format-disable">
-        <label :style="{cursor: $store.state.enableBtn ? '' : 'not-allowed', color: $store.state.enableBtn ? 'white' : '#676767'}" class="formatLabel">Barcode Format</label>
+        <label :style="{cursor: $store.state.enableBtn ? '' : 'not-allowed', color: $store.state.enableBtn ? 'white' : '#676767'}" class="formatLabel">
+          <span class="text">Barcode Format</span>
+          <span class="textInMobile">Format</span>
+        </label>
       </div>
     </a-popover>
   </div>
@@ -155,6 +158,54 @@ export default Vue.extend({
     this.$store.commit("getAll1dBarcodes", this.selection1DColumn);
     this.$store.commit("getAll2dBarcodes", this.selection2DColumn);
     this.$store.commit("getAllOtherBarcodes", this.selectionOtherColumn);
+    if (this.$store.state.selected1dBarcodes.length == 0) {
+      this.indeterminate1d = false;
+      this.checkAll1dBarcode = false;
+    } else if (
+      this.$store.state.selected1dBarcodes.length <
+      this.$store.state.all1dBarcodes.size
+    ) {
+      this.indeterminate1d = true;
+      this.checkAll1dBarcode = false;
+    } else if (
+      this.$store.state.selected1dBarcodes.length ===
+      this.$store.state.all1dBarcodes.size
+    ) {
+      this.indeterminate1d = false;
+      this.checkAll1dBarcode = true;
+    }
+    if (this.$store.state.selected2dBarcodes.length == 0) {
+      this.indeterminate2d = false;
+      this.checkAll2dBarcode = false;
+    } else if (
+      this.$store.state.selected2dBarcodes.length <
+      this.$store.state.all2dBarcodes.size
+    ) {
+      this.indeterminate2d = true;
+      this.checkAll2dBarcode = false;
+    } else if (
+      this.$store.state.selected2dBarcodes.length ===
+      this.$store.state.all2dBarcodes.size
+    ) {
+      this.indeterminate2d = false;
+      this.checkAll2dBarcode = true;
+    }
+    if (this.$store.state.selectedOtherBarcodes.length == 0) {
+      this.indeterminateOther = false;
+      this.checkAllOtherBarcode = false;
+    } else if (
+      this.$store.state.selectedOtherBarcodes.length <
+      this.$store.state.allOtherBarcodes.size
+    ) {
+      this.indeterminateOther = true;
+      this.checkAllOtherBarcode = false;
+    } else if (
+      this.$store.state.selectedOtherBarcodes.length ===
+      this.$store.state.allOtherBarcodes.size
+    ) {
+      this.indeterminateOther = false;
+      this.checkAllOtherBarcode = true;
+    }
     document.addEventListener("click", () => {
       this.$store.commit("hideBarcodeFormatPopover");
     });
@@ -327,6 +378,7 @@ export default Vue.extend({
 .barcodeFormatBtn {border-bottom: 1px solid #222222;font-family: "OpenSans-Regular";}
 .sidebarBtn {height: 100%;}
 .formatLabel {font-family: "OpenSans-Regular";}
+.formatLabel .textInMobile {display: none;}
 
 .collapse {position: relative;margin: -12px -16px;padding: 8px 19px;background-color: rgba(50, 50, 52);overflow: auto;}
 .collapse .collapsePanel {width: 100%;color: white;margin-bottom: 10px;}
@@ -384,9 +436,13 @@ export default Vue.extend({
   .barcodeSelection .selectionItemContainer {margin-bottom: 10px;}
   .selectionItemContainer label {width: 80px;}
   .sidebarBtn img {width: 18px;height: 18px;}
+  .formatLabel .text {display: none;}
+  .formatLabel .textInMobile {display: block;}
 }
 
 @media screen and (max-width: 420px) {
   .formatLabel {font-family: "Oswald-Regular";}
+  .formatLabel .text {display: none;}
+  .formatLabel .textInMobile {display: block;}
 }
 </style>

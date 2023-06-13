@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import { router } from '../main.js'
 
 Vue.use(Vuex)
 
@@ -19,7 +20,7 @@ export default new Vuex.Store({
     guideSelection: "common1d",
     // use case part
     isShowUseCasePopover: false,
-    selectedUseCase: "general",
+    selectedUseCase: undefined,
     previousSelected1d: [],
     previousSelected2d: [],
     previousSelectedOther: [],
@@ -40,16 +41,16 @@ export default new Vuex.Store({
     singleOrMul: 'single',
     scanMode: 'bestSpeed',
     autoZoom: false,
-    autoFocus: false,
     autoSuggestTip: true,
     invertColourOn: false,
     soundEffectsOn: true,
+    isShowAdvancedSettings: false,
     isChanged: false,
     isShowSettings: false,
     runtimeSettings: "",
     isShowEmailInput: false,
     currentResolution: [],
-    curSystem: ""
+    curSystem: "",
   },
   getters: {
     selectedBarcodes: state => {
@@ -66,7 +67,6 @@ export default new Vuex.Store({
 
     // guide part
     startScanning(state, guideSelection) {
-      state.isStartScanning = true;
       state.guideSelection = guideSelection;
       switch (state.guideSelection) {
         case "common-oned":
@@ -76,6 +76,9 @@ export default new Vuex.Store({
           state.selectedOtherBarcodes = [];
           state.enableBtn = true;
           state.previousIsNotGeneral = false;
+          if(router.currentRoute.path !== "/common-oned/") {
+            router.replace(`/common-oned/${location.search}`);
+          }
           break;
         case "common-twod":
           this.commit("onSelectedUseCaseChange", 'general');
@@ -84,6 +87,9 @@ export default new Vuex.Store({
           state.selectedOtherBarcodes = [];
           state.enableBtn = true;
           state.previousIsNotGeneral = false;
+          if(router.currentRoute.path !== "/common-twod/") {
+            router.replace(`/common-twod/${location.search}`);
+          }
           break;
         case "common-oned-twod":
           this.commit("onSelectedUseCaseChange", 'general');
@@ -92,6 +98,9 @@ export default new Vuex.Store({
           state.selectedOtherBarcodes = [];
           state.enableBtn = true;
           state.previousIsNotGeneral = false;
+          if(router.currentRoute.path !== "/common-oned-twod/") {
+            router.replace(`/common-oned-twod/${location.search}`);
+          }
           break;
         case "driver-license":
           this.commit("onSelectedUseCaseChange", 'dl');
@@ -105,6 +114,7 @@ export default new Vuex.Store({
         default:
           break;
       }
+      state.isStartScanning = true;
     },
 
     // use case part
@@ -117,6 +127,8 @@ export default new Vuex.Store({
       state.isShowUseCasePopover = false;
     },
     onSelectedUseCaseChange(state, newValue) {
+      if(state.selectedUseCase === newValue) return;
+
       state.runtimeSettings = "";
       state.isShowSettings = false;
       state.selectedUseCase = newValue;
@@ -128,6 +140,9 @@ export default new Vuex.Store({
         }
         state.enableBtn = true;
         state.previousIsNotGeneral = false;
+        if(router.currentRoute.path !== "/common-oned-twod/") {
+          router.replace(`/common-oned-twod/${location.search}`);
+        }
       }
       else if (state.selectedUseCase === 'vin') {
         // change selected barcode format
@@ -140,9 +155,11 @@ export default new Vuex.Store({
         this.commit("scanModeSwitch", "bestSpeed");
         // set invert colour off
         this.commit("invertColourSwitch", "false");
-
         state.enableBtn = false;
         state.previousIsNotGeneral = true;
+        if(router.currentRoute.path !== "/vin/") {
+          router.replace(`/vin/${location.search}`);
+        }
       }
       else if (state.selectedUseCase === "dl") {
         // change selected barcode format
@@ -155,9 +172,11 @@ export default new Vuex.Store({
         this.commit("scanModeSwitch", "bestSpeed");
         // set invert colour off
         this.commit("invertColourSwitch", "false");
-
         state.enableBtn = false;
         state.previousIsNotGeneral = true;
+        if(router.currentRoute.path !== "/driver-license/") {
+          router.replace(`/driver-license/${location.search}`);
+        }
       }
       else if (state.selectedUseCase === "dpm") {
         // change selected barcode format
@@ -167,6 +186,9 @@ export default new Vuex.Store({
 
         state.enableBtn = false;
         state.previousIsNotGeneral = true;
+        if(router.currentRoute.path !== "/dpm/") {
+          router.replace(`/dpm/${location.search}`);
+        }
       }
     },
 
@@ -257,9 +279,6 @@ export default new Vuex.Store({
     },
     autoZoomSwitch(state, newValue) {
       state.autoZoom = newValue;
-    },
-    autoFocusSwitch(state, newValue) {
-      state.autoFocus = newValue;
     },
     autoSuggestTipSwitch(state, newValue) {
       state.autoSuggestTip = newValue;

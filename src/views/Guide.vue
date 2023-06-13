@@ -10,11 +10,12 @@
     </header>
     <div class="guideContainer">
       <div class="guideTitle">
+        <h1>Dynamsoft Barcode Reader | JavaScript Barcode Reader Demo</h1>
         <img src="../assets/image/dbr.svg" alt="dynamsoft-barcode-reader" />
       </div>
-      <h1 class="guideTextPart1" style="color: white">
-        Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this barcode scanner demo and see how it works in different modes.
-      </h1>
+      <p class="guideTextPart1" style="color: white">
+        Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this JavaScript barcode scanner demo and see how it works in different modes.
+      </p>
       <div class="guideOptions">
         <div class="optionRow1 optionRow">
           <div class="optionItemContainer" :class="{ selected: guideSelection == 'common-oned' }">
@@ -209,9 +210,11 @@
     <div class="supportedBrowsersInfo">
       <span class="guideText-main">
         <div class="guideText">
-          Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this barcode scanner demo and see how it works in different modes.
+          Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this JavaScript barcode scanner demo and see how it works in different modes.
         </div>
-        <div>Supported Browsers: Safari v11+, Chrome v59+, Firefox v52+ (v55+ on Android/iOS) and Edge v16+ on Desktop/Android/iOS.</div>
+        <div>
+          Supported Browsers: Safari v11+, Chrome v59+, Firefox v52+ (v55+ on Android/iOS) and Edge v16+ on Desktop/Android/iOS.
+        </div>
       </span>
     </div>
   </div>
@@ -222,6 +225,8 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "Guide",
+  components: {
+  },
   data() {
     return {
       guideSelection: "",
@@ -229,24 +234,11 @@ export default Vue.extend({
   },
   mounted() {
     this.guideSelection = "common-oned-twod";
-    if (window.location.hash.toLowerCase() === "#general") {
-      this.guideSelection = "common-oned-twod";
-      this.startScanning();
-    } else if (window.location.hash.toLowerCase() === "#vin") {
-      this.guideSelection = "vin";
-      this.startScanning();
-    } else if (window.location.hash.toLowerCase() === "#driverslicense") {
-      this.guideSelection = "driver-license";
-      this.startScanning();
-    } else if (window.location.hash.toLowerCase() === "#dpm") {
-      this.guideSelection = "dpm";
-      this.startScanning();
-    }
   },
   methods: {
     startScanning() {
       setTimeout(() => {
-        this.$router.push(`/${this.guideSelection}.html${location.search}`);
+        this.$router.push(`/${this.guideSelection}/`);
         this.$store.commit("startScanning", this.guideSelection);
       }, 0);
     },
@@ -267,6 +259,7 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
 
 .guideContainer {display: flex;flex-direction: column;flex: 1 1 auto;color: white;}
 .guideContainer .guideTitle {margin-top: 3.8vh;text-align: center;}
+.guideContainer .guideTitle > h1 {display: none;}
 .guideContainer .guideTitle img {height: 4.9vh;max-width: 100%;}
 .guideContainer .guideTextPart1 {margin: 2.4vh auto 0;max-width: 78.7%;font-family: "OpenSans-Regular";font-size: 12px;line-height: 18px;}
 .guideContainer .guideOptions {display: flex;flex-direction: column;margin-top: 2.5vh;margin-left: 4%;margin-right: 5.9%;}
@@ -320,7 +313,8 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   .guideContainer .guideOptionsInDesktop .optionColumns {display: flex;flex-direction: row;justify-content: space-between;margin-top: 3vh;width: 100%;height: 19.4vh;min-height: 150px;}
 
   .optionColumn .optionItemContainer {position: relative;}
-  .optionColumn .optionItemContainer label {width: 100%;height: 100%;padding-left: 6.25%;cursor: pointer;}
+  .optionColumn .optionItemContainer>label {width: 100%;height: 100%;padding-left: 6.25%;cursor: pointer;}
+  
   .optionColumn .optionItemContainer .itemHeader {display: flex;flex-direction: row;align-items: center;font-size: 18px;line-height: 26px;}
   .optionColumn .optionItemContainer .itemBody {width: 82.6%;font-size: 12px;color: #fff;font-family: "OpenSans-Regular";line-height: 20px;}
   .optionColumn .optionItemContainer:hover {background-color: #2E2E2E;}
@@ -347,6 +341,7 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   .supportedBrowsersInfo {margin-left: 50%;margin-bottom: 5vh;height: 5.2vh;width: 66.8%;min-width: 980px;font-size: 16px;text-align: center;transform: translateX(-50%);}
 
   .supportedBrowsersInfo .guideText {display: none;}
+
   .copyrightInfo {margin-top: 2.1vh;height: 7.6vh;font-size: 16px;background-color: #222222;}
 }
 
@@ -355,13 +350,14 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   header .headerLeft {display: flex;}
   .headerLeft .dynamsoftLogo {margin-left: 4vw;}
   .headerLeft .dynamsoftLogo img {height: 24px;}
-  
+
   .guideContainer {justify-content: space-around;}
   .guideContainer .guideTitle {margin-top: 0;}
   .guideContainer .guideTitle img {height: 32.7px;}
 
   .optionRow .optionItemContainer .itemBody {overflow: hidden;white-space: nowrap;text-overflow: ellipsis;}
   .optionRow .optionItemContainer {height: 100%;}
+  .optionItemContainer>label {display: flex;flex-direction: column;justify-content: center;width:100%;height: 100%;}
 
   .guideContainer .guideOptions {display: flex;}
   .guideContainer .guideOptionsInDesktop {display: none;}
@@ -377,17 +373,21 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   .supportedBrowsersInfo {display: none;}
   .copyrightInfo {display: none;}
 }
+/* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
   .guideContainer .guideTextPart1 {display: none;}
+
+  .optionItemContainer>label {display: flex;flex-direction: column;justify-content: center;width:100%;height: 100%;}
 }
 @media screen and (max-height: 500px) {
   .guide {padding-bottom: 10px;}
   .guideTitle {padding: 10px 0 0 0;}
+
+  .optionItemContainer>label {display: flex;flex-direction: column;justify-content: center;width:100%;height: 100%;}
 }
 @media screen and (orientation: portrait) {
   .guideContainer {overflow: auto;}
 }
-/* mobile */
 @media screen and (max-width: 980px) {
   .guide {background-color: rgba(50, 50, 52);}
   .guideContainer .btnContainer {display: flex;}

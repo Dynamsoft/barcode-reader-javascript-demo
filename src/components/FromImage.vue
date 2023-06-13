@@ -1,20 +1,20 @@
 <template>
   <div class="fromImage" @click="trigger">
-    <input @change="onIptChange" @click="onIptClick" ref="uploadImage" type="file" accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp" style="display: none"/>
+    <input @change="onIptChange" ref="uploadImage" type="file" accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp" style="display: none"/>
     <img src="../assets/image/Images-add.svg" alt="images-add" />
   </div>
 </template>
 
 <script>
 import Vue from "vue";
-import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleTransformationMode} from "dynamsoft-javascript-barcode";
+import {BarcodeReader,EnumDPMCodeReadingMode,EnumLocalizationMode,EnumGrayscaleTransformationMode,EnumIntermediateResultType} from "dynamsoft-javascript-barcode";
 import { CodeParser } from "dynamsoft-code-parser";
 import BarcodeFormatMap from "../assets/enum/BarcodeFormatMap.js";
 import BarcodeFormatMap_2 from "../assets/enum/BarcodeFormatMap_2.js";
 
 export default Vue.extend({
   name: "FromImage",
-  props: ["isUploadImage", "bScannerCreated"],
+  props: ["isUploadImage"],
   data() {
     return {
       reader: null,
@@ -33,92 +33,85 @@ export default Vue.extend({
     }
   },
   methods: {
-    onIptClick(e) {
-      if(!this.bScannerCreated) {
-        e.preventDefault();
-      }
-    },
     async onIptChange(event) {
       this.$emit("clearResultsCvs");
       try {
         this.resultsInfo = [];
         let input = event.target;
-        let files = input.files;
-        for (let i = 0; i < files.length; ++i) {
-          let file = files[i];
-          let resultInfo = {
-            fileName: "",
-            results: [],
-          };
-          this.reader.ifSaveOriginalImageInACanvas = true;
-          resultInfo.fileName = file.name;
-          this.$store.commit("startDecodingFile");
-          this.$emit("removeDLResults");
+        let file = input.files[0];
+        let resultInfo = {
+          fileName: "",
+          results: [],
+        };
+        this.reader.ifSaveOriginalImageInACanvas = true;
+        resultInfo.fileName = file.name;
+        this.$store.commit("startDecodingFile");
+        this.$emit("removeDLResults");
 
-          // show tip
-          let config = {};
-          config.content = "Decoding...";
-          config.icon = (
-            <a-icon type="loading" style={{ color: "#FE8E14" }}></a-icon>
-          );
-          config.duration = 0;
-          this.$message.open(config);
-          let results = await this.reader.decode(file);
-          let cvs = this.reader.getOriginalImageInACanvas();
-          cvs.style.width = "100%";
-          cvs.style.height = "100%";
-          cvs.style.objectFit = "contain";
-          this.currentImg = cvs;
-          for(let result of results) {
-            let barcodeFormat = "";
-            if (result.barcodeFormatString.includes("No Barcode Format")) {
-              barcodeFormat = result.barcodeFormatString_2;
-            }else {
-              barcodeFormat = result.barcodeFormatString;
+        // show tip
+        let config = {};
+        config.content = "Decoding...";
+        config.icon = (
+          <a-icon type="loading" style={{ color: "#FE8E14" }}></a-icon>
+        );
+        config.duration = 0;
+        this.$message.open(config);
+        let results = await this.reader.decode(file);
+        let cvs = this.reader.getOriginalImageInACanvas();
+        cvs.style.width = "100%";
+        cvs.style.height = "100%";
+        cvs.style.objectFit = "contain";
+        this.currentImg = cvs;
+        for(let result of results) {
+          let barcodeFormat = "";
+          if (result.barcodeFormatString.includes("No Barcode Format")) {
+            barcodeFormat = result.barcodeFormatString_2;
+          }else {
+            barcodeFormat = result.barcodeFormatString;
+          }
+          if(this.selectedUseCase === "dl" && result.barcodeFormatString === "PDF417" && result.barcodeFormatString_2.includes("No Barcode Format")){
+            if(!this.parser) {
+              this.parser = await CodeParser.createInstance();
             }
-            if(this.selectedUseCase === "dl" && result.barcodeFormatString === "PDF417" && result.barcodeFormatString_2.includes("No Barcode Format")){
-              if(!this.parser) {
-                this.parser = await CodeParser.createInstance();
-              }
-              let jsonRes = await this.parser.parseData(result.barcodeBytes);
-              if(jsonRes.exception) {
-                resultInfo.parseFailed = true;
-                resultInfo.results = [];
-              } else {
-                resultInfo.results.push({
-                  barcodeFormat: barcodeFormat,
-                  json: JSON.stringify(jsonRes),
-                  text: result.barcodeText
-                });
-              }
+            let jsonRes = await this.parser.parseData(result.barcodeBytes);
+            if(jsonRes.exception) {
+              resultInfo.parseFailed = true;
+              resultInfo.results = [];
+              resultInfo.barcodeText = result.barcodeText;
             } else {
               resultInfo.results.push({
                 barcodeFormat: barcodeFormat,
-                text: result.barcodeText,
+                json: JSON.stringify(jsonRes),
+                text: result.barcodeText
               });
             }
-          }
-          this.resultsInfo.push(resultInfo);
-          this.$message.destroy();
-          if (results.length === 0) {
-            config = {};
-            config.content = "No barcodes found!";
-            config.icon = (
-              <a-icon type="close" style={{ color: "#FE8E14" }}></a-icon>
-            );
-            config.duration = 1;
-            this.$store.commit("finishDecodingFile");
-            this.$emit("clearResultList");
           } else {
-            config.content = "Complete!";
-            config.duration = 1;
-            config.icon = (
-              <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
-            );
+            resultInfo.results.push({
+              barcodeFormat: barcodeFormat,
+              text: result.barcodeText,
+            });
           }
-          this.$emit("showResults", this.resultsInfo, this.currentImg, results);
-          this.$message.open(config);
         }
+        this.resultsInfo.push(resultInfo);
+        this.$message.destroy();
+        if (results.length === 0) {
+          config = {};
+          config.content = "No barcodes found!";
+          config.icon = (
+            <a-icon type="close" style={{ color: "#FE8E14" }}></a-icon>
+          );
+          config.duration = 1;
+          this.$store.commit("finishDecodingFile");
+          this.$emit("clearResultList");
+        } else {
+          config.content = "Complete!";
+          config.duration = 1;
+          config.icon = (
+            <a-icon type="smile" style={{ color: "#FE8E14" }}></a-icon>
+          );
+        }
+        this.$emit("showResults", this.resultsInfo, this.currentImg, results);
+        this.$message.open(config);
         input.value = "";
       } catch (ex) {
         this.resultsInfo.push(ex.message);
@@ -214,7 +207,9 @@ export default Vue.extend({
             }
             let jsonRes = await this.parser.parseData(result.barcodeBytes);
             if(jsonRes.exception) {
+              resultInfo.parseFailed = true;
               resultInfo.results = [];
+              resultInfo.barcodeText = result.barcodeText;
             } else {
               resultInfo.results.push({
                 barcodeFormat: barcodeFormat,

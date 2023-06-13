@@ -6,9 +6,14 @@
     <div class="copyrightInfo">
       <div>
         © 2003 – 2023 Dynamsoft. All rights reserved.
-        <a href="https://www.dynamsoft.com/PrivacyStatement.aspx" target="_blank" >Privacy Statement</a>
+        <a href="https://www.dynamsoft.com/PrivacyStatement.aspx" target="_blank">Privacy Statement</a>
         /
-        <a href="https://www.dynamsoft.com/SiteMap.aspx" target="_blank">Site Map</a>
+        <a href="https://www.dynamsoft.com/SiteMap.aspx" target="_blank">Site Map</a>.
+      </div>
+      <div>
+        This site is protected by reCAPTCHA and the Google
+        <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a> and
+        <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a> apply.
       </div>
     </div>
   </div>
@@ -31,7 +36,7 @@ export default Vue.extend({
 
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
-  .copyRightFooter {bottom: 0;height: 6vh;width: 100%;z-index: 40;}
+  .copyRightFooter {bottom: 0;min-height: 48px;height: 6vh;width: 100%;z-index: 40;}
   .dynamsoftLogo {height: 58.2%;}
   .copyrightInfo {margin-left: 3.3%;font-size: 16px;}
 }

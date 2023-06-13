@@ -1,12 +1,10 @@
 {
   "name": "dbr_js_demo_vue",
-  "version": "9.6.10",
+  "version": "9.6.20",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "build:self-iis-test": "vue-cli-service build --mode self-iis-test",
-    "build:publish": "vue-cli-service build --mode publish",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -15,7 +13,9 @@
     "clipboard": "^2.0.11",
     "core-js": "^3.6.5",
     "dynamsoft-code-parser": "1.1.0",
-    "dynamsoft-javascript-barcode": "9.6.10",
+    "dynamsoft-javascript-barcode": "9.6.20",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
     "qrcodejs2": "^0.0.2",
     "vue": "^2.6.11",
     "vue-router": "^3.5.4",

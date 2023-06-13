@@ -20,17 +20,17 @@ Vue.use(VueRouter);
 
 const routes = [
   { path: '/', component: Guide},
-  { path: '/common-oned.html', component: BarcodeScannerComponent },
-  { path: '/common-twod.html', component: BarcodeScannerComponent },
-  { path: '/common-oned-twod.html', component: BarcodeScannerComponent },
-  { path: '/vin.html', component: BarcodeScannerComponent },
-  { path: '/driver-license.html', component: BarcodeScannerComponent },
-  { path: '/dpm.html', component: BarcodeScannerComponent }
+  { path: '/common-oned', component: BarcodeScannerComponent },
+  { path: '/common-twod', component: BarcodeScannerComponent },
+  { path: '/common-oned-twod', component: BarcodeScannerComponent },
+  { path: '/vin', component: BarcodeScannerComponent },
+  { path: '/driver-license', component: BarcodeScannerComponent },
+  { path: '/dpm', component: BarcodeScannerComponent }
 ]
 
-const router = new VueRouter({
+export const router = new VueRouter({
   routes,
-  base: process.env.BASE_URL,
+  base: "/barcode-reader-js/",
   mode: "history",
 })
 
@@ -39,7 +39,5 @@ new Vue({
   store,
   router,
   mounted() {
-    // You'll need this for renderAfterDocumentEvent.
-    document.dispatchEvent(new Event('render-event'))
   },
 }).$mount('#app')

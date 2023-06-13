@@ -81,15 +81,18 @@
               <div class="copyCode" @click="copySettings" :style="{color: isCopied ? '#FE8E14' : '#ffffff'}">{{isCopied ? "Copied" : "Copy"}}</div>
             </div>
           </div>
-          <div class="optionRow5 optionRow" v-show="!isShowSettings">
-            <div @click="viewSettings">View Setting Codes<svg t="1677204473794" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2865" id="mx_n_1677204473795" width="17" height="22"><path d="M723.1 483.4c-1.3-1.3-2.6-2.4-4-3.4L355.9 116c-14.6-14.6-38.4-14.6-53 0-14.6 14.6-14.6 38.5 0 53.1l340.4 341.2L302.9 851c-14.6 14.6-14.6 38.4 0 53 14.6 14.6 38.4 14.6 53 0l362.9-363.3c1.5-1.1 2.9-2.3 4.3-3.7 7.4-7.4 11-17.1 10.9-26.8 0.1-9.7-3.6-19.4-10.9-26.8z" fill="#fe8e14" p-id="2866"></path></svg></div>
+          <div class="footer" v-show="!isShowSettings">
+            <div @click="viewSettings">View Setting Codes<svg viewBox="0 0 1024 1024"><path d="M723.1 483.4c-1.3-1.3-2.6-2.4-4-3.4L355.9 116c-14.6-14.6-38.4-14.6-53 0-14.6 14.6-14.6 38.5 0 53.1l340.4 341.2L302.9 851c-14.6 14.6-14.6 38.4 0 53 14.6 14.6 38.4 14.6 53 0l362.9-363.3c1.5-1.1 2.9-2.3 4.3-3.7 7.4-7.4 11-17.1 10.9-26.8 0.1-9.7-3.6-19.4-10.9-26.8z" fill="#fe8e14"></path></svg></div>
           </div>
         </div>
       </template>
       <div class="sidebarBtn" :style="{color: fontAndIconColor,backgroundColor: bgColor}">
         <img src="../../assets/image/icon-web-settings.svg" alt="settings">
         <!-- <img v-show="!$store.state.enableBtn" src="../../assets/image/icon-setting-disable.svg" alt="settings-disable"> -->
-        <label class="settingsLabel"> Scan Settings </label>
+        <label class="settingsLabel"> 
+          <span class="text">Scan Settings</span>
+          <span class="textInMobile">Settings</span>
+        </label>
       </div>
     </a-popover>
   </div>
@@ -292,6 +295,7 @@ export default Vue.extend({
 <style scoped>
 .sidebarBtn {height: 100%;}
 .settingsLabel {font-family: "OpenSans-Regular";color: white;}
+.settingsLabel .textInMobile {display: none;}
 
 .scanSettingsOptions {margin: -12px -16px;background-color: rgba(50, 50, 52, 0.8);}
 .optionRows {display: flex;flex-direction: column;justify-content: space-between;width: 100%;height:100%;}
@@ -301,9 +305,9 @@ export default Vue.extend({
 .settingsContainer .footer-btns {width:90%;display:flex;justify-content: space-between; position: absolute;bottom: 5%;color: #fff;font-size: 14px;cursor: pointer;}
 .settingsContainer .sendEmail {position: absolute;right: 5%;bottom: 5%;width: 128px;height: 35px;line-height: 35px;background-color: #FE8E14;color: #fff;text-align: center;font-size: 14px;cursor: pointer;}
 
-.optionRow5 {width: 100%;height: 60px;background-color: #000000;}
-.optionRow5 div {line-height: 60px;color: #FE8E14;font-size: 19px;float: right;padding-right: 20px;cursor: pointer;}
-.optionRow5 div svg {margin-left: 16px; vertical-align: sub;}
+.scanSettingsOptions .footer {width: 100%;height: 60px;background-color: #000000;}
+.scanSettingsOptions .footer div {line-height: 60px;color: #FE8E14;font-size: 19px;float: right;padding-right: 20px;cursor: pointer;}
+.scanSettingsOptions .footer div svg {margin-left: 4px; height: 22px;vertical-align: sub;}
 
 .optionBtns {display: flex;flex-direction: row;}
 .optionBtns img {height: 40px;}
@@ -340,7 +344,7 @@ export default Vue.extend({
   .optionRows .optionRow:nth-child(1) {margin-top: 0;}
   .optionBtns {margin-top: 10px;}
 
-  .optionRow5 div {padding-right: 10px;}
+  .scanSettingsOptions .footer div {padding-right: 10px;}
   .optionRow .optionText .shortIntro {font-size: 14px;}
 
   .optionBtn {margin-right: 20px;padding: 10px 20px;min-width: 80px;height: 40px;}
@@ -371,9 +375,17 @@ export default Vue.extend({
 }
 /* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
+  .settingsLabel .text {display: none;}
+  .settingsLabel .textInMobile {display: block;}
+
   .scanSettingsBtn {width: 25%;}
   .sidebarBtn img {width: 18px;height: 18px;}
   .scanSettingsOptions {width: 330px;font-size: 14px;}
+
+  .scanSettingsOptions .footer {height: 40px;}
+  .scanSettingsOptions .footer div {line-height: 40px;font-size: 16px;padding-right: 10px;}
+  .scanSettingsOptions .footer div svg {margin-left: 2px;height: 20px}
+
 
   .optionRows {padding-top: 25px;padding-bottom: 13px;padding-left: 18px;padding-right: 20px;}
   .optionRows .optionRow {margin-top: 19px;}
@@ -387,5 +399,7 @@ export default Vue.extend({
 
 @media screen and (max-width: 420px) {
   .settingsLabel {font-family: "Oswald-Regular";}
+  .settingsLabel .text {display: none;}
+  .settingsLabel .textInMobile {display: block;}
 }
 </style>

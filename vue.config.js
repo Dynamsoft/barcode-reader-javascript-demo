@@ -1,29 +1,13 @@
-const path = require('path');
-const CompressionWebpackPlugin = require('compression-webpack-plugin');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const PrerenderSPAPlugin = require('prerender-spa-plugin')
-const Renderer = PrerenderSPAPlugin.PuppeteerRenderer;
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 // vue.config.js for less-loader@6.0.0
 module.exports = {
-  publicPath: process.env.VUE_APP_PUBLIC_PATH,//"./",
+  publicPath: "/barcode-reader-js/",
+  
+  outputDir: 'dist/barcode-reader-js/',
 
   configureWebpack: config=>{
     if(config.mode === "production"){
-        // use gz
-        config.plugins.push(
-            new CompressionWebpackPlugin({
-              exclude: /(\.config)$/,
-            }),
-        );
-        config.plugins.push(
-            new BundleAnalyzerPlugin({
-              analyzerMode: 'disabled', 
-              generateStatsFile: false, 
-              deleteOriginalAssets: true
-            }),
-        );
         config.devtool = false;
 
         config.plugins.push(
@@ -41,6 +25,9 @@ module.exports = {
           })
         );	
     }
+  },
+  devServer: {
+    https: true,
   },
   chainWebpack: config => {
     config.plugins.delete('preload');
