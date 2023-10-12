@@ -238,7 +238,7 @@ export default Vue.extend({
   methods: {
     startScanning() {
       setTimeout(() => {
-        this.$router.push(`/${this.guideSelection}/`);
+        this.$router.push(`/${this.guideSelection}/${location.search}`);
         this.$store.commit("startScanning", this.guideSelection);
       }, 0);
     },
