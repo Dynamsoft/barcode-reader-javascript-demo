@@ -41,6 +41,7 @@ export default new Vuex.Store({
     singleOrMul: 'single',
     scanMode: 'bestSpeed',
     autoZoom: false,
+    // autoFocus: false,
     autoSuggestTip: true,
     invertColourOn: false,
     soundEffectsOn: true,
@@ -280,6 +281,9 @@ export default new Vuex.Store({
     autoZoomSwitch(state, newValue) {
       state.autoZoom = newValue;
     },
+    // autoFocusSwitch(state, newValue) {
+    //   state.autoFocus = newValue;
+    // },
     autoSuggestTipSwitch(state, newValue) {
       state.autoSuggestTip = newValue;
     },

@@ -3,7 +3,7 @@
     <use-case-btn />
     <barcode-format-btn />
     <full-image-localization-btn />
-    <scan-settings-btn :isUploadImage="isUploadImage" :bSupportFocus="bSupportFocus" :bScannerCreated="bScannerCreated"/>
+    <scan-settings-btn :isUploadImage="isUploadImage" :bScannerCreated="bScannerCreated"/>
   </div>
 </template>
 

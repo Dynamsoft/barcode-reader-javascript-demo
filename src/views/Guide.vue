@@ -269,6 +269,8 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
 .guideOptions .optionRow:nth-child(3), .guideOptions .optionRow:nth-child(4) {display: flex;flex-direction: row;align-items: center;justify-content: space-between;height: 6.7vh;min-height: 25px;}
 
 .optionItemContainer {display: flex;flex-direction: column;justify-content: center;background-color: #222222;border: 1px solid transparent;}
+/* .optionItemContainer>label {display: flex;flex-direction: column;justify-content: center;width:100%;height: 100%;} */
+/* .optionItemContainer>label {width:100%;height: 100%;} */
 .optionItemContainer .invert {filter: invert();}
 .optionItemContainer.selected {border: 1px solid #fe8e14;}
 
@@ -341,7 +343,6 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   .supportedBrowsersInfo {margin-left: 50%;margin-bottom: 5vh;height: 5.2vh;width: 66.8%;min-width: 980px;font-size: 16px;text-align: center;transform: translateX(-50%);}
 
   .supportedBrowsersInfo .guideText {display: none;}
-
   .copyrightInfo {margin-top: 2.1vh;height: 7.6vh;font-size: 16px;background-color: #222222;}
 }
 
@@ -350,7 +351,6 @@ header .headerLeft {display: flex;flex-direction: row;align-items: center;}
   header .headerLeft {display: flex;}
   .headerLeft .dynamsoftLogo {margin-left: 4vw;}
   .headerLeft .dynamsoftLogo img {height: 24px;}
-
   .guideContainer {justify-content: space-around;}
   .guideContainer .guideTitle {margin-top: 0;}
   .guideContainer .guideTitle img {height: 32.7px;}

@@ -106,7 +106,7 @@ import "../../assets/css/sidebarBtn.css";
 export default Vue.extend({
   name: "scanSettingsBtn",
   components: {},
-  props:["isUploadImage", "bSupportFocus", "bScannerCreated"],
+  props:["isUploadImage", "bScannerCreated"],
   data() {
     return {
       popoverPlacement: document.body.clientWidth > 980 ? 'rightBottom' : 'topRight',

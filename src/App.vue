@@ -8,9 +8,9 @@
 <script >
 import Vue from "vue";
 import CopyRightFooter from "./components/CopyRightFooter.vue";
-import { BarcodeScanner } from "dynamsoft-javascript-barcode";
 import "./dbr";
 import "./dcp";
+import { BarcodeScanner } from "dynamsoft-javascript-barcode";
 
 export default Vue.extend({
   name: "App",
@@ -92,11 +92,14 @@ li {
 .ant-popover-placement-right > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-rightTop > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-rightBottom > .ant-popover-content > .ant-popover-arrow {
   display: none;
 }
+/* .ant-popover-placement-top > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-topLeft > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-topRight > .ant-popover-content > .ant-popover-arrow {
+  display: none;
+} */
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
 }
 @media screen and (max-width: 980px) and (orientation: landscape) {
-  #comm100-float-button-2 {
+  [id*=comm100-float-button] {
     display: none !important;
     width: 1px !important;
     height: 1px !important;
@@ -105,7 +108,7 @@ li {
 }
 /* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
-  #comm100-float-button-2 {
+  [id*=comm100-float-button] {
     display: none !important;
     width: 1px !important;
     height: 1px !important;

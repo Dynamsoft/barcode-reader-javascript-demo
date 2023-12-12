@@ -1,13 +1,13 @@
 <template>
   <div>
     <div :class="{mask: true, maskHidden: isShowMask}"></div>
-    <focus-box @switchFocusBoxShow="switchFocusBoxShow" v-if="bMountFocusBox && currentEnv.OS === 'Android' && currentEnv.browser === 'Chrome'"></focus-box>
+    <focus-box v-if="bMountFocusBox && bSupportFocus"></focus-box>
     <home />
-    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" :bSupportFocus="bSupportFocus" :bScannerCreated="bScannerCreated"/>
+    <sidebar :isUploadImage="isUploadImage" @getImages="getImages" :bScannerCreated="bScannerCreated"/>
     <div class="barcodeScanner">
       <div v-once class="videoContainer" ref="videoContainer" style="width: 100%;height: 100%;min-width: 100px;min-height: 100px;background: #ddd;position: absolute;">
         <div class="dce-video-container" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%"></div>
-        <div ref="scanArea" class="dce-scanarea" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%">
+        <div ref="scanArea" class="dce-scanarea" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;pointer-events:none;">
           <div class="dce-scanlight" style="display: none;position: absolute;width: 100%;height: 3px;border-radius: 50%;box-shadow: 0px 0px 2vw 1px #fe8e14;background: #fe8e14;animation: 3s infinite dce-scanlight;user-select: none;"></div>
         </div>
         <div class="copyright"><span>Powered by Dynamsoft</span></div>
@@ -36,8 +36,8 @@
       <div v-show="selectedUseCase !== 'dl' && !isUploadImage">
         <result-bubble v-for="(result, name) in videoResults" :key="name" :result="result" :scanner="scanner" />
       </div>
-      <div class="torchContainer" :style="torchContainerStyle" v-show="!isResizing && !isUploadImage">
-        <a-icon v-show="isShowTorchIcon" type="funnel-plot" @click="flashlightSwitch" style=" position: absolute; left: 50%; bottom: 0; font-size: 30px; color: rgb(254, 142, 20); transform: translateX(-50%);"/>
+      <div class="torchContainer" :style="{bottom: cssRegionTop+'%'}" v-show="!isResizing && !isUploadImage && isShowTorchButton">
+        <a-icon type="funnel-plot" @click="flashlightSwitch" style="font-size: 30px; color: rgb(254, 142, 20);"/>
       </div>
       <result-container v-show="selectedUseCase !== 'dl' && !isUploadImage" :decodeRecords="decodeRecords" :pharmacodeResult="pharmacodeResult"/>
       <div class="dlResultContainer" v-show="isDLResultShow && !isUploadImage">
@@ -98,7 +98,7 @@
               <div class="parse-failed" v-if="selectedUseCase === 'dl' && item.parseFailed">Driver's License parse failed!</div>
               <div class="parse-failed-ori-string" v-if="selectedUseCase === 'dl' && item.parseFailed">
                 <div :style="{fontFamily: 'Oswald-Regular', fontSize: '16px', marginBottom: '10px'}">Original Text:</div>
-                <div :style="{wordWrap: 'break-word'}">{{item.barcodeText}}</div>
+                <div :style="{wordWrap: 'break-all'}">{{item.barcodeText}}</div>
               </div>
               <div class="no-barcode" v-if="!item.results.length && selectedUseCase !== 'dl'">No barcodes found !</div>
               <li v-for="(result, i) in item.results" :key="i">
@@ -189,7 +189,7 @@ export default Vue.extend({
       clientHeight: 0,
       visibleRegionInPixels: null,
       maskCanvas: null,
-      isShowTorchIcon: false,
+      isShowTorchButton: false,
       flashlightOn: false,
       isShowCameraList: false,
       dlText: "",
@@ -229,9 +229,9 @@ export default Vue.extend({
     this.clientHeight = document.body.clientHeight;
     this.clientWidth = document.body.clientWidth;
     if (["Android", "iPhone"].includes(BarcodeScanner.browserInfo.OS) && BarcodeScanner.browserInfo.version >= 17) {
-      this.isShowTorchIcon = true;
+      this.isShowTorchButton = true;
     } else {
-      this.isShowTorchIcon = false;
+      this.isShowTorchButton = false;
     }
     window.addEventListener("resize", ()=>{ this.resizeEvent(1000) });
     document.addEventListener("click", this.hideCameraList);
@@ -552,7 +552,7 @@ export default Vue.extend({
           <a-icon type="frown" style={{ color: "#FE8E14" }}></a-icon>
         );
         this.$message.open(config);
-        this.isShowTorchIcon = false;
+        this.isShowTorchButton = false;
       }
     },
     soundEffectsSwitch() {
@@ -563,7 +563,11 @@ export default Vue.extend({
       }
     },
     async initDcp() {
-      this.parser || (this.parser = await CodeParser.createInstance());
+      try {
+        this.parser || (this.parser = await CodeParser.createInstance());
+      } catch(e) {
+        console.error(e);
+      }
     },
     async showScanner() {
       this.isLoadingCamera = true;
@@ -618,9 +622,13 @@ export default Vue.extend({
               }
             }
           };
+
           let callBackInfo = await this.scanner.open();
           this.bScannerCreated = true;
+          const capabilities = this.scanner.getCapabilities();
+          this.bSupportFocus = !!capabilities.focusMode;
           this.bMountFocusBox = true;
+          // this.$store.commit('autoFocusSwitch', this.bSupportFocus);
           this.$store.state.currentResolution[0] = callBackInfo.width;
           this.$store.state.currentResolution[1] = callBackInfo.height;
           this.isLoadingCamera = false;
@@ -655,8 +663,13 @@ export default Vue.extend({
       let config = {};
       this.isLoadingCamera = true;
       let resulution = item[1] === "HD" ? [1280, 720] : [1920, 1080];
+      this.bMountFocusBox = false;
       await this.scanner.setCurrentCamera(item[0].deviceId);
       await this.scanner.setResolution(resulution);
+      const capabilities = this.scanner.getCapabilities();
+      this.bSupportFocus = !!capabilities.focusMode;
+      this.bMountFocusBox = true;
+      // this.$store.commit('autoFocusSwitch', this.bSupportFocus);
       this.$store.state.currentResolution = this.scanner.getResolution();
       this.currentCamera = await this.scanner.getCurrentCamera();
       if (this.currentCamera.deviceId !== item[0].deviceId) {
@@ -1064,6 +1077,9 @@ export default Vue.extend({
     autoZoom() {
       return this.$store.state.autoZoom;
     },
+    // autoFocus() {
+    //   return this.$store.state.autoFocus;
+    // },
     autoSuggestTip() {
       return this.$store.state.autoSuggestTip;
     },
@@ -1170,19 +1186,6 @@ export default Vue.extend({
       top = Math.round(top * 100);
       return top;
     },
-    torchContainerStyle() {
-      let left = this.cssRegionLeft;
-      let right = left;
-      let top = this.cssRegionTop;
-      let bottom = top;
-      let style = {
-        left: left + "%",
-        right: right + "%",
-        top: top + "%",
-        bottom: bottom + "%",
-      };
-      return style;
-    },
     currentResolution() {
       return this.$store.state.currentResolution;
     }
@@ -1257,6 +1260,11 @@ export default Vue.extend({
       s.autoZoom = newValue;
       await this.scanner.updateScanSettings(s);
     },
+    // async autoFocus(newValue,_) {
+    //   const s = await this.scanner.getScanSettings();
+    //   s.autoFocus = newValue;
+    //   await this.scanner.updateScanSettings(s);
+    // },
     isFullImageLocalization() {
       this.changeSettings();
     },
@@ -1276,7 +1284,7 @@ export default Vue.extend({
 
 .barcodeScanner {position: absolute;width: 100%;height: 100%;min-width: 100px;min-height: 100px;background: #d1d1d1;}
 
-.copyright {color: white;font-size: 12px;font-family: "Oswald-Light";position: absolute;left: 50%;transform: translateX(-50%);user-select: none;}
+.copyright {color: white;font-size: 12px;font-family: "Oswald-Light";position: absolute;left: 50%;transform: translateX(-50%);user-select: none;pointer-events: none;}
 
 .loadingImg {position: absolute;left: 50%;top: 50%;transform: translate(-50%, -50%);}
 .loadingCameraImg {width: 100%;height: 100%;background: #ddd;position: absolute;}
@@ -1322,13 +1330,13 @@ export default Vue.extend({
 .cameraAndSoundsContainer .soundEffects .musicUnSelected {height: 50%;margin-top: 0;}
 .cameraAndSoundsContainer .soundEffects .musicSelected {height: 60%;margin-top: 7px;}
 
-.curUseCaseTip {width: 100%;position: absolute;left: 50%;color: #fff;text-align: center;transform: translateX(-50%);z-index: 15;user-select: none;font-family: "OpenSans-Regular";}
+.curUseCaseTip {width: 100%;position: absolute;left: 50%;color: #fff;text-align: center;transform: translateX(-50%);z-index: 15;user-select: none;pointer-events: none; font-family: "OpenSans-Regular";}
 
 .dlResultContainer {position: absolute;top: 50%;left: 50%;width: 85%;max-height: 65vh;padding: 20px;color: #dddddd;background-color: rgba(34, 34, 34, 0.5);padding: 17px 25px 13px;transform: translate(-50%, -50%);z-index: 20;}
 .dlResultContainer .dlInfo {height: 100%;max-height: calc(60vh - 25px);overflow: auto;}
-.resContainer .dlInfo li span {word-break: break-word;}
 .resContainer .dlInfo li .description {width: 55%;color: #cccccc;}
-.dlResultContainer .dlInfo li, .resContainer .dlInfo li {display: flex;flex-direction: row;align-items: center;justify-content: space-around;padding-bottom: 2px;font-size: 14px;}
+.dlResultContainer .dlInfo li, .resContainer .dlInfo li {display: flex;flex-direction: row;justify-content: space-around;padding-bottom: 2px;font-size: 14px;}
+.dlResultContainer > .dlInfo > li > span, .resContainer .dlInfo li span {word-break: break-all;}
 
 .dlResultContainer .dlInfo li .description, .dlResultContainer .dlInfo li .value, .resContainer .dlInfo li .value {width: 40%;color: white;}
 
@@ -1336,7 +1344,7 @@ export default Vue.extend({
 .dlResultContainer .footer .copyBtn,
 .dlResultContainer .footer .closeBtn {cursor: pointer;user-select: none;}
 
-.torchContainer {position: absolute;user-select: none;transform: translateY(35px);}
+.torchContainer {position: absolute;left: 50%; width: 30px; height: 30px; user-select: none;transform: translate(-50%, 35px);}
 
 .driverLicenseTip {display: flex;position: absolute;flex-direction: column;align-items: center;justify-content: space-between;left: 50%;font-family: "OpenSans-Regular";color: #fff;transform: translateX(-50%);user-select: none;pointer-events: none;}
 
@@ -1409,7 +1417,6 @@ export default Vue.extend({
 }
 
 @media screen and (max-width: 980px) {
-
   .screenshot {position: absolute;bottom: 10px;right: 10px;width: 50px;height: 50px;background-color: rgba(0,0,0,0.6);border-radius: 50%;color: #ffffff;cursor: pointer;font-size: 18px;z-index: 30;}
   .screenshotIcon {position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);width: 20px;height: 20px;fill: #fff;vertical-align: baseline;}
 

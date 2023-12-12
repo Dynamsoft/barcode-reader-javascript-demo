@@ -4,7 +4,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 module.exports = {
   publicPath: "/barcode-reader-js/",
   
-  outputDir: 'dist/barcode-reader-js/',
+  outputDir: "dist/barcode-reader-js/",
 
   configureWebpack: config=>{
     if(config.mode === "production"){

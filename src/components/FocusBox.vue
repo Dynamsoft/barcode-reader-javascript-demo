@@ -1,5 +1,5 @@
 <template>
-    <div class="focusBox" :style="{'--top': focusCvsTop, '--left': focusCvsLeft}" ref="focusBox" v-show="bShowFocusBox">
+    <div class="focusBox" :style="{top: focusCvsTop, left: focusCvsLeft}" ref="focusBox" v-show="bShowFocusBox">
         <canvas class="focusCvs" ref="focusCvs" width="68" height="68"></canvas>
         <div class="tapToFocus" v-show="bShowText">Tap to focus</div>
     </div>
@@ -23,7 +23,8 @@ export default Vue.extend({
         this.createCvsAndDrawBorder();
         
         window.addEventListener("click", (e) => {
-            if(!this.bNeedFocus(e)) return;
+            if(!this.$refs.focusCvs) return;
+            
             if(this.bShowText) this.bShowText = false;
             if(this.focusBoxTimeout) {clearTimeout(this.focusBoxTimeout);}
             this.focusCvsTop = e.clientY+"px";
@@ -62,15 +63,12 @@ export default Vue.extend({
             ctx.arcTo(firstControllX,firstControllY,secondControllX,secondControllY,radian);
             ctx.lineTo(endX,endY);
         },
-        bNeedFocus(e) {
-            return !(e.target.className !== "dce-scanarea" && e.target.className !== "torchContainer" && e.target.nodeName !== "CANVAS");
-        }
     }
 });
 </script>
 
 <style scoped>
-.focusBox {width: 68px;height: 68px;position: absolute;top: var(--top);left: var(--left);transform: translate(-50%,-50%);z-index: 1;}
+.focusBox {width: 68px;height: 68px;position: absolute;transform: translate(-50%,-50%);z-index: 1;}
 .focusBox .focusCvs {width: 100%;height: 100%;animation: scale 0.2s linear alternate 5;z-index: 1;}
 .focusBox .tapToFocus {width: 106px; height: 29px;position: absolute;bottom: -65%;transform: translateX(-17px); background-color: rgba(148, 147, 147, 0.4);border-radius: 5px;margin-top: 20px;text-align: center;line-height: 29px;font-family: "OpenSans-Regular";color: #fff;}
 @keyframes scale {from {transform: scale(1.1);} to {transform: scale(1);}}

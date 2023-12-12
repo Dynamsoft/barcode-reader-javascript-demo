@@ -1,6 +1,6 @@
 <template>
   <div class="fromImage" @click="trigger">
-    <input @change="onIptChange" ref="uploadImage" type="file" accept=".jpg,.jpeg,.icon,.gif,.svg,.webp,.png,.bmp" style="display: none"/>
+    <input @change="onIptChange" ref="uploadImage" type="file" :accept="supportedImgFormat.toString()" style="display: none"/>
     <img src="../assets/image/Images-add.svg" alt="images-add" />
   </div>
 </template>
@@ -22,10 +22,14 @@ export default Vue.extend({
       visible: false,
       currentImg: null,
       changeRuntimeSettingsTimeoutId: null,
-      resultsInfo: []
+      resultsInfo: [],
+      supportedImgFormat: ["image/jpeg", "image/png", "image/bmp", "image/gif", "image/svg+xml", "image/x-icon", "image/webp"]
     };
   },
   async mounted() {
+    if (["iPhone", "iPad", "Mac"].includes(BarcodeReader.browserInfo.OS)) {
+      this.supportedImgFormat.push("image/tiff");
+    }
     this.reader || (this.reader = await BarcodeReader.createInstance());
     window.reader = this.reader;
     if (BarcodeReader._bUseFullFeature) {
@@ -39,6 +43,13 @@ export default Vue.extend({
         this.resultsInfo = [];
         let input = event.target;
         let file = input.files[0];
+        
+        if(!this.supportedImgFormat.includes(file.type)) {
+          const message = `Sorry, the file format you selected is unsupported. Please select a file in JPEG, PNG, BMP, GIF, SVG, ICON${this.supportedImgFormat.includes("image/tiff")?", TIFF":""} or WebP format.`;
+          this.$message.error({content: message, duration: 3});
+          return;
+        }
+
         let resultInfo = {
           fileName: "",
           results: [],
