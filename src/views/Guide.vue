@@ -3,7 +3,7 @@
     <header>
       <div class="headerLeft">
         <a class="dynamsoftLogo" href="https://www.dynamsoft.com/" target="_blank">
-          <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="dynamsoft"/>
+          <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="Dynamsoft"/>
           dynamsoft
         </a>
       </div>

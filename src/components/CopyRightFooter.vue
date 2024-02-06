@@ -1,11 +1,11 @@
 <template>
-  <div class="copyRightFooter">
+  <div class="copyrightFooter">
     <a class="dynamsoftLogo" href="https://www.dynamsoft.com/" target="_blank">
-      <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="dynamsoft"/>
+      <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="Dynamsoft"/>
     </a>
     <div class="copyrightInfo">
       <div>
-        © 2003 – 2023 Dynamsoft. All rights reserved.
+        © 2003 – {{new Date().getUTCFullYear()}} Dynamsoft. All rights reserved.
         <a href="https://www.dynamsoft.com/PrivacyStatement.aspx" target="_blank">Privacy Statement</a>
         /
         <a href="https://www.dynamsoft.com/SiteMap.aspx" target="_blank">Site Map</a>.
@@ -23,28 +23,28 @@
 import Vue from "vue";
 
 export default Vue.extend({
-  name: "App",
+  name: "CopyrightFooter",
   components: {},
   mounted() {},
 });
 </script>
 
 <style scoped>
-.copyRightFooter {position: absolute;display: flex;flex-direction: row;justify-content: center;align-items: center;background-color: #222222;}
+.copyrightFooter {position: absolute;display: flex;flex-direction: row;justify-content: center;align-items: center;background-color: #222222;}
 .dynamsoftLogo img {height: 100%;max-height: 100%;}
 .copyrightInfo {color: #fff;font-family: "OpenSans-Regular";}
 
 @media (min-width: 981px),
   screen and (max-width: 980px) and (orientation: landscape) {
-  .copyRightFooter {bottom: 0;min-height: 48px;height: 6vh;width: 100%;z-index: 40;}
+  .copyrightFooter {bottom: 0;min-height: 48px;height: 6vh;width: 100%;z-index: 40;}
   .dynamsoftLogo {height: 58.2%;}
   .copyrightInfo {margin-left: 3.3%;font-size: 16px;}
 }
 @media screen and (max-width: 980px) and (orientation: landscape) {
-  .copyRightFooter {display: none;}
+  .copyrightFooter {display: none;}
 }
 /* mobile */
 @media screen and (max-width: 980px) and (orientation: portrait) {
-  .copyRightFooter {display: none;}
+  .copyrightFooter {display: none;}
 }
 </style>

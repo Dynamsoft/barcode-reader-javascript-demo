@@ -5,17 +5,17 @@
       </div>
       <div class="headerRight">
         <div class="linkInMobile">
-          <a class="codeLink" href="https://github.com/Dynamsoft/barcode-reader-javascript-demo" target="_blank" @click="recordClickLink('codeLink')">
+          <a class="codeLink" href="https://github.com/Dynamsoft/barcode-reader-javascript-demo" target="_blank" @click="(event)=>{event.stopPropagation();recordClickLink('codeLink')}">
             GET DEMO CODE
             <svg class="downloadCodeIcon" viewBox="0 0 18 18"><g transform="translate(-519 -1339)"><g transform="translate(520 1340)"><path d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></g></g></svg>
           </a>
         </div>
         <div class="linkInDesktop">
-          <a class="codeLink" href="https://github.com/Dynamsoft/barcode-reader-javascript-demo" target="_blank" @click="recordClickLink('codeLink')">
+          <a class="codeLink" href="https://github.com/Dynamsoft/barcode-reader-javascript-demo" target="_blank" @click="(event)=>{event.stopPropagation();recordClickLink('codeLink')}">
             GET DEMO CODE
             <svg class="downloadCodeIcon" viewBox="0 0 18 18"><g transform="translate(-519 -1339)"><g transform="translate(520 1340)"><path d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></g></g></svg>
           </a>
-          <a class="sdkLink" href="https://www.dynamsoft.com/barcode-reader/downloads/#javascript" target="_blank" @click="recordClickLink('sdkLink')">
+          <a class="sdkLink" href="https://www.dynamsoft.com/barcode-reader/downloads/#javascript" target="_blank" @click="(event)=>{event.stopPropagation();recordClickLink('sdkLink')}">
             DOWNLOAD SDK
           </a>
         </div>

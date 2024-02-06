@@ -1,6 +1,6 @@
 {
   "name": "dbr_js_demo_vue",
-  "version": "9.6.32",
+  "version": "9.6.33",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -13,7 +13,7 @@
     "clipboard": "^2.0.11",
     "core-js": "^3.6.5",
     "dynamsoft-code-parser": "1.1.0",
-    "dynamsoft-javascript-barcode": "9.6.32",
+    "dynamsoft-javascript-barcode": "9.6.33",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "qrcodejs2": "^0.0.2",

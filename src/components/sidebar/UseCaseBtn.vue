@@ -3,7 +3,7 @@
     <a-popover :placement="popoverPlacement" :visible="$store.state.isShowUseCasePopover">
       <template slot="content">
         <div class="useCaseOptions">
-          <div class="useCaseOption" v-for="item in useCaseuseCaseOptions" :key="item.id" style="color: white">
+          <div class="useCaseOption" v-for="item in useCaseuseCaseOptions" :key="item.id" style="color: white" @click="event=>{event.stopPropagation();$store.commit('hideUseCasePopover');}">
             <label :class="{ selected: item.value === $store.state.selectedUseCase }">
               <input type="radio" name="useCaseOptions" :value="item.value" v-model="selectedUseCase"/>
               {{ item.label }}

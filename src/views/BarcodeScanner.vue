@@ -535,7 +535,9 @@ export default Vue.extend({
         clipboard.destroy();
       });
     },
-    async flashlightSwitch() {
+    async flashlightSwitch(event) {
+      event.stopPropagation();
+
       try {
         if (this.flashlightOn) {
           await this.scanner.turnOffTorch();
@@ -555,7 +557,9 @@ export default Vue.extend({
         this.isShowTorchButton = false;
       }
     },
-    soundEffectsSwitch() {
+    soundEffectsSwitch(event) {
+      event.stopPropagation();
+      
       if (this.$store.state.soundEffectsOn) {
         this.$store.commit("soundEffectsSwitch", "false");
       } else {
@@ -622,7 +626,6 @@ export default Vue.extend({
               }
             }
           };
-
           let callBackInfo = await this.scanner.open();
           this.bScannerCreated = true;
           const capabilities = this.scanner.getCapabilities();

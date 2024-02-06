@@ -132,7 +132,9 @@ export default Vue.extend({
     handleCancel() {
       this.visible = false;
     },
-    trigger() {
+    trigger(event) {
+      event.stopPropagation();
+      
       this.$refs.uploadImage.click();
     },
     async changeSettings() {

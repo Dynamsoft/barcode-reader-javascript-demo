@@ -1,13 +1,13 @@
 <template>
   <div id="app">
     <router-view></router-view>
-    <copy-right-footer />
+    <copyright-footer />
   </div>
 </template>
 
 <script >
 import Vue from "vue";
-import CopyRightFooter from "./components/CopyRightFooter.vue";
+import CopyrightFooter from "./components/CopyrightFooter.vue";
 import "./dbr";
 import "./dcp";
 import { BarcodeScanner } from "dynamsoft-javascript-barcode";
@@ -15,7 +15,7 @@ import { BarcodeScanner } from "dynamsoft-javascript-barcode";
 export default Vue.extend({
   name: "App",
   components: {
-    CopyRightFooter,
+    CopyrightFooter,
   },
   data() {
     return {
@@ -29,6 +29,7 @@ export default Vue.extend({
       top: `80%`,
       maxCount: 3,
     });
+    
   },
   methods: {
     getCurrentEnv() {
@@ -95,28 +96,9 @@ li {
 /* .ant-popover-placement-top > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-topLeft > .ant-popover-content > .ant-popover-arrow, .ant-popover-placement-topRight > .ant-popover-content > .ant-popover-arrow {
   display: none;
 } */
-@media (min-width: 981px),
-  screen and (max-width: 980px) and (orientation: landscape) {
-}
-@media screen and (max-width: 980px) and (orientation: landscape) {
-  [id*=comm100-float-button] {
-    display: none !important;
-    width: 1px !important;
-    height: 1px !important;
-    overflow: hidden !important;
-  }
-}
-/* mobile */
-@media screen and (max-width: 980px) and (orientation: portrait) {
-  [id*=comm100-float-button] {
-    display: none !important;
-    width: 1px !important;
-    height: 1px !important;
-    overflow: hidden !important;
-  }
-}
 
 ::-webkit-scrollbar{width: 19px;background-color: transparent;padding: 0 5px;}
 ::-webkit-scrollbar-thumb{background-color:#272626;border: 7px solid transparent;background-clip: content-box;}
 ::-webkit-scrollbar-corner{background-color: rgba(0,0,0,1);}
+
 </style>
