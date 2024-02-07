@@ -18,7 +18,7 @@ function Guide() {
           </div>
         </div>
         <div className="div-introduction-container">
-          Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this JavaScript barcode scanner demo and see how it works in different modes.
+          Using Dynamsoft Barcode Reader JavaScript Edition, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this JavaScript barcode scanner demo and see how it works in different modes.
         </div>
         <div className="div-selection-container">
           <div className="div-text">
@@ -32,7 +32,7 @@ function Guide() {
         <div className="div-info-container">
           <div className="div-info">
             <div className="div-introduction">
-              Using JavaScript barcode reader web SDK, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this JavaScript barcode scanner demo and see how it works in different modes.
+              Using Dynamsoft Barcode Reader JavaScript Edition, you can turn any device with a camera into an enterprise-grade barcode scanner with high-speed functionalities and customization settings for different usage scenarios. Take this JavaScript barcode scanner demo and see how it works in different modes.
             </div>
             <div className="div-browsers-info">
               Supported Browsers: Safari v11+, Chrome v59+, Firefox v52+ (v55+ on Android/iOS) and Edge v16+ on Desktop/Android/iOS.
