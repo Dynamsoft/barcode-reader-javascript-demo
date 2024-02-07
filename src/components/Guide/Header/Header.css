@@ -1,0 +1,25 @@
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(34, 34, 34, 1);
+}
+.header > .a-website-link {
+  margin-left: 15px;
+  height: 53.6%;
+  font-size: 0;
+  overflow: hidden;
+}
+.header > .a-website-link > .img-logo {
+  max-width: 100%;
+  height: 100%;
+}
+/* -----------ignore this part when uploading to github ↓------------ */
+.header > .div-live-chat-container {
+  width: 24px;
+  height: 80%;
+  margin-left: 12px;
+}
+/* -----------ignore this part when uploading to github ↑------------ */

@@ -1,0 +1,244 @@
+.div-guide {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.div-guide > .div-header-container {
+  height: 6.9%;
+}
+
+.div-guide > .div-body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1 1;
+  overflow: auto;
+  background-color: rgba(50, 50, 52, 1);
+}
+
+.div-guide > .div-body > .div-title-container {
+  position: relative;
+  flex: 7.5 1 0;
+  /* margin-top: 3.8vh; */
+  /* padding-top: 33%; */
+  text-align: center;
+}
+
+.div-guide > .div-body > .div-title-container > .div-title {
+  position: absolute;
+  top: 33%;
+  width: 100%;
+  height: 44%;
+}
+
+.div-guide > .div-body > .div-title-container > .div-title > h1 {
+  display: none;
+}
+
+.div-guide > .div-body > .div-title-container > .div-title > .img-dbr-logo {
+  max-width: 100%;
+  height: 100%;
+}
+
+.div-guide > .div-body > .div-introduction-container {
+  display: none;
+}
+
+.div-guide > .div-body > .div-selection-container {
+  display: flex;
+  flex-direction: column;
+  margin: 0 5.9% 0 4%;
+  flex: 28 1 0;
+  min-height: 200px;
+}
+
+.div-guide > .div-body > .div-selection-container > .div-text {
+  display: none;
+  color: rgba(204, 204, 204, 1);
+}
+
+.div-guide > .div-body > .div-button-container {
+  position: relative;
+  flex: 16 1 0;
+}
+
+.div-guide > .div-body > .div-button-container > .btn-start {
+  position: absolute;
+  top: 29%;
+  left: 50%;
+  width: 120px;
+  height: 25%;
+  max-height: 40px;
+  font-size: 14px;
+  font-family: inherit;
+  color: rgba(255, 255, 255, 1);
+  background-color: rgba(254, 142, 20, 1);
+  border: none;
+  transform: translateX(-50%);
+  transition: background-color 0.3s;
+  cursor: pointer;
+}
+
+.div-guide > .div-body > .div-button-container > .btn-start:hover {
+  background-color: rgba(255, 174, 56, 1);
+}
+
+.div-guide > .div-body > .div-info-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  /* height: 15vh; */
+  /* min-height: 50px; */
+  flex: 10 1 0;
+  font-size: 12px;
+  font-family: "OpenSans-Regular";
+  color: rgba(170, 170, 170, 1);
+  background-color: rgba(33, 33, 33, 1);
+  overflow: hidden;
+}
+
+.div-guide > .div-body > .div-info-container > .div-info {
+  padding: 10px 2.9% 10px 5.3%;
+  height: 100%;
+  overflow: auto;
+}
+
+.div-guide > .div-body > .div-info-container > .div-info > .div-introduction {
+  margin-bottom: 10px;
+}
+/* -----------ignore this part when uploading to github ↓------------ */
+.div-guide > .div-body > .div-info-container > .div-info > .div-reCAPTCHA-info {
+  margin-top: 10px;
+}
+/* -----------ignore this part when uploading to github ↑------------ */
+
+.div-guide > .div-footer-container {
+  display: none;
+  width: 100%;
+}
+
+/* Extra small devices (phones, 600px and down) */
+@media screen and (max-width: 600px) {
+}
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media screen and (min-width: 600px) and (orientation: portrait) {
+}
+/* Small devices (landscape phones, width > 600px and height < 600px) */
+@media screen and (min-width: 600px) and (max-height: 600px) and (orientation: landscape) {
+  .div-guide > .div-body > .div-title-container {
+    flex-grow: 6.5;
+  }
+
+  .div-guide > .div-body > .div-title-container > .div-title {
+    top: 25%;
+    height: 50%;
+  }
+
+  .div-guide > .div-body > .div-info-container {
+    display: none;
+  }
+
+  .div-guide > .div-body > .div-button-container {
+    flex: 8 1 0;
+  }
+
+  .div-guide > .div-body > .div-button-container > .btn-start {
+    height: 40%;
+  }
+}
+/* Medium devices (landscape tablets, 768px and up) */
+@media screen and (min-width: 768px) {
+}
+/* Large devices (laptops/desktops, 992px and up) */
+@media screen and (min-width: 992px) {
+  .div-guide > .div-header-container {
+    display: none;
+  }
+
+  .div-guide > .div-body {
+    background-color: rgba(68, 68, 68, 1);
+  }
+
+  .div-guide > .div-body > .div-title-container {
+    /* margin-top: 12.7vh; */
+    flex: 188 1 0;
+  }
+
+  .div-guide > .div-body > .div-title-container > .div-title {
+    top: 54%;
+    height: 25%;
+  }
+
+  .div-guide > .div-body > .div-introduction-container {
+    display: block;
+    padding: 0 20%;
+    width: 100%;
+    min-width: 750px;
+    flex: 152 1 0;
+    font-size: 16px;
+    line-height: 26px;
+    font-family: "OpenSans-Regular";
+    color: rgba(255, 255, 255, 1);
+  }
+
+  .div-guide > .div-body > .div-selection-container {
+    margin: 0 auto;
+    width: 66.8%;
+    min-width: 992px;
+    flex: 205 1 0;
+  }
+
+  .div-guide > .div-body > .div-selection-container > .div-text {
+    display: block;
+    margin-bottom: 3vh;
+    line-height: 26px;
+    font-size: 18px;
+  }
+
+  .div-guide > .div-body > .div-button-container {
+    flex: 156 1 0;
+  }
+
+  .div-guide > .div-body > .div-button-container > .btn-start {
+    width: 140px;
+    height: 46px;
+    max-height: none;
+    font-size: 18px;
+  }
+
+  .div-guide > .div-body > .div-info-container {
+    /* height: 5.2vh; */
+    flex: 42 1 0;
+    font-size: 16px;
+    text-align: center;
+    background-color: transparent;
+  }
+
+  .div-guide > .div-body > .div-info-container > .div-info {
+    padding: 0;
+    width: 66.8%;
+    min-width: 992px;
+  }
+
+  .div-guide > .div-body > .div-info-container > .div-info > .div-introduction {
+    display: none;
+  }
+  /* -----------ignore this part when uploading to github ↓------------ */
+  .div-guide
+    > .div-body
+    > .div-info-container
+    > .div-info
+    > .div-reCAPTCHA-info {
+    display: none;
+  }
+  /* -----------ignore this part when uploading to github 上------------ */
+
+  .div-guide > .div-footer-container {
+    display: block;
+    height: 6%;
+    min-height: 48px;
+  }
+}

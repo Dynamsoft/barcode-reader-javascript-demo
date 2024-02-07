@@ -1,0 +1,321 @@
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(50, 50, 52, 0.49);
+}
+
+.header .div-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header > .div-header-left {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+.header > .div-header-left > .div-camera-dropdown-container {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 60px;
+  height: 100%;
+  background-color: rgba(34, 34, 34, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .div-camera-icon-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .div-camera-icon-container
+  > .img-camera-icon {
+  height: 20px;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .div-camera-icon-container
+  > .span-text {
+  font-size: 12px;
+  color: rgba(170, 170, 170, 1);
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .div-arrow-container {
+  width: 16px;
+  height: 100%;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .div-current-camera-name {
+  display: none;
+}
+
+.header > .div-header-left > .div-camera-dropdown-container > .ul-camera-list {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: max-content;
+  font-size: 14px;
+  color: rgba(170, 170, 170, 1);
+  background-color: rgba(34, 34, 34, 1);
+  cursor: pointer;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .ul-camera-list.show {
+  display: block;
+  animation: fade-in 0.2s;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .ul-camera-list
+  > .li-camera-option {
+  padding: 5px 12px;
+  width: 100%;
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .ul-camera-list
+  > .li-camera-option:hover {
+  background-color: rgba(50, 50, 52, 1);
+}
+
+.header
+  > .div-header-left
+  > .div-camera-dropdown-container
+  > .ul-camera-list
+  > .li-camera-option.selected {
+  color: rgba(254, 142, 20, 1);
+  background-color: rgba(0, 0, 0, 1);
+}
+
+.header > .div-header-left > .div-upload-image-button-container {
+  width: 60px;
+  height: 100%;
+  background-color: rgba(34, 34, 34, 1);
+  border-left: 1px solid rgba(98, 96, 94, 1);
+  cursor: pointer;
+}
+
+.header
+  > .div-header-left
+  > .div-upload-image-button-container
+  > .img-upload-image-icon {
+  max-width: 100%;
+  height: 50%;
+}
+
+.header > .div-header-left > .div-sound-effect-button-container {
+  width: 60px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.header
+  > .div-header-left
+  > .div-sound-effect-button-container.sound-effect-on {
+  background-color: rgba(110, 110, 110, 0.8);
+}
+
+.header
+  > .div-header-left
+  > .div-sound-effect-button-container
+  > .img-sound-effect-icon {
+  max-width: 100%;
+  height: 60%;
+}
+
+.header
+  > .div-header-left
+  > .div-sound-effect-button-container.sound-effect-on
+  > .img-sound-effect-icon {
+  margin-top: 7px;
+}
+
+.header > .div-header-left > .div-live-chat-button-container {
+  width: 46px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.header
+  > .div-header-left
+  > .div-live-chat-button-container
+  > .div-live-chat-button {
+  width: 24px;
+  height: 24px;
+}
+
+.header > .div-header-right {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 12px;
+  height: 100%;
+  font-size: 14px;
+}
+
+.header > .div-header-right > .a-source-code-link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  color: rgba(255, 255, 255, 1);
+}
+
+.header > .div-header-right > .a-source-code-link > .div-get-source-code-icon {
+  margin-left: 3px;
+  margin-top: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: rgba(255, 255, 255, 1);
+  mask: url("../../../assets/image/get-source-code-icon.svg") no-repeat center /
+    contain;
+  -webkit-mask: url("../../../assets/image/get-source-code-icon.svg") no-repeat
+    center / contain;
+}
+
+.header > .div-header-right > .a-download-sdk {
+  display: none;
+}
+
+@media screen and (min-width: 992px) {
+  .header
+    > .div-header-left
+    > .div-camera-dropdown-container
+    > .div-camera-icon-container
+    > .span-text {
+    display: none;
+  }
+
+  .header
+    > .div-header-left
+    > .div-camera-dropdown-container
+    > .div-camera-icon-container
+    > .img-camera-icon {
+    height: 42%;
+  }
+
+  .header
+    > .div-header-left
+    > .div-camera-dropdown-container
+    > .div-current-camera-name {
+    display: block;
+  }
+
+  .header
+    > .div-header-left
+    > .div-camera-dropdown-container
+    > .ul-camera-list {
+    font-size: 16px;
+  }
+
+  .header > .div-header-left > .div-upload-image-button-container {
+    width: 75px;
+  }
+
+  .header > .div-header-left > .div-sound-effect-button-container {
+    width: 75px;
+  }
+
+  .header > .div-header-left > .div-live-chat-button-container {
+    display: none;
+  }
+
+  .header > .div-header-right {
+    padding-right: 25px;
+    font-size: 16px;
+  }
+
+  .header > .div-header-right > .a-source-code-link {
+    color: rgba(254, 142, 20, 1);
+    transition: color 0.3s;
+  }
+
+  .header > .div-header-right > .a-source-code-link:hover {
+    color: rgba(255, 174, 56, 1);
+  }
+
+  .header
+    > .div-header-right
+    > .a-source-code-link:hover
+    > .div-get-source-code-icon {
+    background-color: rgba(255, 174, 56, 1);
+  }
+
+  .header
+    > .div-header-right
+    > .a-source-code-link
+    > .div-get-source-code-icon {
+    margin-left: 5px;
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    background-color: rgba(254, 142, 20, 1);
+    transition: background-color 0.3s;
+  }
+
+  .header > .div-header-right > .a-download-sdk {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 20px;
+    width: 160px;
+    height: 65%;
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(254, 142, 20, 1);
+    transition: background-color 0.3s;
+  }
+
+  .header > .div-header-right > .a-download-sdk:hover {
+    background-color: rgba(255, 174, 56, 1);
+  }
+}

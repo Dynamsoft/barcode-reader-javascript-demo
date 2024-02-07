@@ -1,0 +1,52 @@
+.div-option {
+  position: relative;
+  display: flex;
+  padding: 0 4.5vw 0 3.2vw;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  background-color: rgba(34, 34, 34, 1);
+  border: 1px solid transparent;
+}
+
+.div-option:hover {
+  background-color: rgba(46, 46, 46, 1);
+}
+
+.div-option.selected {
+  border: 1px solid rgba(254, 142, 20, 1);
+}
+
+.div-option > .div-circle {
+  position: absolute;
+  right: 18px;
+  top: 8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: rgba(245, 245, 245, 1);
+}
+
+.div-option.selected > .div-circle {
+  background-color: rgba(254, 142, 20, 1);
+}
+
+/* Small devices (landscape phones, width > 600px and height < 600px) */
+@media screen and (min-width: 600px) and (max-height: 600px) and (orientation: landscape) {
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media screen and (min-width: 992px) {
+  .div-option {
+    padding: 0 11.1% 0 6.3%;
+  }
+
+  .div-option > .div-circle {
+    right: 5.2%;
+    top: 10px;
+    width: 18px;
+    height: 18px;
+  }
+}
