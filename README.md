@@ -29,21 +29,23 @@ If you would like to get this demo project running, you can follow the steps bel
 
     > If you don't have a license yet, you can [request a trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr&package=js&utm_source=sampleReadme) via Dynamsoft customer portal.
 
-    Open "src/dbr.js" and input your DBR license key in this line:
+    For full functionality, the license must be added in two places.
+    
+    2.1. Open "src/dbr.js" and add your license key in this line:
 
     ```js
     BarcodeReader.license = "YOUR-LICENSE-KEY";
     ```
 
-    Open "src/dcp.js" and input your DCP license key in this line:
+    2.2. Open "src/dcp.js" and add your license key in this line:
 
-    > If you don't need to read driver licenses, you can skip this step.
+    > Skip this step if you don't need to read driver's licenses.
 
     ```js
     CodeParser.license = "YOUR-LICENSE-KEY";
     ```
 
-3. Run
+4. Run
 
     For development:
 
