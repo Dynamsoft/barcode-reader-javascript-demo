@@ -27,7 +27,7 @@ If you would like to get this demo project running, you can follow the steps bel
 
 2. Add license
 
-    > If you don't have a license yet, you can skip this step. You will still be able to test the demo for up to 24 hours.
+    > If you don't have a license yet, you can [request a trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr&package=js&utm_source=sampleReadme) via Dynamsoft customer portal.
 
     Open "src/dbr.js" and input your DBR license key in this line:
 
