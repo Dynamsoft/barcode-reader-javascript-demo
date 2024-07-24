@@ -7,7 +7,7 @@
 
 <script >
 import Vue from "vue";
-import CopyrightFooter from "./components/CopyrightFooter.vue";
+import CopyrightFooter from "./components/CopyRightFooter.vue";
 import "./dbr";
 import "./dcp";
 import { BarcodeScanner } from "dynamsoft-javascript-barcode";
