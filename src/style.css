@@ -1,0 +1,103 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: "Oswald-Regular";
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-width: 300px;
+  overflow-y: hidden;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+@font-face {
+  font-family: "Oswald-Regular";
+  src: url("./assets/font/Oswald-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Oswald-Light";
+  src: url("./assets/font/Oswald-Light.ttf");
+}
+
+@font-face {
+  font-family: "OpenSans-Regular";
+  src: url("./assets/font/OpenSans-Regular.ttf");
+}
+
+::-webkit-scrollbar {
+  width: 19px;
+  background-color: transparent;
+  padding: 0 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #272626;
+  border: 7px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: rgba(0, 0, 0, 1);
+}
+
+.dbr-dropdown-list ul {
+  color: #aaaaaa !important;
+  background-color: rgb(34, 34, 34) !important;
+  padding: 0 !important;
+}
+
+.dbr-dropdown-list ul li {
+  color: rgb(170, 170, 170) !important;
+}
+
+.dbr-dropdown-list .ant-dropdown-arrow::before {
+  background-color: rgb(34, 34, 34) !important;
+}
+
+.dbr-dropdown-list .ant-dropdown-menu-item-selected {
+  background-color: black !important;
+  color: rgb(254, 142, 20) !important;
+}
+
+.ant-message {
+  z-index: 99999999;
+}
+
+li {
+  list-style: none;
+}
+
+.rc-anchor-content {
+  display: none !important;
+}
+
+.grecaptcha-badge {
+  display: none !important;
+}
+
+@media screen and (max-width: 980px) and (orientation: landscape) {
+  [id*=comm100-float-button] {
+    display: none !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+  }
+}
+
+@media screen and (max-width: 980px) and (orientation: portrait) {
+  [id*=comm100-float-button] {
+    display: none !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+  }
+}

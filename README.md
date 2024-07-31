@@ -9,7 +9,7 @@ https://demo.dynamsoft.com/barcode-reader-js/.
 >
 > We recommend that you instead try the samples in the DBRJS samples repository https://github.com/Dynamsoft/barcode-reader-javascript-samples.
 >
-> The demo itself is based on Vue 2, you can find a simple Vue 2 sample at https://github.com/Dynamsoft/barcode-reader-javascript-samples/tree/main/1.hello-world/5.read-video-vue
+> The demo itself is based on Vue, you can find a simple Vue sample at https://github.com/Dynamsoft/barcode-reader-javascript-samples/tree/main/hello-world/vue
 
 If you would like to get this demo project running, you can follow the steps below:
 
@@ -27,34 +27,24 @@ If you would like to get this demo project running, you can follow the steps bel
 
 2. Add license
 
-    > If you don't have a license yet, you can [request a trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr&package=js&utm_source=sampleReadme) via Dynamsoft customer portal.
+    > If you don't have a license yet, you can skip this step. You will still be able to test the demo for up to 24 hours.
 
-    For full functionality, the license must be added in two places.
-    
-    2.1. Open "src/dbr.js" and add your license key in this line:
+    Open "src/dbr.js" and input your license key in this line:
 
     ```js
-    BarcodeReader.license = "YOUR-LICENSE-KEY";
+    LicenseManager.initLicense("YOUR-LICENSE-KEY");
     ```
 
-    2.2. Open "src/dcp.js" and add your license key in this line:
-
-    > Skip this step if you don't need to read driver's licenses.
-
-    ```js
-    CodeParser.license = "YOUR-LICENSE-KEY";
-    ```
-
-4. Run
+3. Run
 
     For development:
 
     ```cmd
-    npm run serve
+    npm run dev
     ```
     or
     ```cmd
-    yarn serve
+    yarn dev
     ```
     
     For production:
