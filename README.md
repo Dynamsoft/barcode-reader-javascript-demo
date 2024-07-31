@@ -29,7 +29,7 @@ If you would like to get this demo project running, you can follow the steps bel
 
     > If you don't have a license yet, you can skip this step. You will still be able to test the demo for up to 24 hours.
 
-    Open "src/dbr.js" and input your license key in this line:
+    Open "src/dynamsoft.config.ts" and input your license key in this line:
 
     ```js
     LicenseManager.initLicense("YOUR-LICENSE-KEY");
