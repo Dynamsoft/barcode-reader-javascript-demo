@@ -32,7 +32,7 @@ If you would like to get this demo project running, you can follow the steps bel
     Open "src/dynamsoft.config.ts" and input your license key in this line:
 
     ```js
-    LicenseManager.initLicense("YOUR-LICENSE-KEY");
+    LicenseManager.initLicense("YOUR_LICENSE_KEY_HERE");
     ```
 
 3. Run
