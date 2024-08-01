@@ -21,7 +21,7 @@ CoreModule.engineResourcePaths = {
  * To use the library, you need to first specify a license key using the API "initLicense()" as shown below.
  */
 
-LicenseManager.initLicense("");
+LicenseManager.initLicense("YOUR_LICENSE_KEY_HERE");
 
 /**
  * You can visit https://www.dynamsoft.com/customer/license/trialLicense?utm_source=github&product=dbr&package=js to get your own trial license good for 30 days.
