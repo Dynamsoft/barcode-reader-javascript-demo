@@ -27,7 +27,9 @@ If you would like to get this demo project running, you can follow the steps bel
 
 2. Add license
 
-    > If you don't have a license yet, you can skip this step. You can still test the demo for up to 24 hours. Alternatively, request a 30-day free trial license through the [Request a Trial License](https://www.dynamsoft.com/customer/license/trialLicense?ver=10.2.10&utm_source=demoReadMe&product=dbr&package=js) link.
+    > If you don't have a license yet, you can request a 30-day free trial using the following link: [Request a Trial License](https://www.dynamsoft.com/customer/license/trialLicense?ver=10.2.10&utm_source=demoReadMe&product=dbr&package=js).
+    >
+    > Alternatively, you can skip this step and still test the demo for up to 24 hours without a license.
 
     Open "src/dynamsoft.config.ts" and input your license key in this line:
 
