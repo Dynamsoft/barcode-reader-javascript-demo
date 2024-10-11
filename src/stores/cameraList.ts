@@ -41,7 +41,6 @@ export const useCameraListStore = defineStore("cameraList", {
           key: index,
         }));
       this.$state.cameraList = _cameraList;
-      console.log(_cameraList);
     },
     updateCurrentCamera(camera: VideoDeviceInfo) {
       const _camera = camera;

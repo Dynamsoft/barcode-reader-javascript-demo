@@ -38,6 +38,11 @@ const currentModeName = computed(() => {
   }
 });
 
+// Check if file uploaded is an image
+const isImageFile = (type: string) => {
+  return type && type.startsWith("image/");
+};
+
 // Read barcodes from an image file.s
 const readImage = async (e: Event) => {
   currentInstance.proxy.$message.loading({
@@ -48,6 +53,11 @@ const readImage = async (e: Event) => {
   let parsedData: ParsedResultItem | ParsedDataFailed | {} = {};
 
   try {
+    // Check if file chosen is an image
+    if (!isImageFile((e.target as HTMLInputElement).files![0]?.type)) {
+      throw new Error("File is not an image!");
+    }
+
     captureImageStore.updateDecodingState(true);
 
     // Stop capturing and hide scan laser if camera is open
@@ -91,10 +101,17 @@ const readImage = async (e: Event) => {
 
     // Show barcode decoded result and show success message
     captureImageStore.captureImagePageVisible(true);
-    currentInstance.proxy.$message.success({
-      content: "Barcode decoded!",
-      key: "decode",
-    });
+    if (captureResult?.barcodeResultItems?.length) {
+      currentInstance.proxy.$message.success({
+        content: "Barcode decoded!",
+        key: "decode",
+      });
+    } else {
+      currentInstance.proxy.$message.warning({
+        content: "No barcodes found!",
+        key: "decode",
+      });
+    }
   } catch (ex: any) {
     currentInstance.proxy.$message.error({
       content: ex.message || ex,
@@ -130,7 +147,14 @@ const preventDefault = (e: Event) => {
     <CameraSelector />
     <label class="dbr-upload-image">
       <img src="../assets/image/Images-add.svg" alt="image" />
-      <input type="file" id="dbr-image-read" class="dbr-image-read" @click="preventDefault" @change="readImage" />
+      <input
+        type="file"
+        accept="image/*"
+        id="dbr-image-read"
+        class="dbr-image-read"
+        @click="preventDefault"
+        @change="readImage"
+      />
     </label>
     <div
       class="dbr-sound"

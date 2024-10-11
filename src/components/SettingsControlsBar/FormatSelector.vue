@@ -185,8 +185,12 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
                 }
               "
             >
-              <DownOutlined style="color: #ffffff; margin-right: 5px" v-if="!checkboxState.oneD.open" />
-              <UpOutlined style="color: #ffffff; margin-right: 5px" v-else />
+              <DownOutlined
+                class="dbr-down-out-lined"
+                style="color: #ffffff; margin-right: 5px"
+                v-if="!checkboxState.oneD.open"
+              />
+              <UpOutlined class="dbr-up-out-lined" style="color: #ffffff; margin-right: 5px" v-else />
               <label>Common 1D Barcodes</label>
             </div>
             <div class="dbr-right">
@@ -245,8 +249,12 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
                 }
               "
             >
-              <DownOutlined style="color: #ffffff; margin-right: 5px" v-if="!checkboxState.twoD.open" />
-              <UpOutlined style="color: #ffffff; margin-right: 5px" v-else />
+              <DownOutlined
+                class="dbr-down-out-lined"
+                style="color: #ffffff; margin-right: 5px"
+                v-if="!checkboxState.twoD.open"
+              />
+              <UpOutlined class="dbr-up-out-lined" style="color: #ffffff; margin-right: 5px" v-else />
               <label>Common 2D Barcodes</label>
             </div>
             <div class="dbr-right">
@@ -305,8 +313,12 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
                 }
               "
             >
-              <DownOutlined style="color: #ffffff; margin-right: 5px" v-if="!checkboxState.other.open" />
-              <UpOutlined style="color: #ffffff; margin-right: 5px" v-else />
+              <DownOutlined
+                class="dbr-down-out-lined"
+                style="color: #ffffff; margin-right: 5px"
+                v-if="!checkboxState.other.open"
+              />
+              <UpOutlined class="dbr-up-out-lined" style="color: #ffffff; margin-right: 5px" v-else />
               <label>Other Barcodes</label>
             </div>
             <div class="dbr-right">
@@ -449,22 +461,45 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
           .dbr-left {
             cursor: pointer;
 
+            .dbr-down-out-lined,
+            .dbr-up-out-lined {
+              width: 12px;
+              height: 12px;
+            }
+
             label {
               font-size: 16px;
               color: #ffffff;
               font-family: "OpenSans-Regular";
               cursor: pointer;
+
+              @media (max-width: 980px) and (orientation: portrait) {
+                font-size: 12px;
+              }
+
+              @media (max-width: 980px) and (orientation: landscape) {
+                font-size: 12px;
+              }
             }
           }
 
           .dbr-right {
             cursor: pointer;
+            padding-right: 19px;
 
             label {
               font-size: 16px;
               color: #999999;
               font-family: "OpenSans-Regular";
               cursor: pointer;
+
+              @media (max-width: 980px) and (orientation: portrait) {
+                font-size: 12px;
+              }
+
+              @media (max-width: 980px) and (orientation: landscape) {
+                font-size: 12px;
+              }
             }
           }
         }
