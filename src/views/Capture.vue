@@ -16,7 +16,6 @@ import {
 } from "dynamsoft-core";
 import { ParsedResultItem } from "dynamsoft-code-parser";
 import { CapturedResult } from "dynamsoft-capture-vision-router";
-import { _getNorImageData, _toCanvas } from "dynamsoft-utility";
 import { ParsedDataFailed } from "../types";
 
 const _window = window as any;
