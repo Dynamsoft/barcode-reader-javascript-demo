@@ -9,6 +9,7 @@ import { CapturedResult } from "dynamsoft-capture-vision-router";
 import { ParsedResultItem } from "dynamsoft-code-parser";
 import { OriginalImageResultItem } from "dynamsoft-core";
 import { ParsedDataFailed } from "../types";
+import { BarcodeResultItem } from "dynamsoft-barcode-reader";
 
 const _window = window as any;
 
@@ -89,7 +90,7 @@ const readImage = async (e: Event) => {
           : (parsedData as ParsedResultItem).jsonString
       );
     }
-    captureImageStore.updateCaptureResult(captureResult?.barcodeResultItems);
+    captureImageStore.updateCaptureResult(captureResult?.barcodeResultItems as BarcodeResultItem[]);
     captureImageStore.updateSelectedFile((e.target as HTMLInputElement).files![0]);
 
     // Close camera on barcode decoded

@@ -17,6 +17,7 @@ import {
 import { ParsedResultItem } from "dynamsoft-code-parser";
 import { CapturedResult } from "dynamsoft-capture-vision-router";
 import { ParsedDataFailed } from "../types";
+import { BarcodeResultItem } from "dynamsoft-barcode-reader";
 
 const _window = window as any;
 
@@ -55,7 +56,7 @@ const reDecode = async () => {
         captureImageStore.updateDLJsonString((parsedData as ParsedResultItem).jsonString);
       }
     }
-    captureImageStore.updateCaptureResult(captureResult?.barcodeResultItems);
+    captureImageStore.updateCaptureResult(captureResult?.barcodeResultItems as BarcodeResultItem[]);
   } catch (ex: any) {
     captureImageStore.updateCaptureResult();
     throw ex;
