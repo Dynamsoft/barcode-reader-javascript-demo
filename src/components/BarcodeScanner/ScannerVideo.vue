@@ -111,8 +111,8 @@ onMounted(async () => {
 
       // Use Case: Non-Driver License
       if (result.barcodeResultItems && useCaseStore.useCaseName !== "dl") {
-        scannerResult.value = result.barcodeResultItems as BarcodeResultItem[];
-        resultCountStore.updateResultCount(result.barcodeResultItems as BarcodeResultItem[]);
+        scannerResult.value = result.barcodeResultItems;
+        resultCountStore.updateResultCount(result.barcodeResultItems);
       } else {
         scannerResult.value = [];
       }
