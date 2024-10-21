@@ -1,7 +1,7 @@
 {
   "name": "dynamsoft-barcode-reader",
   "private": true,
-  "version": "10.4.2000",
+  "version": "10.4.2001",
   "type": "module",
   "scripts": {
     "dev": "vite --mode=dev",
