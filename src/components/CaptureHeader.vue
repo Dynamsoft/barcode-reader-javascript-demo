@@ -7,7 +7,6 @@ import { useUseCaseStore } from "../stores/useCase";
 import { useCaptureImageStore } from "../stores/captureImage";
 import { CapturedResult } from "dynamsoft-capture-vision-router";
 import { ParsedResultItem } from "dynamsoft-code-parser";
-import { _getNorImageData, _toCanvas } from "dynamsoft-utility";
 import { OriginalImageResultItem } from "dynamsoft-core";
 import { ParsedDataFailed } from "../types";
 
