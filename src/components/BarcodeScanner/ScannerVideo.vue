@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import {
-  onMounted,
-  ref,
-  Ref,
-  ComputedRef,
-  watch,
-  getCurrentInstance,
-  onBeforeMount,
-  computed,
-  onUnmounted,
-} from "vue";
+import { onMounted, ref, Ref, ComputedRef, watch, getCurrentInstance, onBeforeMount, computed, onUnmounted } from "vue";
 import { CameraEnhancer, CameraView, EnumEnhancedFeatures, Feedback } from "dynamsoft-camera-enhancer";
 import GeneralResultBox from "./GeneralResultBox.vue";
 import DriverLicenseResultBox from "./DriverLicenseResultBox.vue";
@@ -18,7 +8,7 @@ import FocusBox from "./FocusBox.vue";
 import { useCameraListStore } from "../../stores/cameraList";
 import { AllowNameSet, useUseCaseStore } from "../../stores/useCase";
 import { useBarcodeFormatStore, BarcodeCategory } from "../../stores/barcodeFormat";
-import { OriginalImageResultItem, Rect } from "dynamsoft-core";
+import { Rect } from "dynamsoft-core";
 import {
   CaptureVisionRouter,
   CapturedResult,
@@ -34,7 +24,6 @@ import { BarcodeResultItem } from "dynamsoft-barcode-reader";
 import { useRouter } from "vue-router";
 import { ExtendedMediaTrackCapabilities, ParsedDataFailed } from "../../types";
 import { EnumResolution, ResolutionMap } from "../../assets/enum/Resolution";
-import { CapturedResultItem } from "dynamsoft-core";
 
 const _window = window as any;
 
@@ -60,7 +49,6 @@ const isMountFocusBox = ref(false);
 const isSupportFocus = ref(false);
 const isShowTorchButton = ref(false);
 const isOpenTorch = ref(false);
-const isPauseCollectImg = ref(false);
 const scannerResult: Ref<Array<BarcodeResultItem>> = ref([]);
 let cameraView: CameraView | null;
 let cameraEnhancer: CameraEnhancer | null;
@@ -114,12 +102,8 @@ onMounted(async () => {
     intermediateManager.addResultReceiver(irr);
 
     // Configure Captured Result Receiver
-    let originalImage: OriginalImageResultItem;
     const crr = new CapturedResultReceiver();
     crr.onCapturedResultReceived = async (result: CapturedResult) => {
-      // Get original image
-      originalImage = result.items.find((item: CapturedResultItem) => item.type === 1) as OriginalImageResultItem;
-
       // Play sound when barcode is decoded
       if (result.barcodeResultItems) {
         settingsStore.playSound && Feedback.beep();

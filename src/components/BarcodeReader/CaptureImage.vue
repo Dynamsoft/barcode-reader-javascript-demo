@@ -64,6 +64,7 @@ const drawResults = (oriImg: HTMLCanvasElement) => {
   const oriWidth = oriImg.width;
   const oriHeight = oriImg.height;
   const oriRatio = oriWidth / oriHeight;
+
   const imgWidth = parseInt(getComputedStyle(oriImg).width);
   const imgHeight = parseInt(getComputedStyle(oriImg).height);
   const imgRatio = imgWidth / imgHeight;
@@ -106,14 +107,15 @@ const drawResults = (oriImg: HTMLCanvasElement) => {
     }
     cvs.style.position = "absolute";
 
-    const offsetX = [x0, x1, x2, x3].map((x) => x - minX);
-    const offsetY = [y0, y1, y2, y3].map((y) => y - minY);
+    const offsetX = [x0, x1, x2, x3].map((x) => (x - minX) * widthZoom);
+    const offsetY = [y0, y1, y2, y3].map((y) => (y - minY) * heightZoom);
 
     cvs.width = Math.max(cvs.width, Math.max(...offsetX));
     cvs.height = Math.max(cvs.height, Math.max(...offsetY));
 
     ctx.fillStyle = result.formatString === "PatchCode" ? "rgba(97, 189, 79, 0.2)" : "rgba(97, 189, 79, 0.5)";
     cvs.style.zIndex = result.formatString === "PatchCode" ? "1" : "2";
+
     ctx.moveTo(offsetX[0], offsetY[0]);
     ctx.lineTo(offsetX[1], offsetY[1]);
     ctx.lineTo(offsetX[2], offsetY[2]);

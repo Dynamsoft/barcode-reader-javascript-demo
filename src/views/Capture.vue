@@ -9,14 +9,9 @@ import { useUseCaseStore } from "../stores/useCase";
 import { useSettingsStore } from "../stores/settings";
 import { useBarcodeFormatStore } from "../stores/barcodeFormat";
 import { templateMap } from "../util";
-import {
-  EnumCapturedResultItemType,
-  EnumGrayscaleTransformationMode,
-  OriginalImageResultItem,
-} from "dynamsoft-core";
+import { EnumCapturedResultItemType, EnumGrayscaleTransformationMode, OriginalImageResultItem } from "dynamsoft-core";
 import { ParsedResultItem } from "dynamsoft-code-parser";
 import { CapturedResult } from "dynamsoft-capture-vision-router";
-import { _getNorImageData, _toCanvas } from "dynamsoft-utility";
 import { ParsedDataFailed } from "../types";
 
 const _window = window as any;
@@ -36,15 +31,10 @@ const reDecode = async () => {
   let captureResult: CapturedResult | null = null;
   let parsedData: ParsedResultItem | ParsedDataFailed | {} = {};
   try {
-    captureResult = await _window.cvRouter.capture(
-      captureImageStore.currentSelectedImageFile,
-      currentTemplate.value
-    );
+    captureResult = await _window.cvRouter.capture(captureImageStore.currentSelectedImageFile, currentTemplate.value);
     if (captureResult?.barcodeResultItems && useCaseStore.useCaseName === "dl") {
       try {
-        parsedData = await _window.parser.parse(
-          captureResult.barcodeResultItems[0].bytes
-        );
+        parsedData = await _window.parser.parse(captureResult.barcodeResultItems[0].bytes);
       } catch (ex: any) {
         (parsedData as ParsedDataFailed).exception = true;
         (parsedData as ParsedDataFailed).message = ex.message || ex;
@@ -64,11 +54,9 @@ const reDecode = async () => {
     if (
       ["vin", "dl"].includes(useCaseStore.useCaseName) &&
       settingsStore.isCollectImg &&
-      (captureResult && captureResult.items.length <= 1 || (parsedData as ParsedDataFailed).exception)
+      ((captureResult && captureResult.items.length <= 1) || (parsedData as ParsedDataFailed).exception)
     ) {
-      const originalImage = captureResult?.items.find(
-        (item) => item.type === 1
-      ) as OriginalImageResultItem;
+      const originalImage = captureResult?.items.find((item) => item.type === 1) as OriginalImageResultItem;
       if (!originalImage) return;
     }
   }
@@ -76,10 +64,7 @@ const reDecode = async () => {
 
 const udpateSettings = async () => {
   try {
-    if (
-      !_window.cameraEnhancer ||
-      (!_window.cameraEnhancer.isOpen() && !captureImageStore.isShowCaptureImagePage)
-    )
+    if (!_window.cameraEnhancer || (!_window.cameraEnhancer.isOpen() && !captureImageStore.isShowCaptureImagePage))
       return;
     captureImageStore.updateCaptureResult();
     captureImageStore.updateDLJsonString();
@@ -97,8 +82,7 @@ const udpateSettings = async () => {
     const settings = await _window.cvRouter.getSimplifiedSettings(currentTemplate.value);
     settings.capturedResultItemTypes |= EnumCapturedResultItemType.CRIT_ORIGINAL_IMAGE;
     if (useCaseStore.isGeneral) {
-      settings.barcodeSettings.expectedBarcodesCount =
-        settingsStore.singleOrMulti === "single" ? 1 : 512;
+      settings.barcodeSettings.expectedBarcodesCount = settingsStore.singleOrMulti === "single" ? 1 : 512;
     }
     settings.barcodeSettings.grayscaleTransformationModes[0] =
       settingsStore.colourMode === "Inverted"
@@ -106,10 +90,7 @@ const udpateSettings = async () => {
         : EnumGrayscaleTransformationMode.GTM_ORIGINAL;
 
     await _window.cvRouter.updateSettings(currentTemplate.value, settings);
-    await barcodeFormatStore.updateBarcodeFormat(
-      currentTemplate.value,
-      captureImageStore.isShowCaptureImagePage
-    );
+    await barcodeFormatStore.updateBarcodeFormat(currentTemplate.value, captureImageStore.isShowCaptureImagePage);
     if (!captureImageStore.isShowCaptureImagePage) {
       await _window.cvRouter.startCapturing(currentTemplate.value);
     } else {
@@ -134,7 +115,11 @@ const udpateSettings = async () => {
   <CaptureHeader :currentTemplate="currentTemplate" />
   <ScannerVideo :currentTemplate="currentTemplate" :changeTemplate="changeTemplate" :udpateSettings="udpateSettings" />
   <CaptureImage v-show="captureImageStore.isShowCaptureImagePage" :currentTemplate="currentTemplate" />
-  <SettingsControlsBar :currentTemplate="currentTemplate" :changeTemplate="changeTemplate" :udpateSettings="udpateSettings" />
+  <SettingsControlsBar
+    :currentTemplate="currentTemplate"
+    :changeTemplate="changeTemplate"
+    :udpateSettings="udpateSettings"
+  />
 </template>
 
 <style scoped lang="less"></style>
