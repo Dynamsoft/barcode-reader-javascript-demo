@@ -72,6 +72,12 @@ body {
   z-index: 99999999;
 }
 
+.ant-message > div > div > div > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 li {
   list-style: none;
 }
@@ -85,7 +91,7 @@ li {
 }
 
 @media screen and (max-width: 980px) and (orientation: landscape) {
-  [id*=comm100-float-button] {
+  [id*="comm100-float-button"] {
     display: none !important;
     width: 1px !important;
     height: 1px !important;
@@ -94,7 +100,7 @@ li {
 }
 
 @media screen and (max-width: 980px) and (orientation: portrait) {
-  [id*=comm100-float-button] {
+  [id*="comm100-float-button"] {
     display: none !important;
     width: 1px !important;
     height: 1px !important;
