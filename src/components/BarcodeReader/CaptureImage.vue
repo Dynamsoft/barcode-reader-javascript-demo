@@ -177,7 +177,7 @@ const restartVideo = async () => {
       key: "restartVideo",
     });
   } catch (ex: any) {
-    currentInstance.proxy.$message.success({
+    currentInstance.proxy.$message.error({
       content: ex.message || ex,
       key: "restartVideo",
     });
