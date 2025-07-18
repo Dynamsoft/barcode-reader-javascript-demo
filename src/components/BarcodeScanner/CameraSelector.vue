@@ -3,30 +3,30 @@ import { ref, Ref, reactive, watchEffect, getCurrentInstance } from "vue";
 import { Dropdown, Menu } from "ant-design-vue";
 import { DownOutlined, UpOutlined } from "@ant-design/icons-vue";
 import { MenuInfo } from "ant-design-vue/es/menu/src/interface";
-import { useCameraListStore } from "../../stores/cameraList";
+import { PlayCallbackInfo, VideoDeviceInfo } from "dynamsoft-barcode-reader-bundle";
+import { useCameraListStore, VideoDeviceInfoOther } from "../../stores/cameraList";
 import { useCaptureImageStore } from "../../stores/captureImage";
-import { VideoDeviceInfo } from "dynamsoft-camera-enhancer";
 import { judgeCurResolution } from "../../util";
-import { Resolution, ResolutionMap } from "../../assets/enum/Resolution";
+import { ResolutionMap } from "../../assets/enum/Resolution";
+import { useScanRegionStore } from "../../stores/scanRegion";
+import { useSettingsStore } from "../../stores/settings";
+import { useUseCaseStore } from "../../stores/useCase";
 
 const _window = window as any;
 type PopoverPlacement = "bottom" | "bottomLeft";
-interface VideoDeviceInfoOther {
-  key: number;
-  resolution: Resolution;
-  selected: boolean;
-}
 
 const currentInstance: any = getCurrentInstance();
 const cameraListStore = useCameraListStore();
 const captureImageStore = useCaptureImageStore();
+const scanRegionStore = useScanRegionStore();
+const settingsStore = useSettingsStore();
+const useCaseStore = useUseCaseStore();
 
 const state = reactive({
   collapsed: false, // Controls the state of the dropdown.
   selectedKeys: [0], // Stores the selected camera key.
+  selectedCanmeraLabel: "Loading..."
 });
-
-const currentCameraName = ref("loading...");
 
 watchEffect(() => {
   const _currentCameraName = cameraListStore.cameraList.filter((camera) => {
@@ -35,8 +35,8 @@ watchEffect(() => {
       camera.resolution === cameraListStore.currentResolution
     );
   })[0];
-  currentCameraName.value = _currentCameraName?.label;
   state.selectedKeys = [_currentCameraName?.key];
+  state.selectedCanmeraLabel = _currentCameraName?.label;
 });
 
 const placement: Ref<PopoverPlacement> = ref(document.body.clientWidth > 980 ? "bottom" : "bottomLeft");
@@ -65,6 +65,7 @@ const changeCamera = async (info: MenuInfo) => {
 
   // Clears all drawings in the camera view. Recommended during all camera switch/pause events
   _window.cameraView?.clearAllInnerDrawingItems();
+  captureImageStore.updateDlResultBoxVisibility(false);
 
   // Check if selected camera or resolution is different than current one
   if (
@@ -73,38 +74,68 @@ const changeCamera = async (info: MenuInfo) => {
   ) {
     _window.cameraView?.setScanLaserVisible(false);
     _window.cameraView?.setScanRegionMaskVisible(false);
+    _window.cvRouter.stopCapturing();
+    _window.cameraEnhancer.close();
+
+    // Set the camera resolution based on the selected resolution.
+    const _currentResolution: PlayCallbackInfo = await _window.cameraEnhancer?.setResolution(ResolutionMap[_item.resolution]);
 
     // Switches to the new camera if the device ID is different.
     if (cameraListStore.currentCamera?.deviceId !== _item.deviceId) {
-      await _window.cameraEnhancer?.selectCamera(_item);
-    }
+      if(!_item._isDemoVideo) {
+        _window.cameraEnhancer.videoSrc = "";
+        await _window.cameraEnhancer?.selectCamera(_item);
+      } else {
+        const _url = new URL(`../../assets/videos/${_item.deviceId}`, import.meta.url).href;
+        _window.cameraEnhancer.videoSrc = _url;
+        _window.cameraEnhancer.setScanRegion(null);
 
-    // Set the camera resolution based on the selected resolution.
-    await _window.cameraEnhancer?.setResolution(ResolutionMap[_item.resolution]);
+        if(_item._belong !== useCaseStore.modeName) {
+          if (_item._belong === "general") {
+            useCaseStore.changeUseCase("1d2d");
+          } else {
+            useCaseStore.changeUseCase(_item._belong!);
+          }
+        } else {
+          await _window.cameraEnhancer.open();
+          await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
+        }
+      }
+    }
 
     // Updates the current camera and resolution in the store.
     cameraListStore.updateCurrentCamera(_item);
     cameraListStore.updateCameraResolution(_item.resolution);
+    _window.cameraView.setVideoFit(_item._isDemoVideo ? "contain" : "cover");
 
-    // Verify camera switch is successfull
-    const currentCamera = _window.cameraEnhancer?.getSelectedCamera();
-    const currentResolution = _window.cameraEnhancer?.getResolution();
-
-    if (currentCamera?.deviceId !== cameraListStore.currentCamera?.deviceId) {
-      currentCamera && cameraListStore.updateCurrentCamera(currentCamera);
-      currentInstance.proxy.$message.error("Switch camera failed!");
-    } else if (cameraListStore.currentResolution !== judgeCurResolution(currentResolution!)) {
-      currentInstance.proxy.$message.warn(
-        `Switch resolution failed. ${cameraListStore.currentResolution} might be unsupported in the camera.`
-      );
-      currentResolution && cameraListStore.updateCameraResolution(currentResolution);
+    if(!_item._isDemoVideo) {
+      // Verify camera switch is successfull
+      const currentCamera = _window.cameraEnhancer?.getSelectedCamera();
+  
+      if (currentCamera?.deviceId !== cameraListStore.currentCamera?.deviceId) {
+        currentCamera && cameraListStore.updateCurrentCamera(currentCamera);
+        currentInstance.proxy.$message.error("Switch camera failed!");
+      } else if (cameraListStore.currentResolution !== judgeCurResolution(_currentResolution!)) {
+        currentInstance.proxy.$message.warn(
+          `Switch resolution failed. ${cameraListStore.currentResolution} might be unsupported in the camera.`
+        );
+        _currentResolution && cameraListStore.updateCameraResolution(_currentResolution);
+      } else {
+        currentInstance.proxy.$message.success(
+          `Switched to ${currentCamera?.label}(${cameraListStore.currentResolution}) successfully!`
+        );
+      }
+      _window.cameraView?.setScanLaserVisible(true);
+      _window.cameraView?.setScanRegionMaskVisible(true);
+      await _window.cameraEnhancer.open();
+      scanRegionStore.updateVisibleRegionInPixels(_window.cameraView.getVisibleRegionOfVideo({ inPixels: true }));
+      _window.cameraEnhancer.setScanRegion(scanRegionStore.region);
+      await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
     } else {
-      currentInstance.proxy.$message.success(
-        `Switched to ${currentCamera?.label}(${cameraListStore.currentResolution}) successfully!`
-      );
+      currentInstance.proxy.$message.success(`Switched to ${_item.label}) successfully!`);
     }
-    _window.cameraView?.setScanLaserVisible(true);
-    _window.cameraView?.setScanRegionMaskVisible(true);
+    cameraListStore.updateIsUseDemoVideo(!!_item._isDemoVideo);
+    settingsStore.updateZonalScan(!_item._isDemoVideo);
   }
   toggleCollapsed(false);
 };
@@ -117,7 +148,7 @@ const changeCamera = async (info: MenuInfo) => {
     class="dbr-camera-selector"
     overlayClassName="dbr-dropdown-list"
     :placement="placement"
-    :disabled="captureImageStore.isShowCaptureImagePage"
+    :disabled="captureImageStore.isShowCaptureImagePage || !cameraListStore.hasCamera || cameraListStore.isLoading"
     arrow
   >
     <a class="dbr-dropdown-link" @click.prevent>
@@ -154,7 +185,7 @@ const changeCamera = async (info: MenuInfo) => {
       </div>
       <DownOutlined class="dbr-down-out-lined" v-if="!state.collapsed" />
       <UpOutlined class="dbr-up-out-lined" v-else />
-      <div class="dbr-current-camera">{{ currentCameraName }}</div>
+      <div class="dbr-current-camera">{{ state.selectedCanmeraLabel }}</div>
     </a>
     <template #overlay>
       <Menu :items="cameraListStore.cameraList" @click="changeCamera" v-model:selectedKeys="state.selectedKeys"></Menu>

@@ -129,243 +129,92 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
 </script>
 
 <template>
-  <Popover
-    overlayClassName="dbr-format-selector-popover"
-    :open="popoverOpenStore.formatSelector && isFormatChangeEnabled"
-    :placement="placement"
-    :arrow="shouldShowArrow"
-  >
-    <div
-      class="dbr-format-selector"
-      :style="{
-        backgroundColor: !isFormatChangeEnabled ? 'rgb(77, 77, 77)' : '#000000',
+  <Popover overlayClassName="dbr-format-selector-popover" :open="popoverOpenStore.formatSelector && isFormatChangeEnabled" :placement="placement" :arrow="shouldShowArrow">
+    <div class="dbr-format-selector" :style="{
+      backgroundColor: !isFormatChangeEnabled ? 'rgb(77, 77, 77)' : '#000000',
+      cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
+    }" @click.stop="updatePopoverStore" @mouseenter="updatePopoverStore">
+      <img class="dbr-barcodes-icon" src="../../assets/image/icon-web-barcodes.svg" alt="barcodes" v-show="isFormatChangeEnabled" />
+      <img class="dbr-barcodes-icon" src="../../assets/image/icon-web-barcodes-disable.svg" alt="barcodes-disable" v-show="!isFormatChangeEnabled" />
+      <label class="dbr-barcodes-text-in-desktop" :style="{
+        color: !isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
         cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
-      }"
-      @click.stop="updatePopoverStore"
-      @mouseenter="updatePopoverStore"
-    >
-      <img
-        class="dbr-barcodes-icon"
-        src="../../assets/image/icon-web-barcodes.svg"
-        alt="barcodes"
-        v-show="isFormatChangeEnabled"
-      />
-      <img
-        class="dbr-barcodes-icon"
-        src="../../assets/image/icon-web-barcodes-disable.svg"
-        alt="barcodes-disable"
-        v-show="!isFormatChangeEnabled"
-      />
-      <label
-        class="dbr-barcodes-text-in-desktop"
-        :style="{
-          color: !isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
-          cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
-        }"
-        >Barcodes Format</label
-      >
-      <label
-        class="dbr-barcodes-text-in-mobile"
-        :style="{
-          color: !isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
-          cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
-        }"
-        >Format</label
-      >
+      }">Barcodes Format</label>
+      <label class="dbr-barcodes-text-in-mobile" :style="{
+        color: !isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
+        cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
+      }">Format</label>
     </div>
     <template #content>
       <div class="dbr-format-list" @click.stop="">
         <div class="dbr-1d-barcodes">
           <div class="dbr-1d-barcodes-header">
-            <div
-              class="dbr-left"
-              @click="
-                () => {
-                  toggleFormatListOpen('oneD');
-                }
-              "
-            >
-              <DownOutlined
-                class="dbr-down-out-lined"
-                style="color: #ffffff; margin-right: 5px"
-                v-if="!checkboxState.oneD.open"
-              />
+            <div class="dbr-left" @click="() => { toggleFormatListOpen('oneD') }">
+              <DownOutlined class="dbr-down-out-lined" style="color: #ffffff; margin-right: 5px" v-if="!checkboxState.oneD.open" />
               <UpOutlined class="dbr-up-out-lined" style="color: #ffffff; margin-right: 5px" v-else />
               <label>Common 1D Barcodes</label>
             </div>
             <div class="dbr-right">
-              <label
-                for="dbr-select-all-1d-checkbox"
-                :style="{ color: checkboxState['oneD'].checkAll ? '#FE8E14' : '#999999' }"
-                >Select All</label
-              >
-              <ConfigProvider
-                :theme="{
-                  token: {
-                    colorPrimary: '#FE8E14',
-                  },
-                }"
-              >
-                <Checkbox
-                  id="dbr-select-all-1d-checkbox"
-                  style="margin-left: 12px"
-                  :indeterminate="checkboxState['oneD'].indeterminate"
-                  v-model:checked="checkboxState['oneD'].checkAll"
-                  @change="
-                    (e) => {
-                      onCheckAllBarcodeChange(e, 'oneD');
-                    }
-                  "
-                />
+              <label for="dbr-select-all-1d-checkbox" :style="{ color: checkboxState['oneD'].checkAll ? '#FE8E14' : '#999999' }">Select All</label>
+              <ConfigProvider :theme="{ token: { colorPrimary: '#FE8E14' } }">
+                <Checkbox id="dbr-select-all-1d-checkbox" style="margin-left: 12px" :indeterminate="checkboxState['oneD'].indeterminate" v-model:checked="checkboxState['oneD'].checkAll" @change="(e) => { onCheckAllBarcodeChange(e, 'oneD') }" />
               </ConfigProvider>
             </div>
           </div>
           <div class="dbr-1d-barcodes-items" v-show="checkboxState.oneD.open">
             <div class="dbr-1d-barcodes-item" v-for="item of Object.keys(barcodeFormatStore.oneD)">
-              <div
-                class="dbr-item-inner"
-                @click="
-                  () => {
-                    checkAllCheckOrAllUnCheck(item, 'oneD');
-                  }
-                "
-                :style="{
-                  backgroundColor: barcodeFormatStore.oneD[item].state ? '#fe8e14' : 'rgba(34, 34, 34)',
-                  color: barcodeFormatStore.oneD[item].state ? '#ffffff' : '#888888',
-                }"
-              >
-                {{ item }}
-              </div>
+              <label class="dbr-item-inner" :style="{ backgroundColor: barcodeFormatStore.oneD[item].state ? '#fe8e14' : 'rgba(34, 34, 34)', color: barcodeFormatStore.oneD[item].state ? '#ffffff' : '#888888' }">
+                <input type="checkbox" class="dbr-checkbox" @click="() => { checkAllCheckOrAllUnCheck(item, 'oneD') }" :checked="barcodeFormatStore.oneD[item].state">
+                <span>{{ item }}</span>
+              </label>
             </div>
           </div>
         </div>
         <div class="dbr-2d-barcodes">
           <div class="dbr-2d-barcodes-header">
-            <div
-              class="dbr-left"
-              @click="
-                () => {
-                  toggleFormatListOpen('twoD');
-                }
-              "
-            >
-              <DownOutlined
-                class="dbr-down-out-lined"
-                style="color: #ffffff; margin-right: 5px"
-                v-if="!checkboxState.twoD.open"
-              />
+            <div class="dbr-left" @click="() => { toggleFormatListOpen('twoD') }">
+              <DownOutlined class="dbr-down-out-lined" style="color: #ffffff; margin-right: 5px" v-if="!checkboxState.twoD.open" />
               <UpOutlined class="dbr-up-out-lined" style="color: #ffffff; margin-right: 5px" v-else />
               <label>Common 2D Barcodes</label>
             </div>
             <div class="dbr-right">
-              <label
-                for="dbr-select-all-2d-checkbox"
-                :style="{ color: checkboxState['twoD'].checkAll ? '#FE8E14' : '#999999' }"
-                >Select All</label
-              >
-              <ConfigProvider
-                :theme="{
-                  token: {
-                    colorPrimary: '#FE8E14',
-                  },
-                }"
-              >
-                <Checkbox
-                  id="dbr-select-all-2d-checkbox"
-                  style="margin-left: 12px"
-                  :indeterminate="checkboxState['twoD'].indeterminate"
-                  v-model:checked="checkboxState['twoD'].checkAll"
-                  @change="
-                    (e) => {
-                      onCheckAllBarcodeChange(e, 'twoD');
-                    }
-                  "
-                />
+              <label for="dbr-select-all-2d-checkbox" :style="{ color: checkboxState['twoD'].checkAll ? '#FE8E14' : '#999999' }">Select All</label>
+              <ConfigProvider :theme="{ token: { colorPrimary: '#FE8E14' } }">
+                <Checkbox id="dbr-select-all-2d-checkbox" style="margin-left: 12px" :indeterminate="checkboxState['twoD'].indeterminate" v-model:checked="checkboxState['twoD'].checkAll" @change="(e) => { onCheckAllBarcodeChange(e, 'twoD') }" />
               </ConfigProvider>
             </div>
           </div>
           <div class="dbr-2d-barcodes-items" v-show="checkboxState.twoD.open">
             <div class="dbr-2d-barcodes-item" v-for="item of Object.keys(barcodeFormatStore.twoD)">
-              <div
-                class="dbr-item-inner"
-                @click="
-                  () => {
-                    checkAllCheckOrAllUnCheck(item, 'twoD');
-                  }
-                "
-                :style="{
-                  backgroundColor: barcodeFormatStore.twoD[item].state ? '#fe8e14' : 'rgba(34, 34, 34)',
-                  color: barcodeFormatStore.twoD[item].state ? '#ffffff' : '#888888',
-                }"
-              >
-                {{ item }}
-              </div>
+              <label class="dbr-item-inner" :style="{ backgroundColor: barcodeFormatStore.twoD[item].state ? '#fe8e14' : 'rgba(34, 34, 34)', color: barcodeFormatStore.twoD[item].state ? '#ffffff' : '#888888' }">
+                <input type="checkbox" class="dbr-checkbox" @click="() => { checkAllCheckOrAllUnCheck(item, 'twoD') }" :checked="barcodeFormatStore.twoD[item].state">
+                <span>{{ item }}</span>
+              </label>
             </div>
           </div>
         </div>
         <div class="dbr-other-barcodes">
           <div class="dbr-other-barcodes-header">
-            <div
-              class="dbr-left"
-              @click="
-                () => {
-                  toggleFormatListOpen('other');
-                }
-              "
-            >
-              <DownOutlined
-                class="dbr-down-out-lined"
-                style="color: #ffffff; margin-right: 5px"
-                v-if="!checkboxState.other.open"
-              />
+            <div class="dbr-left" @click="() => { toggleFormatListOpen('other') }">
+              <DownOutlined class="dbr-down-out-lined" style="color: #ffffff; margin-right: 5px" v-if="!checkboxState.other.open" />
               <UpOutlined class="dbr-up-out-lined" style="color: #ffffff; margin-right: 5px" v-else />
               <label>Other Barcodes</label>
             </div>
             <div class="dbr-right">
-              <label
-                for="dbr-select-all-other-checkbox"
-                :style="{
-                  color: checkboxState['other'].checkAll ? '#FE8E14' : '#999999',
-                }"
-                >Select All</label
-              >
-              <ConfigProvider
-                :theme="{
-                  token: {
-                    colorPrimary: '#FE8E14',
-                  },
-                }"
-              >
-                <Checkbox
-                  id="dbr-select-all-other-checkbox"
-                  style="margin-left: 12px"
-                  :indeterminate="checkboxState['other'].indeterminate"
-                  v-model:checked="checkboxState['other'].checkAll"
-                  @change="
-                    (e) => {
-                      onCheckAllBarcodeChange(e, 'other');
-                    }
-                  "
-                />
+              <label for="dbr-select-all-other-checkbox" :style="{
+                color: checkboxState['other'].checkAll ? '#FE8E14' : '#999999',
+              }">Select All</label>
+              <ConfigProvider :theme="{ token: { colorPrimary: '#FE8E14' } }">
+                <Checkbox id="dbr-select-all-other-checkbox" style="margin-left: 12px" :indeterminate="checkboxState['other'].indeterminate" v-model:checked="checkboxState['other'].checkAll" @change="(e) => { onCheckAllBarcodeChange(e, 'other') }" />
               </ConfigProvider>
             </div>
           </div>
           <div class="dbr-other-barcodes-items" v-show="checkboxState.other.open">
             <div class="dbr-other-barcodes-item" v-for="item of Object.keys(barcodeFormatStore.other)">
-              <div
-                class="dbr-item-inner"
-                @click="
-                  () => {
-                    checkAllCheckOrAllUnCheck(item, 'other');
-                  }
-                "
-                :style="{
-                  backgroundColor: barcodeFormatStore.other[item].state ? '#fe8e14' : 'rgba(34, 34, 34)',
-                  color: barcodeFormatStore.other[item].state ? '#ffffff' : '#888888',
-                }"
-              >
-                {{ item }}
-              </div>
+              <label class="dbr-item-inner" :style="{ backgroundColor: barcodeFormatStore.other[item].state ? '#fe8e14' : 'rgba(34, 34, 34)', color: barcodeFormatStore.other[item].state ? '#ffffff' : '#888888' }">
+                <input type="checkbox" class="dbr-checkbox" @click="() => { checkAllCheckOrAllUnCheck(item, 'other') }" :checked="barcodeFormatStore.other[item].state">
+                <span>{{ item }}</span>
+              </label>
             </div>
           </div>
         </div>
@@ -452,6 +301,7 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
       .dbr-1d-barcodes,
       .dbr-2d-barcodes,
       .dbr-other-barcodes {
+
         .dbr-1d-barcodes-header,
         .dbr-2d-barcodes-header,
         .dbr-other-barcodes-header {
@@ -525,38 +375,69 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
             .dbr-item-inner {
               width: 80%;
               color: #888888;
-              font-size: 16px;
               font-family: OpenSans-Regular;
               background-color: rgba(34, 34, 34);
               transition: all 0.1s;
               cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: flex-start;
+              padding-left: 10px;
 
-              @media (hover: hover) and (pointer: fine) {
-                &:hover {
-                  background-color: #fea543 !important;
-                  color: #ffffff !important;
+              span {
+                font-family: OpenSans-Regular;
+                font-size: 16px;
+
+                @media (max-width: 980px) and (orientation: portrait) {
+                  font-size: 14px;
+                }
+
+                @media (max-width: 980px) and (orientation: landscape) {
+                  font-size: 12px !important;
                 }
               }
 
-              @media (max-width: 980px) and (orientation: portrait) {
-                font-size: 14px;
-                width: 80px;
+              .dbr-checkbox {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 15px;
+                height: 15px;
+                border: 1px solid #ffffff;
+                border-radius: 4px;
+                background-color: rgba(34, 34, 34);
+                cursor: pointer;
+                position: relative;
+                margin-right: 5px;
                 display: flex;
-                justify-content: center;
                 align-items: center;
+                justify-content: center;
+              }
+
+              .dbr-checkbox:checked {
+                background-color: #fe8e14;
+              }
+
+              .dbr-checkbox:checked::after {
+                content: "";
+                width: 3px;
+                height: 7px;
+                border: solid #fff;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+              }
+
+              @media (max-width: 980px) and (orientation: portrait) {
+                width: 90%;
               }
 
               @media (max-width: 980px) and (orientation: landscape) {
-                font-size: 12px;
                 width: 120px;
                 height: 30px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
               }
             }
 
             @media (max-width: 980px) and (orientation: portrait) {
+              width: calc(100% / 2);
               margin-top: 10px;
               line-height: unset;
             }
@@ -564,6 +445,20 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
             @media (max-width: 980px) and (orientation: landscape) {
               margin-top: 10px;
               line-height: unset;
+            }
+          }
+        }
+
+        .dbr-1d-barcodes-items {
+          :nth-child(5) {
+            .dbr-item-inner {
+              span {
+                font-size: 14px;
+
+                @media (max-width: 980px) and (orientation: portrait) {
+                  font-size: 12px;
+                }
+              }
             }
           }
         }

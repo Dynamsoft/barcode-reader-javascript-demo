@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import { useSettingsStore } from "../../stores/settings";
 import { usePopoverOpenStore } from "../../stores/popoverOpen";
+import { useCameraListStore } from "../../stores/cameraList";
+
 const popoverOpenStore = usePopoverOpenStore();
 const settingsStore = useSettingsStore();
+const cameraListStore = useCameraListStore();
 
 const updatePopoverStore = (e: Event) => {
+  popoverOpenStore.updatePopoverStore(false, false, false);
+  if(cameraListStore.isUseDemoVideo) return;
   if (e.type === "click") {
     settingsStore.updateZonalScan(!settingsStore.zonalScan);
   }
-  popoverOpenStore.updatePopoverStore(false, false, false);
 };
 </script>
 
 <template>
-  <div class="dbr-region-controller" @click="updatePopoverStore" @mouseenter="updatePopoverStore">
+  <div :class="`dbr-region-controller ${cameraListStore.isUseDemoVideo ? '' : 'hover'}`" :style="{cursor: cameraListStore.isUseDemoVideo ? 'not-allowed' : 'pointer'}" @click="updatePopoverStore" @mouseenter="updatePopoverStore">
     <img
       class="dbr-zonal-icon"
       src="../../assets/image/icon-web-zonal.svg"
@@ -26,8 +30,8 @@ const updatePopoverStore = (e: Event) => {
       v-show="!settingsStore.zonalScan"
       alt="full-image"
     />
-    <label class="dbr-zonal-text-in-desktop">{{ settingsStore.zonalScan ? "Zonal" : "Full Image" }} Scan</label>
-    <label class="dbr-zonal-text-in-mobile">{{ settingsStore.zonalScan ? "Zonal" : "Full Image" }}</label>
+    <label class="dbr-zonal-text-in-desktop" :style="{cursor: cameraListStore.isUseDemoVideo ? 'not-allowed' : 'pointer'}">{{ settingsStore.zonalScan ? "Zonal" : "Full Image" }} Scan</label>
+    <label class="dbr-zonal-text-in-mobile" :style="{cursor: cameraListStore.isUseDemoVideo ? 'not-allowed' : 'pointer'}">{{ settingsStore.zonalScan ? "Zonal" : "Full Image" }}</label>
   </div>
 </template>
 
@@ -40,11 +44,6 @@ const updatePopoverStore = (e: Event) => {
   justify-content: center;
   align-items: center;
   border-bottom: 1px solid #222222;
-  cursor: pointer;
-
-  &:hover {
-    background-color: rgb(34, 34, 34);
-  }
 
   .dbr-zonal-icon {
     width: 28px;
@@ -65,7 +64,6 @@ const updatePopoverStore = (e: Event) => {
     font-family: "OpenSans-Regular";
     color: #ffffff;
     font-size: 14px;
-    cursor: pointer;
   }
 
   .dbr-zonal-text-in-desktop {
@@ -86,6 +84,12 @@ const updatePopoverStore = (e: Event) => {
 
   @media (max-width: 980px) {
     width: 25%;
+  }
+}
+
+.hover {
+  &:hover {
+    background-color: rgb(34, 34, 34);
   }
 }
 </style>

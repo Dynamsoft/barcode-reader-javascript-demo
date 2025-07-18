@@ -8,8 +8,6 @@ import { useSettingsStore } from "../stores/settings";
 import { useBarcodeFormatStore } from "../stores/barcodeFormat";
 
 const props = defineProps<{
-  currentTemplate: string;
-  changeTemplate: (templateName: string) => void;
   udpateSettings: () => Promise<void>;
 }>();
 
@@ -35,7 +33,7 @@ watch(
     <ModeSelector />
     <FormatSelector />
     <RegionController />
-    <SettingsController :currentTemplate="currentTemplate" />
+    <SettingsController />
   </div>
 </template>
 

@@ -1,26 +1,20 @@
 {
   "name": "dynamsoft-barcode-reader",
   "private": true,
-  "version": "10.4.2001",
+  "version": "11.0.3000",
   "type": "module",
   "scripts": {
     "dev": "vite --mode=dev",
     "build": "vue-tsc && vite build --mode=build-test",
-    "build:publish": "vue-tsc && vite build --mode=publish",
     "preview": "vite preview"
   },
   "dependencies": {
     "ant-design-vue": "^4.2.1",
     "clipboard": "2.0.11",
-    "dynamsoft-barcode-reader": "10.4.20",
-    "dynamsoft-camera-enhancer": "4.1.0",
-    "dynamsoft-capture-vision-router": "2.4.21",
-    "dynamsoft-code-parser": "2.4.22",
-    "dynamsoft-core": "3.4.20",
-    "dynamsoft-license": "3.4.20",
-    "dynamsoft-utility": "1.4.20",
+    "dynamsoft-barcode-reader-bundle": "11.0.3000",
     "jszip": "^3.10.1",
-    "pinia": "^2.1.7",
+    "pinia": "^2.3.1",
+    "qrcode": "^1.5.4",
     "vue": "^3.4.21",
     "vue-router": "^4.3.2"
   },

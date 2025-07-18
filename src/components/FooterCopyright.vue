@@ -146,7 +146,7 @@ const isShowGuideStore = useIsShowGuideStore();
 
   @media (max-width: 980px) {
     display: block;
-    height: 15vh;
+    height: 12vh;
     background-color: #212121;
     padding: 10px 2.9vw 10px 5.3vw;
     overflow: auto;

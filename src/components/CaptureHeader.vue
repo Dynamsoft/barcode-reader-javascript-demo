@@ -5,20 +5,16 @@ import HeaderRightPart from "./HeaderRightPart.vue";
 import { useSettingsStore } from "../stores/settings";
 import { useUseCaseStore } from "../stores/useCase";
 import { useCaptureImageStore } from "../stores/captureImage";
-import { CapturedResult } from "dynamsoft-capture-vision-router";
-import { ParsedResultItem } from "dynamsoft-code-parser";
-import { OriginalImageResultItem } from "dynamsoft-core";
+import { CapturedResult, ParsedResultItem, OriginalImageResultItem, CaptureVisionRouter } from "dynamsoft-barcode-reader-bundle";
 import { ParsedDataFailed } from "../types";
+import { useCameraListStore } from "../stores/cameraList";
 
 const _window = window as any;
-
-const props = defineProps<{
-  currentTemplate: string;
-}>();
 
 const settingsStore = useSettingsStore();
 const useCaseStore = useUseCaseStore();
 const captureImageStore = useCaptureImageStore();
+const cameraListStore = useCameraListStore();
 const currentInstance: any = getCurrentInstance();
 
 const switchSoundPlay = () => {
@@ -37,11 +33,6 @@ const currentModeName = computed(() => {
   }
 });
 
-// Check if file uploaded is an image
-const isImageFile = (type: string) => {
-  return type && type.startsWith("image/");
-};
-
 // Read barcodes from an image file.s
 const readImage = async (e: Event) => {
   currentInstance.proxy.$message.loading({
@@ -53,9 +44,10 @@ const readImage = async (e: Event) => {
 
   try {
     // Check if file chosen is an image
-    if (!isImageFile((e.target as HTMLInputElement).files![0]?.type)) {
-      throw new Error("File is not an image!");
-    }
+    // const _checkImageFile = isImageFile((e.target as HTMLInputElement).files![0]?.type);
+    // if (_checkImageFile !== true) {
+    //   throw new Error(_checkImageFile as string);
+    // }
 
     captureImageStore.updateDecodingState(true);
 
@@ -63,24 +55,26 @@ const readImage = async (e: Event) => {
     if (_window.cameraEnhancer && _window.cameraEnhancer.isOpen()) {
       _window.cvRouter.stopCapturing();
       _window.cameraView?.setScanLaserVisible(false);
+      _window.cameraView?.clearAllInnerDrawingItems();
     }
 
     // Capture and process the image
-    captureResult = await _window.cvRouter.capture((e.target as HTMLInputElement).files![0], props.currentTemplate);
+    const cvRouter = _window.cvRouter as CaptureVisionRouter;
+    captureResult = await cvRouter.capture((e.target as HTMLInputElement).files![0], captureImageStore.currentTemplate);
 
     // Handle the case where no barcode result is found
-    if (!captureResult?.barcodeResultItems) {
+    if (!captureResult.decodedBarcodesResult?.barcodeResultItems) {
       captureImageStore.updateDLJsonString();
     }
 
     // Parse Driver License barcodes
-    if (captureResult?.barcodeResultItems && useCaseStore.useCaseName === "dl") {
+    if (captureResult.decodedBarcodesResult?.barcodeResultItems && useCaseStore.useCaseName === "dl") {
       try {
-        parsedData = await _window.parser.parse(captureResult.barcodeResultItems[0].bytes);
+        parsedData = await _window.parser.parse(captureResult.decodedBarcodesResult.barcodeResultItems[0].bytes);
       } catch (ex: any) {
         (parsedData as ParsedDataFailed).exception = true;
         (parsedData as ParsedDataFailed).message = ex.message || ex;
-        (parsedData as ParsedDataFailed).text = captureResult.barcodeResultItems[0].text;
+        (parsedData as ParsedDataFailed).text = captureResult.decodedBarcodesResult.barcodeResultItems[0].text;
       }
 
       captureImageStore.updateDLJsonString(
@@ -89,18 +83,13 @@ const readImage = async (e: Event) => {
           : (parsedData as ParsedResultItem).jsonString
       );
     }
-    captureImageStore.updateCaptureResult(captureResult?.barcodeResultItems);
+    captureImageStore.updateCaptureResult(captureResult.decodedBarcodesResult?.barcodeResultItems);
     captureImageStore.updateSelectedFile((e.target as HTMLInputElement).files![0]);
 
-    // Close camera on barcode decoded
-    if (_window.cameraEnhancer && _window.cameraEnhancer.isOpen()) {
-      _window.cameraEnhancer?.close();
-      _window.cameraView?.clearAllInnerDrawingItems();
-    }
-
     // Show barcode decoded result and show success message
+    _window.cameraEnhancer?.close();
     captureImageStore.captureImagePageVisible(true);
-    if (captureResult?.barcodeResultItems?.length) {
+    if (captureResult.decodedBarcodesResult?.barcodeResultItems?.length) {
       currentInstance.proxy.$message.success({
         content: "Barcode decoded!",
         key: "decode",
@@ -116,8 +105,10 @@ const readImage = async (e: Event) => {
       content: ex.message || ex,
       key: "decode",
     });
-    _window.cvRouter.startCapturing(props.currentTemplate);
-    _window.cameraView?.setScanLaserVisible(true);
+    if (!captureImageStore.isShowCaptureImagePage) {
+      _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
+      _window.cameraView?.setScanLaserVisible(!cameraListStore.isUseDemoVideo);
+    }
   } finally {
     captureImageStore.updateDecodingState(false);
     (e.target as HTMLInputElement).value = "";
@@ -146,35 +137,15 @@ const preventDefault = (e: Event) => {
     <CameraSelector />
     <label class="dbr-upload-image">
       <img src="../assets/image/Images-add.svg" alt="image" />
-      <input
-        type="file"
-        accept="image/*"
-        id="dbr-image-read"
-        class="dbr-image-read"
-        @click="preventDefault"
-        @change="readImage"
-      />
+      <input type="file" id="dbr-image-read" accept=".jpg,.jpeg,.ico,.gif,.svg,.webp,.png,.bmp" class="dbr-image-read" @click="preventDefault" @change="readImage" />
     </label>
-    <div
-      class="dbr-sound"
-      @click="switchSoundPlay"
-      :style="{
-        backgroundColor: settingsStore.playSound ? 'rgba(110, 110, 110, 0.8)' : '',
-      }"
-    >
-      <img
-        class="dbr-music-selected"
-        src="../assets/image/music-selected.svg"
-        alt="Music-selected"
-        v-show="settingsStore.playSound"
-      />
-      <img
-        class="dbr-music-unselected"
-        src="../assets/image/music-unselected.svg"
-        alt="Music-unselected"
-        v-show="!settingsStore.playSound"
-      />
+    <div class="dbr-sound" @click="switchSoundPlay" :style="{
+      backgroundColor: settingsStore.playSound ? 'rgba(110, 110, 110, 0.8)' : '',
+    }">
+      <img class="dbr-music-selected" src="../assets/image/music-selected.svg" alt="Music-selected" v-show="settingsStore.playSound" />
+      <img class="dbr-music-unselected" src="../assets/image/music-unselected.svg" alt="Music-unselected" v-show="!settingsStore.playSound" />
     </div>
+    <LiveChat />
     <label class="dbr-current-mode" v-show="!captureImageStore.isShowCaptureImagePage">{{ currentModeName }}</label>
     <HeaderRightPart />
   </div>
@@ -254,6 +225,10 @@ const preventDefault = (e: Event) => {
       text-align: center;
       top: 135%;
       font-size: 16px;
+    }
+
+    @media (max-height: 500px) {
+      font-size: 14px;
     }
   }
 }

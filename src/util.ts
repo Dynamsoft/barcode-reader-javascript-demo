@@ -1,4 +1,4 @@
-import { Resolution as VideoResolution } from "dynamsoft-camera-enhancer";
+import { Resolution as VideoResolution } from "dynamsoft-barcode-reader-bundle";
 import { Resolution, EnumResolution } from "./assets/enum/Resolution";
 
 export function judgeCurResolution(resolution: VideoResolution): Resolution {
@@ -19,6 +19,18 @@ export function getDate() {
 export function getValueByKey(obj: object, value: string) {
   return Object.entries(obj).find(([_, val]) => val === value)?.[0];
 }
+
+// Check if file uploaded is an image
+export const isImageFile = (type: string): string | boolean => {
+  const _imageType = type.split("/")[1];
+  if(["gif", "tiff", "pdf"].includes(_imageType)) {
+    return "Image type not supported!";
+  }
+  if(!type.startsWith("image/")) {
+    return "File is not an image!"
+  }
+  return true;
+};
 
 const useCaseBarcodeFormatMap: {
   "1d": string[];
@@ -78,9 +90,9 @@ const useCaseBarcodeFormatMap: {
 };
 
 const templateMap = {
-  "Best Speed": "ReadSingleBarcode",
+  "Speed": "ReadSingleBarcode",
   Balance: "ReadBarcodes_Balance",
-  "Best Coverage": "ReadBarcodes_ReadRateFirst",
+  "Coverage": "ReadBarcodes_ReadRateFirst",
 };
 
 const isDebug = location.search.includes("debug=true");

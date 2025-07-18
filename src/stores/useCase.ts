@@ -18,6 +18,13 @@ export const useUseCaseStore = defineStore("useCase", {
     isGeneral(state) {
       return ["1d", "2d", "1d2d"].includes(state.useCaseName);
     },
+    modeName(state) {
+      if(this.isGeneral) {
+        return "general"
+      } else {
+        return state.useCaseName;
+      }
+    }
   },
 });
 

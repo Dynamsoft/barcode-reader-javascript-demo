@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { BarcodeResultItem } from "dynamsoft-barcode-reader";
+import { BarcodeResultItem } from "dynamsoft-barcode-reader-bundle";
 
 const resultCountMap = new Map();
 

@@ -26,9 +26,5 @@ dist-ssr
 baseUrl.json
 postSessionData.ts
 collectImg.ts
-package-lock.json
 /src/components/LiveChat.vue
 /src/components/DataPrivacyModal.vue
-/public/generateSessionID.js
-/public/manifest.json
-/public/service-worker.js

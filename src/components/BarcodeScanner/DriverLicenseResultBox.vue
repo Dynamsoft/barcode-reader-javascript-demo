@@ -2,14 +2,14 @@
 import { ref, getCurrentInstance } from "vue";
 import { useCaptureImageStore } from "../../stores/captureImage";
 import Clipboard from "clipboard";
+import { useSettingsStore } from "../../stores/settings";
 
-defineProps<{
-  currentTemplate: string;
-  closeDlResultBox: () => void;
-}>();
+const _window = window as any;
 
 const currentInstance: any = getCurrentInstance();
 const captureImageStore = useCaptureImageStore();
+const settingsStore = useSettingsStore();
+
 const isCopied = ref(false);
 
 const copyAll = () => {
@@ -37,6 +37,12 @@ const copyAll = () => {
     currentInstance.proxy.$message.error("Failed!");
     clipboard.destroy();
   });
+};
+
+const closeDlResultBox = async () => {
+  captureImageStore.updateDlResultBoxVisibility(false);
+  await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
+  _window.cameraView?.setScanLaserVisible(settingsStore.zonalScan);
 };
 </script>
 

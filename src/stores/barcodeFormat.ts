@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useCameraListStore } from "./cameraList";
 
 const _window = window as any;
 
@@ -63,8 +64,9 @@ export const useBarcodeFormatStore = defineStore("BarcodeFormat", {
       }
     },
     async updateBarcodeFormat(currentTemplate: string, isShowCaptureImagePage: boolean) {
+      const cameraListStore = useCameraListStore(); 
       // If the camera is not open and it is not the image reader page, you do not need to continue to set, after opening the unified setting
-      if (!_window.cameraEnhancer || (!_window.cameraEnhancer.isOpen() && !isShowCaptureImagePage)) return;
+      if (!_window.cameraEnhancer || (cameraListStore.isLoading && !isShowCaptureImagePage && cameraListStore.hasCamera)) return;
       const settings = await _window.cvRouter!.getSimplifiedSettings(currentTemplate);
       settings.barcodeSettings.barcodeFormatIds = BigInt(0);
       for (let oneD in this.$state.oneD) {

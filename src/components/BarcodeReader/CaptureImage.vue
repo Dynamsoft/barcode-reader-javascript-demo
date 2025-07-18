@@ -2,20 +2,20 @@
 import { ref, Ref, watch, nextTick, getCurrentInstance } from "vue";
 import { useCaptureImageStore } from "../../stores/captureImage";
 import { useUseCaseStore } from "../../stores/useCase";
+import { useSettingsStore } from "../../stores/settings";
+import { useCameraListStore } from "../../stores/cameraList";
 import Clipboard from "clipboard";
 import DriverLicenseResult from "./DriverLicenseResult.vue";
 
 const _window = window as any;
-
-const props = defineProps<{
-  currentTemplate: string;
-}>();
 
 const imageAreaRef: Ref<HTMLDivElement | null> = ref(null);
 const resultCanvasRef: Ref<HTMLDivElement | null> = ref(null);
 const isCopied: Ref<Array<boolean>> = ref([]);
 const captureImageStore = useCaptureImageStore();
 const useCaseStore = useUseCaseStore();
+const settingsStore = useSettingsStore();
+const cameraListStore = useCameraListStore();
 const currentInstance: any = getCurrentInstance();
 
 let currentImage: HTMLCanvasElement;
@@ -168,12 +168,14 @@ const restartVideo = async () => {
   });
 
   try {
-    await _window.cameraEnhancer.open();
-    await _window.cvRouter.startCapturing(props.currentTemplate);
+    if(cameraListStore.hasCamera) {
+      await _window.cameraEnhancer.open();
+      await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
+      _window.cameraView.setScanLaserVisible(settingsStore.zonalScan);
+    }
     captureImageStore.captureImagePageVisible(false);
-    _window.cameraView.setScanLaserVisible(true);
     currentInstance.proxy.$message.success({
-      content: "Restarted",
+      content: cameraListStore.hasCamera ? "Restarted" : "Returned",
       key: "restartVideo",
     });
   } catch (ex: any) {
@@ -190,10 +192,11 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
   if (cvs) {
     imageAreaRef.value!.innerText = "";
     currentImage = cvs;
+
+    imageAreaRef.value!.appendChild(cvs);
     nextTick(() => {
       drawResults(cvs);
     });
-    imageAreaRef.value!.appendChild(cvs);
   }
 });
 </script>
@@ -236,7 +239,7 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
         <DriverLicenseResult v-show="useCaseStore.useCaseName === 'dl'" />
       </div>
     </div>
-    <div class="dbr-restart-video-btn" @click="restartVideo">RESTART VIDEO</div>
+    <div class="dbr-restart-video-btn" @click="restartVideo">{{cameraListStore.hasCamera ? "RESTART VIDEO" : "BACK"}}</div>
   </div>
 </template>
 

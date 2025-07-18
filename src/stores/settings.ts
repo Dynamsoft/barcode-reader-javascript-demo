@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
 
-type SingleOrMulti = "single" | "multiple";
-type ScanMode = "Best Speed" | "Balance" | "Best Coverage";
-type ColourMode = "Inverted" | "Normal";
+export type SingleOrMulti = "Single" | "Multiple";
+export type ScanMode = "Speed" | "Balance" | "Coverage";
+export type ColourMode = "Inverted" | "Normal" | "Both";
 
 export const useSettingsStore = defineStore("settings", {
   state: (): {
@@ -25,9 +25,9 @@ export const useSettingsStore = defineStore("settings", {
     return {
       playSound: false,
       zonalScan: true,
-      singleOrMulti: "single",
-      scanMode: "Best Speed",
-      colourMode: "Normal",
+      singleOrMulti: "Single",
+      scanMode: "Speed",
+      colourMode: "Both",
       autoZoom: false,
       shwoSettingCodesArea: false,
       isCollectImg,

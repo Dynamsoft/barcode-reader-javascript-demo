@@ -3,7 +3,7 @@ import { ref, Ref, getCurrentInstance, computed } from "vue";
 import { Popover, Switch } from "ant-design-vue";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons-vue";
 import { usePopoverOpenStore } from "../../stores/popoverOpen";
-import { useSettingsStore } from "../../stores/settings";
+import { ColourMode, ScanMode, SingleOrMulti, useSettingsStore } from "../../stores/settings";
 import { useUseCaseStore } from "../../stores/useCase";
 import { useCaptureImageStore } from "../../stores/captureImage";
 import { useCameraListStore } from "../../stores/cameraList";
@@ -13,10 +13,6 @@ import Clipboard from "clipboard";
 import JSZip from "jszip";
 
 const _window = window as any;
-
-const props = defineProps<{
-  currentTemplate: string;
-}>();
 
 type PopoverPlacement = "rightBottom" | "topRight";
 
@@ -74,6 +70,7 @@ const copySettings = () => {
 const getImages = async () => {
   if (captureImageStore.isShowCaptureImagePage || !_window.cameraEnhancer) return;
 
+  _window.cameraView.clearAllInnerDrawingItems();
   isShowMask.value = true;
   _window.cvRouter.stopCapturing();
   currentInstance.proxy.$message.loading({ content: "Capturing...", duration: 0 });
@@ -97,7 +94,7 @@ const getImages = async () => {
   isShowMask.value = false;
 
   // Restart capturing with the current template
-  await _window.cvRouter.startCapturing(props.currentTemplate);
+  await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
 };
 
 // Captures images from the camera and adds them to the download list.
@@ -105,19 +102,24 @@ const saveImages = async () => {
   return new Promise<void>(async (resolve) => {
     let index = 0;
     while (index < 8) {
-      const cvs = _window.cameraEnhancer.getImage().toCanvas();
-      if (cvs != null) {
-        const blob = cvs.convertToBlob
-          ? await cvs.convertToBlob()
-          : await new Promise((resolve) => {
-              cvs.toBlob((blob: Blob) => resolve(blob));
-            });
-        downloadImg.value.push({
-          name: "Screenshot - " + new Date().toISOString().replace(/\:/g, "-") + ".png",
-          blob,
-        });
+      const image = await new Promise<any>((rs) => {
+        setTimeout(() => {
+          const image = _window.cameraEnhancer.getImage();
+          rs(image);
+        }, 0)
+      })
+      if (!image) {
         index++;
+        continue;
       }
+      const cvs = image.toCanvas();
+      if (cvs != null) {
+        const blob = cvs.convertToBlob ? await cvs.convertToBlob() : await new Promise((resolve) => {
+          cvs.toBlob((blob: Blob) => resolve(blob));
+        });
+        downloadImg.value.push({ name: "Screenshot - " + new Date().toISOString().replace(/\:/g, "-") + ".png", blob });
+      }
+      index++;
     }
     resolve();
   });
@@ -135,13 +137,15 @@ const viewSettings = computed(() => {
     _viewSettings += `await cameraEnhancer.setResolution(${JSON.stringify(rsl)});<br>`;
     _viewSettings += `cvRouter.stopCapturing();<br>`;
   }
-  _viewSettings += `const settings = await cvRouter.getSimplifiedSettings('${props.currentTemplate}');<br>`;
-  _viewSettings += `settings.barcodeSettings.expectedBarcodesCount = ${
-    settingsStore.singleOrMulti === "single" ? 1 : 512
-  };<br>`;
-  _viewSettings += `settings.barcodeSettings.grayscaleTransformationModes[0] = ${
-    settingsStore.colourMode === "Inverted" ? "1" : "2"
-  };<br>`;
+  _viewSettings += `const settings = await cvRouter.getSimplifiedSettings('${captureImageStore.currentTemplate}');<br>`;
+  _viewSettings += `settings.barcodeSettings.expectedBarcodesCount = ${settingsStore.singleOrMulti === "Single" ? 1 : 512};<br>`;
+
+  const colourModeMap = {
+    Inverted: "[1]",
+    Normal: "[2]",
+    Both: "[1, 2]",
+  };
+  _viewSettings += `settings.barcodeSettings.grayscaleTransformationModes = ${colourModeMap[settingsStore.colourMode]};<br>`;
 
   if (useCaseStore.useCaseName === "vin") {
     _viewSettings += `settings.barcodeSettings.barcodeFormatIds = 0x1 | 0x2 | 0x4 | 0x400 | 0x8 | 0x10 | 0x200 | 0x04000000 | 0x08000000;<br>`;
@@ -151,15 +155,37 @@ const viewSettings = computed(() => {
     _viewSettings += `settings.barcodeSettings.barcodeFormatIds = 0x08000000;<br>`;
   }
 
-  _viewSettings += `await cvRouter.updateSettings('${props.currentTemplate}', settings);<br>`;
+  _viewSettings += `await cvRouter.updateSettings('${captureImageStore.currentTemplate}', settings);<br>`;
   if (!captureImageStore.isShowCaptureImagePage) {
-    _viewSettings += `await cvRouter.startCapturing('${props.currentTemplate}');<br>`;
+    _viewSettings += `await cvRouter.startCapturing('${captureImageStore.currentTemplate}');<br>`;
   }
   if (settingsStore.autoZoom && !captureImageStore.isShowCaptureImagePage) {
     _viewSettings += `cameraEnhancer.enableEnhancedFeatures(0x10);<br>`;
   }
   return _viewSettings;
 });
+
+const uploadTemplate = (e: any) => {
+  _window.cvRouter.stopCapturing();
+  const file = e.target.files[0];
+  const fileReadr = new FileReader();
+  fileReadr.readAsText(file);
+  fileReadr.onload = async (event) => {
+    try {
+      const jsonString = event.target?.result as string;
+      await _window.cvRouter.initSettings(jsonString);
+      const templateName = JSON.parse(jsonString).CaptureVisionTemplates[0].Name;
+      await _window.cvRouter.startCapturing(templateName);
+      captureImageStore.updateCurrentTemplate(templateName);
+      currentInstance.proxy.$message.success({ content: "Successful." });
+    } catch (ex: Error) {
+      currentInstance.proxy.$message.error({ content: ex.message || ex });
+    }
+  };
+  fileReadr.onerror = (event) => {
+    currentInstance.proxy.$message.error({ content: event.target?.error?.message || "Failed to read file." });
+  };
+}
 
 window.addEventListener("resize", () => {
   const isWideScreen = document.body.clientWidth > 980;
@@ -169,12 +195,7 @@ window.addEventListener("resize", () => {
 </script>
 
 <template>
-  <Popover
-    overlayClassName="dbr-settings-popover"
-    :placement="placement"
-    :arrow="shouldShowArrow"
-    :open="popoverOpenStore.settingsController"
-  >
+  <Popover overlayClassName="dbr-settings-popover" :placement="placement" :arrow="shouldShowArrow" :open="popoverOpenStore.settingsController">
     <div class="dbr-settings-controller" @click.stop="updatePopoverStore" @mouseenter="updatePopoverStore">
       <img class="dbr-settings-icon" src="../../assets/image/icon-web-settings.svg" alt="settings" />
       <label class="dbr-settings-text-in-desktop">Scan Settings</label>
@@ -189,86 +210,35 @@ window.addEventListener("resize", () => {
           <div class="dbr-settings-option-1" v-show="['1d', '2d', '1d2d'].includes(useCaseStore.useCaseName)">
             <label>Single/Multi Barcode Scanning</label>
             <div class="dbr-single-or-multi-options">
-              <div
-                class="dbr-single"
-                @click="() => settingsStore.updateSingleOrMulti('single')"
-                :style="{
-                  backgroundColor: settingsStore.singleOrMulti === 'single' ? '#fe8e14' : '#222',
-                }"
-              >
-                Single
-              </div>
-              <div
-                class="dbr-multiple"
-                @click="() => settingsStore.updateSingleOrMulti('multiple')"
-                :style="{
-                  backgroundColor: settingsStore.singleOrMulti === 'multiple' ? '#fe8e14' : '#222',
-                }"
-              >
-                Multiple
-              </div>
+              <label v-for="mode of ['Single', 'Multiple']" :class="`dbr-${mode.toLowerCase()}`" @click="() => settingsStore.updateSingleOrMulti(mode as SingleOrMulti)" :style="{ backgroundColor: settingsStore.singleOrMulti === mode ? '#fe8e14' : '#222' }">
+                <input type="radio" class="dbr-radio" name="single-or-multiple" style="margin-right: 5px;" :checked="mode === 'Single'">
+                {{ mode }}
+              </label>
             </div>
           </div>
           <div class="dbr-settings-option-2" v-show="['1d', '2d', '1d2d'].includes(useCaseStore.useCaseName)">
             <label>Scan Mode</label>
             <div class="dbr-scan-mode">
-              <div
-                class="dbr-best-speed"
-                @click="() => settingsStore.updateScanMode('Best Speed')"
-                :style="{
-                  backgroundColor: settingsStore.scanMode === 'Best Speed' ? '#fe8e14' : '#222',
-                }"
-              >
-                Best Speed
-              </div>
-              <div
-                class="dbr-balance"
-                @click="() => settingsStore.updateScanMode('Balance')"
-                :style="{
-                  backgroundColor: settingsStore.scanMode === 'Balance' ? '#fe8e14' : '#222',
-                }"
-              >
-                Balance
-              </div>
-              <div
-                class="dbr-best-coverage"
-                @click="() => settingsStore.updateScanMode('Best Coverage')"
-                :style="{
-                  backgroundColor: settingsStore.scanMode === 'Best Coverage' ? '#fe8e14' : '#222',
-                }"
-              >
-                Best Coverage
-              </div>
+              <label v-for="mode of ['Speed', 'Balance', 'Coverage']" :class="`dbr-${mode.toLowerCase()}`" @click="() => settingsStore.updateScanMode(mode as ScanMode)" :style="{ backgroundColor: settingsStore.scanMode === mode ? '#fe8e14' : '#222' }">
+                <input type="radio" class="dbr-radio" name="scan-mode" style="margin-right: 5px;" :checked="mode === 'Speed'">
+                {{ mode }}
+              </label>
             </div>
           </div>
           <div class="dbr-settings-option-3">
             <label>Barcode Colour Option</label>
-            <div class="dbr-colour-mode-desc">scan light barcodes on dark background</div>
+            <div class="dbr-colour-mode-desc">
+              <p v-show="settingsStore.colourMode === 'Inverted'">Scan light barcodes on dark background</p>
+              <p v-show="settingsStore.colourMode === 'Normal'">Scan dark barcodes on light background</p>
+              <p v-show="settingsStore.colourMode === 'Both'">Scan both normal and inverted barcodes</p>
+            </div>
             <div class="dbr-colour-mode">
-              <div
-                class="dbr-interved"
-                @click="() => settingsStore.updateColourMode('Inverted')"
-                :style="{
-                  backgroundColor: settingsStore.colourMode === 'Inverted' ? '#fe8e14' : '#222',
-                }"
-              >
-                <div class="dbr-text">Inverted</div>
-                <div class="dbr-image-inverted">
-                  <img src="../../assets/image/barcode.svg" alt="barcode" />
+              <label v-for="mode of ['Inverted', 'Normal', 'Both']" :class="`dbr-${mode.toLowerCase()}`" @click="() => settingsStore.updateColourMode(mode as ColourMode)" :style="{ backgroundColor: settingsStore.colourMode === mode ? '#fe8e14' : '#222' }">
+                <div class="dbr-text">
+                  <input type="radio" class="dbr-radio" name="colour-mode" style="margin-right: 5px;" :checked="mode === 'Both'">
+                  {{ mode }}
                 </div>
-              </div>
-              <div
-                class="dbr-normal"
-                @click="() => settingsStore.updateColourMode('Normal')"
-                :style="{
-                  backgroundColor: settingsStore.colourMode === 'Normal' ? '#fe8e14' : '#222',
-                }"
-              >
-                <div class="dbr-text">Normal</div>
-                <div class="dbr-image-normal">
-                  <img src="../../assets/image/barcode.svg" alt="barcode" />
-                </div>
-              </div>
+              </label>
             </div>
           </div>
         </div>
@@ -276,9 +246,19 @@ window.addEventListener("resize", () => {
           <div class="dbr-auto-zoom-title">Auto Zoom</div>
           <Switch v-model:checked="settingsStore.autoZoom" />
         </div>
-        <div class="dbr-view-setting-codes-btn" @click.stop="() => settingsStore.updateSettingCodesAreaOpen(true)">
-          View Setting Codes
-          <RightOutlined />
+        <div class="dbr-view-setting-codes-btn" @click.stop="" :style="{ justifyContent: isDebug ? 'space-between' : 'flex-end' }">
+          <label class="dbr-upload-template" for="upload-template" v-show="isDebug">
+            <input type="file" id="upload-template" accept=".json" @change="uploadTemplate" style="display: none;">
+            <svg t="1752225146415" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1439" width="20" height="20">
+              <path d="M939.982029 724.992l-139.6736-139.6736a40.96 40.96 0 0 0-58.1632 0l-139.6736 139.6736a40.79616 40.79616 0 0 0 29.0816 69.632c10.6496 0 20.8896-4.096 29.0816-11.8784l70.0416-69.632V983.04c0 22.528 18.432 40.96 40.96 40.96s40.96-18.432 40.96-40.96v-269.9264l70.0416 69.632c8.192 8.192 18.432 11.8784 29.0816 11.8784s20.8896-4.096 29.0816-11.8784a40.79616 40.79616 0 0 0 0-57.7536z" p-id="1440" fill="#ffffff"></path>
+              <path d="M521.780429 942.08H153.140429V81.92h544.3584L849.460429 233.8816V409.6c0 22.528 18.432 40.96 40.96 40.96s40.96-18.432 40.96-40.96V233.8816c0-21.7088-8.6016-42.5984-24.1664-57.7536L755.252429 24.1664C739.687629 8.6016 719.207629 0 697.089229 0H153.140429C108.084429 0 71.220429 36.864 71.220429 81.92v860.16c0 45.056 36.864 81.92 81.92 81.92h368.64c22.528 0 40.96-18.432 40.96-40.96s-18.432-40.96-40.96-40.96z" p-id="1441" fill="#ffffff"></path>
+              <path d="M284.622029 215.4496c-22.528 0-40.96 18.432-40.96 40.96s18.432 40.96 40.96 40.96h396.0832c22.528 0 40.96-18.432 40.96-40.96s-18.432-40.96-40.96-40.96H284.622029zM557.825229 420.2496H284.622029c-22.528 0-40.96 18.432-40.96 40.96s18.432 40.96 40.96 40.96h273.2032c22.528 0 40.96-18.432 40.96-40.96s-18.432-40.96-40.96-40.96z" p-id="1442" fill="#ffffff"></path>
+            </svg>
+          </label>
+          <div class="dbr-open-settings-view" @click.stop="() => settingsStore.updateSettingCodesAreaOpen(true)">
+            View Setting Codes
+            <RightOutlined />
+          </div>
         </div>
       </div>
       <div class="dbr-setting-codes-area" v-show="settingsStore.shwoSettingCodesArea" @click.stop>
@@ -405,7 +385,7 @@ window.addEventListener("resize", () => {
             font-size: 16px;
           }
 
-          .dbr-colour-mode-desc {
+          .dbr-colour-mode-desc p {
             font-size: 14px;
             color: #aaaaaa;
             font-family: OpenSans-Regular;
@@ -419,21 +399,22 @@ window.addEventListener("resize", () => {
 
             .dbr-single,
             .dbr-multiple,
-            .dbr-best-speed,
+            .dbr-speed,
             .dbr-balance,
-            .dbr-best-coverage,
-            .dbr-interved,
-            .dbr-normal {
+            .dbr-coverage,
+            .dbr-inverted,
+            .dbr-normal,
+            .dbr-both {
               height: 40px;
               display: flex;
-              justify-content: center;
+              justify-content: space-around;
               align-items: center;
               background-color: #222;
               color: #ffffff;
               font-size: 16px;
               font-family: OpenSans-Regular;
               margin-right: 20px;
-              padding: 0 15px;
+              padding: 0 5px;
               white-space: nowrap;
               cursor: pointer;
 
@@ -449,10 +430,34 @@ window.addEventListener("resize", () => {
                   color: #ffffff !important;
                 }
               }
+
+              .dbr-radio {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 12px;
+                height: 12px;
+                border: 1px solid #ffffff;
+                border-radius: 50%;
+                outline: none;
+                cursor: pointer;
+                position: relative;
+              }
+
+              .dbr-radio:checked::before {
+                content: "";
+                position: absolute;
+                top: 1px;
+                left: 1px;
+                width: 8px;
+                height: 8px;
+                background-color: #ffffff;
+                border-radius: 50%;
+              }
             }
 
-            .dbr-interved,
-            .dbr-normal {
+            .dbr-inverted,
+            .dbr-normal,
+            .dbr-both {
               display: flex;
               padding-right: 0;
 
@@ -492,7 +497,7 @@ window.addEventListener("resize", () => {
               }
             }
 
-            .dbr-best-coverage {
+            .dbr-coverage {
               margin-right: 0;
             }
           }
@@ -536,8 +541,21 @@ window.addEventListener("resize", () => {
         font-size: 19px;
         line-height: 60px;
         text-align: right;
-        padding-right: 10px;
-        cursor: pointer;
+        padding: 0 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .dbr-upload-template {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+        }
+
+        .dbr-open-settings-view {
+          cursor: pointer;
+          font-family: OpenSans-Regular;
+        }
 
         @media (hover: hover) and (pointer: fine) {
           &:hover {

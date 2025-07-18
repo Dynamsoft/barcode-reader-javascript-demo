@@ -1,4 +1,4 @@
-import { BarcodeResultItem } from "dynamsoft-barcode-reader";
+import { BarcodeResultItem } from "dynamsoft-barcode-reader-bundle";
 import { defineStore } from "pinia";
 import { ParsedField } from "../types";
 
@@ -10,17 +10,21 @@ interface ParsedInfo {
 export const useCaptureImageStore = defineStore("captureImage", {
   state: (): {
     isDecoding: boolean;
+    isShowDlResultBox: boolean;
     isShowCaptureImagePage: boolean;
+    currentTemplate: string;
     currentSelectedImageFile: File | null;
     captureResult: Array<BarcodeResultItem>;
     parsedDLInfo: Array<ParsedInfo>;
   } => {
     return {
       isDecoding: false,
+      isShowDlResultBox: false,
       isShowCaptureImagePage: false,
       currentSelectedImageFile: null,
       captureResult: [],
       parsedDLInfo: [],
+      currentTemplate: "ReadSingleBarcode"
     };
   },
   actions: {
@@ -103,5 +107,11 @@ export const useCaptureImageStore = defineStore("captureImage", {
         this.$state.parsedDLInfo = oriParseInfo;
       }
     },
+    updateDlResultBoxVisibility(value: boolean) {
+      this.$state.isShowDlResultBox = value;
+    },
+    updateCurrentTemplate(value: string) {
+      this.$state.currentTemplate = value;
+    }
   },
 });

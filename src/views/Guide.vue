@@ -4,6 +4,8 @@ import { Router, useRouter } from "vue-router";
 import { useUseCaseStore } from "../stores/useCase";
 import { useIsShowGuideStore } from "../stores/isShowGuide";
 import { urlMap } from "../util";
+import { Checkbox } from "ant-design-vue";
+import { useCameraListStore } from "../stores/cameraList";
 import GuideOptionsInDesktop from "../components/Guide/GuideOptionsInDesktop.vue";
 import GuideOptionsInMobile from "../components/Guide/GuideOptionsInMobile.vue";
 import HeaderInMobile from "../components/Guide/HeaderInMobile.vue";
@@ -11,15 +13,22 @@ import HeaderInMobile from "../components/Guide/HeaderInMobile.vue";
 const useCaseStore = useUseCaseStore();
 const router: Router = useRouter();
 const isShowGuideStore = useIsShowGuideStore();
+const cameraListStore = useCameraListStore();
 
 onBeforeMount(() => {
   isShowGuideStore.updateIsShowGuide(true);
+  cameraListStore.updateHasCamera(true);
 });
 
 const startScan = async () => {
   await router.push(urlMap[useCaseStore.useCaseName] + location.search);
   isShowGuideStore.updateIsShowGuide(false);
 };
+
+const toggleUseDemoVideo = () => {
+  cameraListStore.updateIsUseDemoVideo(!cameraListStore.isUseDemoVideo)
+}
+
 </script>
 
 <template>
@@ -46,6 +55,11 @@ const startScan = async () => {
       >
         START SCAN
       </button>
+    </div>
+    <div class="dbr-use-dmeo-video-checkbox">
+      <!-- <input type="checkbox" id="useDemoVideo"></input>
+      <label for="useDemoVideo"><span>Use Demo Video</span></label> -->
+      <Checkbox style="color: #fe8e14;" v-model="cameraListStore.isUseDemoVideo" @change="toggleUseDemoVideo">Use Demo Video</Checkbox>
     </div>
   </div>
 </template>
@@ -117,6 +131,23 @@ const startScan = async () => {
       }
     }
   }
+
+  .dbr-use-dmeo-video-checkbox {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+
+    :deep(.ant-checkbox-checked .ant-checkbox-inner) {
+      background-color: #fe8e14 !important;
+      border-color: #fe8e14 !important;
+    }
+
+    :deep(.ant-checkbox-checked .ant-checkbox-inner::after) {
+      border-color: white !important;
+    }
+  }
+
   @media (max-width: 980px) {
     height: 93%;
     display: block;

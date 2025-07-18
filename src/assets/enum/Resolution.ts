@@ -1,4 +1,4 @@
-import { Resolution as VideoResolution } from "dynamsoft-camera-enhancer";
+import { Resolution as VideoResolution } from "dynamsoft-barcode-reader-bundle";
 
 export enum EnumResolution {
   HD = "HD",

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from "vue";
-import { BarcodeResultItem } from "dynamsoft-barcode-reader";
+import { BarcodeResultItem } from "dynamsoft-barcode-reader-bundle";
 import { useUseCaseStore } from "../../stores/useCase";
 import { useCaptureImageStore } from "../../stores/captureImage";
 
