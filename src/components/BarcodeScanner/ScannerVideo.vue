@@ -210,13 +210,7 @@ onMounted(async () => {
         isMountFocusBox.value = true;
       }
 
-      // await props.udpateSettings();
-      /**
-        Why do we need to pass a "1d2d"? Since the settings and switching of useCase may be performed before the camera is opened, 
-        to ensure the correct barcode format settings, we need to make sure that the setUseCaseBarcodeFormat logic is executed. 
-        There is room for optimization in this logic.
-      */
-      await props.eventOnUseCaseChange("1d2d");
+      await props.udpateSettings();
 
       cameraView.setScanLaserVisible(settingsStore.zonalScan);
       cameraView.setScanRegionMaskVisible(true);
@@ -238,6 +232,12 @@ onMounted(async () => {
       cameraListStore.updateCurrentCamera(currentCamera);
       cameraListStore.updateCameraResolution(currentResolution);
 
+      /**
+        Why do we need to pass a "1d2d"? Since the settings and switching of useCase may be performed before the camera is opened, 
+        to ensure the correct barcode format settings, we need to make sure that the setUseCaseBarcodeFormat logic is executed. 
+        There is room for optimization in this logic.
+      */
+      await props.eventOnUseCaseChange("1d2d");
       if (captureImageStore.isShowCaptureImagePage) {
         cameraEnhancer.close();
         cvRouter.stopCapturing();
