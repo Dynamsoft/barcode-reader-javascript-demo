@@ -1,19 +1,15 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { useIsShowGuideStore } from "../stores/isShowGuide";
+import { useDeviceType } from "../hooks/useDeviceType";
 
-const isMobile = ref(document.body.clientWidth < 980);
-window.addEventListener("resize", () => {
-  isMobile.value = document.body.clientWidth < 980;
-});
-
+const deviceType = useDeviceType();
 const isShowGuideStore = useIsShowGuideStore();
 </script>
 
 <template>
-  <div class="dbr-copyright" v-show="(!isShowGuideStore.isShowGuide && !isMobile) || isShowGuideStore.isShowGuide">
+  <footer class="dbr-copyright" v-show="(!isShowGuideStore.isShowGuide && deviceType === 'pc') || isShowGuideStore.isShowGuide">
     <div class="dbr-supported-browsers-info" v-show="isShowGuideStore.isShowGuide">
-      Supported Browsers: Safari v14+, Chrome v78+, Firefox v62+ and Edge v79+ on Desktop/Android/iOS.
+      Supported Browsers: Safari v14+, Chrome v78+, Firefox v68+ and Edge v79+ on Desktop/Android/iOS.
     </div>
     <a href="https://www.dynamsoft.com/" target="_blank" class="logo">
       <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="logo" />
@@ -34,21 +30,9 @@ const isShowGuideStore = useIsShowGuideStore();
       </div>
     </div>
     <p class="dbr-product-info-in-mobile-part1">
-      Using Dynamsoft Barcode Reader JavaScript Edition, you can turn any device with a camera into an enterprise-grade
-      barcode scanner with high-speed performance and flexible customization to suit a wide range of use cases. Try our
-      JavaScript barcode scanner demo to see it in action!
+      With Dynamsoft Barcode Reader JavaScript Edition, turn any camera-equipped device into a fast, customizable enterprise-grade barcode scanner. Try our demo to see it in action!
     </p>
-    <p class="dbr-product-info-in-mobile-part2">
-      Supported Browsers: Safari v14+, Chrome v78+, Firefox v62+ and Edge v79+ on Desktop/Android/iOS.
-    </p>
-    <p class="dbr-product-info-in-mobile-part3">
-      This site is protected by reCAPTCHA and the Google
-      <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a>
-      and
-      <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a>
-      apply.
-    </p>
-  </div>
+  </footer>
 </template>
 
 <style scoped lang="less">
@@ -72,7 +56,7 @@ const isShowGuideStore = useIsShowGuideStore();
       display: none;
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       display: none;
     }
   }
@@ -84,18 +68,18 @@ const isShowGuideStore = useIsShowGuideStore();
       height: 100%;
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       display: none;
     }
   }
 
   .dbr-copyright-info {
-    color: #fff;
+    color: #cccccc;
     margin-left: 3.3%;
+    font-size: 14px;
 
     a {
-      color: #fe8e14;
-      text-decoration: none;
+      color: #cccccc;
       background-color: transparent;
       outline: none;
       cursor: pointer;
@@ -111,7 +95,7 @@ const isShowGuideStore = useIsShowGuideStore();
       font-family: "OpenSans-Regular";
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       display: none;
     }
   }
@@ -144,9 +128,9 @@ const isShowGuideStore = useIsShowGuideStore();
     }
   }
 
-  @media (max-width: 980px) {
+  @media (max-width: 979.5px) {
     display: block;
-    height: 12vh;
+    height: 70px;
     background-color: #212121;
     padding: 10px 2.9vw 10px 5.3vw;
     overflow: auto;

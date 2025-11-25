@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { Ref, ref, reactive, computed, watch } from "vue";
+import { reactive, watch } from "vue";
 import { Popover, Checkbox, ConfigProvider } from "ant-design-vue";
 import { usePopoverOpenStore } from "../../stores/popoverOpen";
 import { DownOutlined, UpOutlined } from "@ant-design/icons-vue";
 import { useBarcodeFormatStore } from "../../stores/barcodeFormat";
-import { useUseCaseStore } from "../../stores/useCase";
 import { CheckboxChangeEvent } from "ant-design-vue/es/checkbox/interface";
+import { useDeviceType } from "../../hooks/useDeviceType";
 
-type PopoverPlacement = "rightTop" | "top";
 type BarcodeCategory = "oneD" | "twoD" | "other";
 type CheckboxState = "indeterminate" | "unCheck" | "checkAll";
 
@@ -19,10 +18,7 @@ interface CheckboxStatus {
 
 const popoverOpenStore = usePopoverOpenStore();
 const barcodeFormatStore = useBarcodeFormatStore();
-const useCaseStore = useUseCaseStore();
-
-// Currently, we only allow users to change the selected Barcode Formats for the General use case
-const isFormatChangeEnabled = computed(() => ["1d", "2d", "1d2d"].includes(useCaseStore.useCaseName));
+const deviceType = useDeviceType();
 
 /**
  * Determines the state of checkboxes for a given barcode category.
@@ -43,7 +39,7 @@ const checkedBarcodeFormatState = (type: BarcodeCategory): CheckboxState => {
  * Initializes the checkbox state for all barcode categories.
  * @returns {Record<BarcodeCategory, CheckboxStatus>} A map of barcode categories to their checkbox states.
  */
-const initializeCheckboxState = () => {
+const initializeCheckboxState = (): Record<BarcodeCategory, CheckboxStatus> => {
   const types: BarcodeCategory[] = ["oneD", "twoD", "other"];
   const state: Record<BarcodeCategory, CheckboxStatus> = {} as Record<BarcodeCategory, CheckboxStatus>;
 
@@ -61,21 +57,12 @@ const initializeCheckboxState = () => {
 
 const checkboxState = reactive(initializeCheckboxState());
 
-const placement: Ref<PopoverPlacement> = ref(document.body.clientWidth > 980 ? "rightTop" : "top");
-const shouldShowArrow = ref(document.body.clientWidth < 980);
-
-window.addEventListener("resize", () => {
-  const isWideScreen = document.body.clientWidth > 980;
-  placement.value = isWideScreen ? "rightTop" : "top";
-  shouldShowArrow.value = !isWideScreen;
-});
-
 const updatePopoverStore = (e: Event) => {
   // Due to the fact that the first click under Mobile will also trigger a mouseenter event, the placement value is used to determine whether it is a mobile and ignore the mouseenter event triggering under Mobile
-  if (e.type === "mouseenter" && placement.value !== "top") {
-    popoverOpenStore.updatePopoverStore(false, true, false);
-  } else if (e.type === "click" && placement.value === "top") {
-    popoverOpenStore.updatePopoverStore(false, !popoverOpenStore.formatSelector, false);
+  if (e.type === "mouseenter" && deviceType.value === "pc") {
+    popoverOpenStore.updatePopoverStore(true, false);
+  } else if (e.type === "click" && deviceType.value === "mobile") {
+    popoverOpenStore.updatePopoverStore(!popoverOpenStore.formatSelector, false);
   }
 };
 
@@ -106,7 +93,7 @@ const checkAllCheckOrAllUnCheck = (item: string, type: BarcodeCategory) => {
 
 // Watch for changes in barcodeFormatStore and update checkbox states
 watch(
-  [() => barcodeFormatStore.oneD, () => barcodeFormatStore.twoD, () => barcodeFormatStore.other],
+  () => barcodeFormatStore.$state,
   () => {
     updateCheckboxStateOnUseCaseChange();
   },
@@ -129,20 +116,41 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
 </script>
 
 <template>
-  <Popover overlayClassName="dbr-format-selector-popover" :open="popoverOpenStore.formatSelector && isFormatChangeEnabled" :placement="placement" :arrow="shouldShowArrow">
+  <Popover overlayClassName="dbr-format-selector-popover" :open="popoverOpenStore.formatSelector && barcodeFormatStore.isFormatChangeEnabled" :placement="deviceType === 'pc' ? 'rightTop' : 'bottomLeft'" :arrow="false">
     <div class="dbr-format-selector" :style="{
-      backgroundColor: !isFormatChangeEnabled ? 'rgb(77, 77, 77)' : '#000000',
-      cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
+      backgroundColor: !barcodeFormatStore.isFormatChangeEnabled ? 'rgb(77, 77, 77)' : '#000000',
+      cursor: !barcodeFormatStore.isFormatChangeEnabled ? 'not-allowed' : 'pointer',
     }" @click.stop="updatePopoverStore" @mouseenter="updatePopoverStore">
-      <img class="dbr-barcodes-icon" src="../../assets/image/icon-web-barcodes.svg" alt="barcodes" v-show="isFormatChangeEnabled" />
-      <img class="dbr-barcodes-icon" src="../../assets/image/icon-web-barcodes-disable.svg" alt="barcodes-disable" v-show="!isFormatChangeEnabled" />
+      <svg class="dbr-barcodes-icon" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" :fill="barcodeFormatStore.isFormatChangeEnabled ? '#FEA543' : 'grey'" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 28 28.1" style="enable-background:new 0 0 28 28.1;" xml:space="preserve">
+        <g>
+          <rect x="2.1" y="2" style="fill: none;" width="3.9" height="3.5" />
+          <rect x="21.7" y="2" style="fill: none;" width="3.9" height="3.5" />
+          <path d="M0.1,1v5.5c0,0.6,0.4,1,1,1H7c0.6,0,1-0.4,1-1V1c0-0.6-0.4-1-1-1H1.1C0.5,0,0.1,0.4,0.1,1z M6,5.5H2.1V2H6V5.5z" />
+          <path d="M19.7,1v5.5c0,0.6,0.4,1,1,1h5.9c0.6,0,1-0.4,1-1V1c0-0.6-0.4-1-1-1h-5.9C20.2,0,19.7,0.4,19.7,1z M25.6,5.5h-3.9V2h3.9V5.5z" />
+          <path d="M9.9,1v4.6c0,0.6,0.4,1,1,1s1-0.4,1-1V2h4.9c0.6,0,1-0.4,1-1s-0.4-1-1-1h-5.9C10.3,0,9.9,0.4,9.9,1z" />
+          <path d="M15.1,12.2c0.6,0,1-0.4,1-1V4.7c0-0.6-0.4-1-1-1c-0.6,0-1,0.4-1,1v6.5C14.1,11.7,14.6,12.2,15.1,12.2z" />
+          <path d="M8.2,11.2c0-0.6-0.4-1-1-1H1.1c-0.6,0-1,0.4-1,1s0.4,1,1,1h6.2C7.8,12.2,8.2,11.7,8.2,11.2z" />
+          <path d="M26.6,10.2h-6.2c-0.6,0-1,0.4-1,1s0.4,1,1,1h6.2c0.6,0,1-0.4,1-1S27.2,10.2,26.6,10.2z" />
+          <path d="M6.4,15.5c0-0.6-0.4-1-1-1s-1,0.4-1,1v6.5c0,0.6,0.4,1,1,1s1-0.4,1-1V15.5z" />
+          <path d="M1.1,27.6c0.6,0,1-0.4,1-1V15.5c0-0.6-0.4-1-1-1s-1,0.4-1,1v11.1C0.1,27.1,0.5,27.6,1.1,27.6z" />
+          <path d="M10.3,15.5c0-0.6-0.4-1-1-1s-1,0.4-1,1v6.5c0,0.6,0.4,1,1,1s1-0.4,1-1V15.5z" />
+          <path d="M13.3,14.5c-0.6,0-1,0.4-1,1v11.1c0,0.6,0.4,1,1,1s1-0.4,1-1V15.5C14.3,14.9,13.8,14.5,13.3,14.5z" />
+          <path d="M16.3,15.5v6.5c0,0.6,0.4,1,1,1s1-0.4,1-1v-6.5c0-0.6-0.4-1-1-1S16.3,14.9,16.3,15.5z" />
+          <path d="M22.2,15.5c0-0.6-0.4-1-1-1s-1,0.4-1,1v6.5c0,0.6,0.4,1,1,1s1-0.4,1-1V15.5z" />
+          <path d="M5.4,24.6c-0.6,0-1,0.4-1,1v0.9c0,0.6,0.4,1,1,1s1-0.4,1-1v-0.9C6.4,25.1,5.9,24.6,5.4,24.6z" />
+          <path d="M9.3,24.6c-0.6,0-1,0.4-1,1v0.9c0,0.6,0.4,1,1,1s1-0.4,1-1v-0.9C10.3,25.1,9.9,24.6,9.3,24.6z" />
+          <path d="M16.3,26.6c0,0.6,0.4,1,1,1s1-0.4,1-1v-0.9c0-0.6-0.4-1-1-1s-1,0.4-1,1V26.6z" />
+          <path d="M21.2,24.6c-0.6,0-1,0.4-1,1v0.9c0,0.6,0.4,1,1,1s1-0.4,1-1v-0.9C22.2,25.1,21.8,24.6,21.2,24.6z" />
+          <path d="M25.6,15.5v11.1c0,0.6,0.4,1,1,1s1-0.4,1-1V15.5c0-0.6-0.4-1-1-1S25.6,14.9,25.6,15.5z" />
+        </g>
+      </svg>
       <label class="dbr-barcodes-text-in-desktop" :style="{
-        color: !isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
-        cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
+        color: !barcodeFormatStore.isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
+        cursor: !barcodeFormatStore.isFormatChangeEnabled ? 'not-allowed' : 'pointer',
       }">Barcodes Format</label>
       <label class="dbr-barcodes-text-in-mobile" :style="{
-        color: !isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
-        cursor: !isFormatChangeEnabled ? 'not-allowed' : 'pointer',
+        color: !barcodeFormatStore.isFormatChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff',
+        cursor: !barcodeFormatStore.isFormatChangeEnabled ? 'not-allowed' : 'pointer',
       }">Format</label>
     </div>
     <template #content>
@@ -238,12 +246,12 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
     width: 28px;
     height: 28px;
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       width: 18px;
       height: 18px;
     }
 
-    @media (max-height: 500px) and (max-width: 980px) {
+    @media (max-height: 500px) and (max-width: 979.5px) {
       display: none;
     }
   }
@@ -259,7 +267,7 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
   .dbr-barcodes-text-in-desktop {
     margin-top: 5px;
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       display: none;
     }
   }
@@ -272,8 +280,8 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
     }
   }
 
-  @media (max-width: 980px) {
-    width: 25%;
+  @media (max-width: 979.5px) {
+    flex: 1;
   }
 }
 
@@ -323,11 +331,11 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
               font-family: "OpenSans-Regular";
               cursor: pointer;
 
-              @media (max-width: 980px) and (orientation: portrait) {
+              @media (max-width: 979.5px) and (orientation: portrait) {
                 font-size: 12px;
               }
 
-              @media (max-width: 980px) and (orientation: landscape) {
+              @media (max-width: 979.5px) and (orientation: landscape) {
                 font-size: 12px;
               }
             }
@@ -343,11 +351,11 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
               font-family: "OpenSans-Regular";
               cursor: pointer;
 
-              @media (max-width: 980px) and (orientation: portrait) {
+              @media (max-width: 979.5px) and (orientation: portrait) {
                 font-size: 12px;
               }
 
-              @media (max-width: 980px) and (orientation: landscape) {
+              @media (max-width: 979.5px) and (orientation: landscape) {
                 font-size: 12px;
               }
             }
@@ -388,11 +396,11 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
                 font-family: OpenSans-Regular;
                 font-size: 16px;
 
-                @media (max-width: 980px) and (orientation: portrait) {
+                @media (max-width: 979.5px) and (orientation: portrait) {
                   font-size: 14px;
                 }
 
-                @media (max-width: 980px) and (orientation: landscape) {
+                @media (max-width: 979.5px) and (orientation: landscape) {
                   font-size: 12px !important;
                 }
               }
@@ -426,23 +434,23 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
                 transform: rotate(45deg);
               }
 
-              @media (max-width: 980px) and (orientation: portrait) {
+              @media (max-width: 979.5px) and (orientation: portrait) {
                 width: 90%;
               }
 
-              @media (max-width: 980px) and (orientation: landscape) {
+              @media (max-width: 979.5px) and (orientation: landscape) {
                 width: 120px;
                 height: 30px;
               }
             }
 
-            @media (max-width: 980px) and (orientation: portrait) {
+            @media (max-width: 979.5px) and (orientation: portrait) {
               width: calc(100% / 2);
               margin-top: 10px;
               line-height: unset;
             }
 
-            @media (max-width: 980px) and (orientation: landscape) {
+            @media (max-width: 979.5px) and (orientation: landscape) {
               margin-top: 10px;
               line-height: unset;
             }
@@ -450,12 +458,12 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
         }
 
         .dbr-1d-barcodes-items {
-          :nth-child(5) {
+          :nth-child(8) {
             .dbr-item-inner {
               span {
                 font-size: 14px;
 
-                @media (max-width: 980px) and (orientation: portrait) {
+                @media (max-width: 979.5px) and (orientation: portrait) {
                   font-size: 12px;
                 }
               }
@@ -469,12 +477,12 @@ const toggleFormatListOpen = (type: BarcodeCategory) => {
         margin-top: 30px;
       }
 
-      @media (max-width: 980px) and (orientation: portrait) {
+      @media (max-width: 979.5px) and (orientation: portrait) {
         width: 300px;
         height: 400px;
       }
 
-      @media (max-width: 980px) and (orientation: landscape) {
+      @media (max-width: 979.5px) and (orientation: landscape) {
         width: 500px;
         height: 220px;
       }

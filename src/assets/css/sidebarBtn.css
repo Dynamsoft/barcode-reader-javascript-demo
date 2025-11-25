@@ -28,13 +28,13 @@
   cursor: pointer;
 }
 
-@media (min-width: 981px), screen and (max-width: 980px) and (orientation: landscape) {
+@media (min-width: 981px), screen and (max-width: 979.5px) and (orientation: landscape) {
   .sidebarBtn label {
     font-size: 14px;
   }
 }
 
-@media screen and (max-width: 980px) and (orientation: landscape) {
+@media screen and (max-width: 979.5px) and (orientation: landscape) {
   .sidebarBtn label {
     transform: scale(0.7);
     font-size: 14px;
@@ -42,7 +42,7 @@
 }
 
 /* mobile */
-@media screen and (max-width: 980px) and (orientation: portrait) {
+@media screen and (max-width: 979.5px) and (orientation: portrait) {
   .sidebarBtn label {
     font-size: 14px;
     transform: scale(0.7);

@@ -9,10 +9,9 @@ export const useSettingsStore = defineStore("settings", {
     playSound: boolean;
     zonalScan: boolean;
     singleOrMulti: SingleOrMulti;
-    scanMode: ScanMode;
     colourMode: ColourMode;
     autoZoom: boolean;
-    shwoSettingCodesArea: boolean;
+    resultTooltip: boolean;
     isCollectImg: boolean;
     isLocalized: boolean;
   } => {
@@ -25,21 +24,17 @@ export const useSettingsStore = defineStore("settings", {
     return {
       playSound: false,
       zonalScan: true,
-      singleOrMulti: "Single",
-      scanMode: "Speed",
-      colourMode: "Both",
       autoZoom: false,
-      shwoSettingCodesArea: false,
-      isCollectImg,
+      resultTooltip: false,
       isLocalized: false,
+      singleOrMulti: "Single",
+      colourMode: "Both",
+      isCollectImg,
     };
   },
   actions: {
     updateSingleOrMulti(value: SingleOrMulti) {
       this.$state.singleOrMulti = value;
-    },
-    updateScanMode(value: ScanMode) {
-      this.$state.scanMode = value;
     },
     updateColourMode(value: ColourMode) {
       this.$state.colourMode = value;
@@ -47,20 +42,20 @@ export const useSettingsStore = defineStore("settings", {
     updateAutoZoom(value: boolean) {
       this.$state.autoZoom = value;
     },
+    updateResultTooltip(value: boolean) {
+      this.$state.resultTooltip = value;
+    },
     updatePlaySound(value: boolean) {
       this.$state.playSound = value;
     },
     updateZonalScan(value: boolean) {
       this.$state.zonalScan = value;
     },
-    updateSettingCodesAreaOpen(value: boolean) {
-      this.$state.shwoSettingCodesArea = value;
-    },
     updateIsCollectImg(_: boolean) {
       this.$state.isCollectImg = false;
     },
     updateIsLocalized(value: boolean) {
       this.$state.isLocalized = value;
-    },
+    }
   },
 });

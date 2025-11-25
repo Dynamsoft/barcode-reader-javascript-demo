@@ -1,12 +1,13 @@
 <script setup lang="ts">
+
 </script>
 
 <template>
-  <div class="dbr-header-in-mobile">
+  <header class="dbr-header-in-mobile">
     <a href="https://www.dynamsoft.com/" target="_blank" class="logo">
-      <img src="../../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="logo" />
+      <img src="../assets/image/logo-dynamsoft-blackBg-190x47.png" alt="logo" />
     </a>
-  </div>
+  </header>
 </template>
 
 <style scoped lang="less">
@@ -14,10 +15,10 @@
   width: 100%;
   height: 7%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  position: absolute;
-  top: 0;
   background-color: #222222;
+  padding-right: 35px;
 
   .logo {
     margin-left: 15px;

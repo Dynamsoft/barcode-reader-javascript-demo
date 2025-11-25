@@ -16,94 +16,18 @@ export function getDate() {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
-export function getValueByKey(obj: object, value: string) {
-  return Object.entries(obj).find(([_, val]) => val === value)?.[0];
-}
+export type ParsedField = Array<
+  Array<{
+    FieldName: string;
+    Value?: string;
+    ChildFields?: ParsedField;
+  }>
+>;
 
-// Check if file uploaded is an image
-export const isImageFile = (type: string): string | boolean => {
-  const _imageType = type.split("/")[1];
-  if(["gif", "tiff", "pdf"].includes(_imageType)) {
-    return "Image type not supported!";
-  }
-  if(!type.startsWith("image/")) {
-    return "File is not an image!"
-  }
-  return true;
-};
+export type ExtendedMediaTrackCapabilities = MediaTrackCapabilities & { torch?: boolean; focusMode?: any };
 
-const useCaseBarcodeFormatMap: {
-  "1d": string[];
-  "2d": string[];
-  "1d2d": string[];
-  vin: string[];
-  dl: string[];
-  dpm: string[];
-} = {
-  "1d": [
-    "Code 11",
-    "Code 39",
-    "Code 128",
-    "Code 93",
-    "Codebar",
-    "EAN 13",
-    "EAN 8",
-    "UPC A",
-    "UPC E",
-    "Industrial 25",
-    "Code 39 Extended",
-    "ITF",
-    "MSI Code",
-  ],
-  "2d": ["QR Code", "PDF417", "Data Matrix"],
-  "1d2d": [
-    "Code 11",
-    "Code 39",
-    "Code 128",
-    "Code 93",
-    "Codebar",
-    "EAN 13",
-    "EAN 8",
-    "UPC A",
-    "UPC E",
-    "Industrial 25",
-    "Code 39 Extended",
-    "ITF",
-    "MSI Code",
-    "QR Code",
-    "PDF417",
-    "Data Matrix",
-  ],
-  vin: [
-    "Code 39",
-    "Code 128",
-    "Code 93",
-    "Code 39 Extended",
-    "Codebar",
-    "Industrial 25",
-    "ITF",
-    "QR Code",
-    "Data Matrix",
-  ],
-  dl: ["PDF417"],
-  dpm: ["Data Matrix"],
-};
+const searchParams = new URLSearchParams(location.search);
+const isDebug = searchParams.get("debug") === "true";
+const templateUrl = searchParams.get("template");
 
-const templateMap = {
-  "Speed": "ReadSingleBarcode",
-  Balance: "ReadBarcodes_Balance",
-  "Coverage": "ReadBarcodes_ReadRateFirst",
-};
-
-const isDebug = location.search.includes("debug=true");
-
-const urlMap = {
-  "1d": "common-oned",
-  "2d": "common-twod",
-  "1d2d": "common-oned-twod",
-  vin: "vin",
-  dl: "driver-license",
-  dpm: "dpm",
-};
-
-export { useCaseBarcodeFormatMap, templateMap, isDebug, urlMap };
+export { isDebug, templateUrl };

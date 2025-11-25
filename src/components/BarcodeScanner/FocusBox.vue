@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, Ref } from "vue";
+import { onMounted, reactive, ref, useTemplateRef } from "vue";
 
 const focusInfo: {
   focusCvsTop: string;
@@ -12,7 +12,7 @@ const focusInfo: {
 });
 const isShowFocusBox = ref(true);
 const isShowText = ref(true);
-const focusCvs: Ref<HTMLCanvasElement | null> = ref(null);
+const focusCvs = useTemplateRef("focusCvs");
 
 // Draw and show the focus box on the canvas for 3 seconds and hides the focus box afterwards
 const createCvsAndDrawBorder = () => {
@@ -84,7 +84,6 @@ onMounted(() => {
   <div
     class="dbr-focus-box"
     :style="{ top: focusInfo.focusCvsTop, left: focusInfo.focusCvsLeft }"
-    ref="focusBox"
     v-show="isShowFocusBox"
   >
     <canvas class="dbr-focus-cvs" ref="focusCvs" width="68" height="68"></canvas>

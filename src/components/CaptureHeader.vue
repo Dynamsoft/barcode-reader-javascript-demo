@@ -1,54 +1,29 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance } from "vue";
 import CameraSelector from "./BarcodeScanner/CameraSelector.vue";
-import HeaderRightPart from "./HeaderRightPart.vue";
+import { message } from "ant-design-vue";
 import { useSettingsStore } from "../stores/settings";
-import { useUseCaseStore } from "../stores/useCase";
+import { useScanOptionsStore } from "../stores/scanOptions";
 import { useCaptureImageStore } from "../stores/captureImage";
-import { CapturedResult, ParsedResultItem, OriginalImageResultItem, CaptureVisionRouter } from "dynamsoft-barcode-reader-bundle";
-import { ParsedDataFailed } from "../types";
-import { useCameraListStore } from "../stores/cameraList";
+import { CapturedResult, OriginalImageResultItem, CaptureVisionRouter, ParsedResult, CodeParser, ParsedResultItem } from "dynamsoft-barcode-reader-bundle";
 
 const _window = window as any;
 
 const settingsStore = useSettingsStore();
-const useCaseStore = useUseCaseStore();
+const scanOptionsStore = useScanOptionsStore();
 const captureImageStore = useCaptureImageStore();
-const cameraListStore = useCameraListStore();
-const currentInstance: any = getCurrentInstance();
 
 const switchSoundPlay = () => {
   settingsStore.updatePlaySound(!settingsStore.playSound);
 };
 
-const currentModeName = computed(() => {
-  if (useCaseStore.isGeneral) {
-    return "General";
-  } else if (useCaseStore.useCaseName === "vin") {
-    return "Vehicle Identification Number (VIN)";
-  } else if (useCaseStore.useCaseName === "dl") {
-    return "USA/CAN/ZA Driver's License";
-  } else if (useCaseStore.useCaseName === "dpm") {
-    return "DPM Codes";
-  }
-});
-
 // Read barcodes from an image file.s
 const readImage = async (e: Event) => {
-  currentInstance.proxy.$message.loading({
+  message.loading({
     content: "Decoding...",
     key: "decode",
   });
   let captureResult: CapturedResult | null = null;
-  let parsedData: ParsedResultItem | ParsedDataFailed | {} = {};
-
   try {
-    // Check if file chosen is an image
-    // const _checkImageFile = isImageFile((e.target as HTMLInputElement).files![0]?.type);
-    // if (_checkImageFile !== true) {
-    //   throw new Error(_checkImageFile as string);
-    // }
-
     captureImageStore.updateDecodingState(true);
 
     // Stop capturing and hide scan laser if camera is open
@@ -60,28 +35,45 @@ const readImage = async (e: Event) => {
 
     // Capture and process the image
     const cvRouter = _window.cvRouter as CaptureVisionRouter;
-    captureResult = await cvRouter.capture((e.target as HTMLInputElement).files![0], captureImageStore.currentTemplate);
+    captureResult = await cvRouter.capture((e.target as HTMLInputElement).files![0], scanOptionsStore.currentScanOption.templateNameForReadRate);
 
     // Handle the case where no barcode result is found
     if (!captureResult.decodedBarcodesResult?.barcodeResultItems) {
       captureImageStore.updateDLJsonString();
     }
 
-    // Parse Driver License barcodes
-    if (captureResult.decodedBarcodesResult?.barcodeResultItems && useCaseStore.useCaseName === "dl") {
+    // Parse Driver License, VIN barcodes
+    let parsedResult: ParsedResult & { text: string } | null = null;
+    if (captureResult.decodedBarcodesResult?.barcodeResultItems) {
+      let parsedResultItem;
       try {
-        parsedData = await _window.parser.parse(captureResult.decodedBarcodesResult.barcodeResultItems[0].bytes);
+        parsedResultItem = await (_window.parser as CodeParser).parse(captureResult.decodedBarcodesResult.barcodeResultItems[0].bytes);
       } catch (ex: any) {
-        (parsedData as ParsedDataFailed).exception = true;
-        (parsedData as ParsedDataFailed).message = ex.message || ex;
-        (parsedData as ParsedDataFailed).text = captureResult.decodedBarcodesResult.barcodeResultItems[0].text;
+        parsedResult = {
+          errorCode: -90003,
+          errorString: ex.message,
+          originalImageHashId: captureResult.originalImageHashId,
+          originalImageTag: captureResult.originalImageTag,
+          text: captureResult.decodedBarcodesResult.barcodeResultItems[0].text,
+          parsedResultItems: []
+        }
+      } finally {
+        if (!parsedResult) {
+          parsedResult = {
+            errorCode: 0,
+            errorString: "Successful.",
+            originalImageHashId: captureResult.originalImageHashId,
+            originalImageTag: captureResult.originalImageTag,
+            text: captureResult.decodedBarcodesResult.barcodeResultItems[0].text,
+            parsedResultItems: [parsedResultItem as ParsedResultItem]
+          }
+        }
       }
-
-      captureImageStore.updateDLJsonString(
-        (parsedData as ParsedDataFailed).exception
-          ? JSON.stringify(parsedData)
-          : (parsedData as ParsedResultItem).jsonString
-      );
+      if(scanOptionsStore.currentScanOption.name === "Drivers License (PDF417)") {
+        captureImageStore.updateDLJsonString(parsedResult);
+      } else if(scanOptionsStore.currentScanOption.name === "VIN") {
+        captureImageStore.updateVINJsonString(parsedResult);
+      }
     }
     captureImageStore.updateCaptureResult(captureResult.decodedBarcodesResult?.barcodeResultItems);
     captureImageStore.updateSelectedFile((e.target as HTMLInputElement).files![0]);
@@ -90,44 +82,40 @@ const readImage = async (e: Event) => {
     _window.cameraEnhancer?.close();
     captureImageStore.captureImagePageVisible(true);
     if (captureResult.decodedBarcodesResult?.barcodeResultItems?.length) {
-      currentInstance.proxy.$message.success({
+      message.success({
         content: "Barcode decoded!",
         key: "decode",
+        duration: 1
       });
     } else {
-      currentInstance.proxy.$message.warning({
+      message.warning({
         content: "No barcodes found!",
         key: "decode",
+        duration: 1
       });
     }
   } catch (ex: any) {
-    currentInstance.proxy.$message.error({
+    message.error({
       content: ex.message || ex,
       key: "decode",
+      duration: 1
     });
     if (!captureImageStore.isShowCaptureImagePage) {
-      _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
-      _window.cameraView?.setScanLaserVisible(!cameraListStore.isUseDemoVideo);
+      _window.cvRouter.startCapturing(scanOptionsStore.currentScanOption.templateName);
+      _window.cameraView?.setScanLaserVisible(true);
     }
   } finally {
     captureImageStore.updateDecodingState(false);
     (e.target as HTMLInputElement).value = "";
 
     if (
-      ["vin", "dl"].includes(useCaseStore.useCaseName) &&
+      ["VIN", "Drivers License (PDF417)"].includes(scanOptionsStore.currentScanOption.name) &&
       settingsStore.isCollectImg &&
-      ((captureResult && captureResult.items.length <= 1) || (parsedData as ParsedDataFailed).exception)
+      ((captureResult && captureResult.items.length <= 1) || !(captureResult?.parsedResult?.errorCode === 0))
     ) {
       const originalImage = captureResult?.items.find((item) => item.type === 1) as OriginalImageResultItem;
       if (!originalImage) return;
     }
-  }
-};
-
-const preventDefault = (e: Event) => {
-  if (!_window.cvRouter) {
-    e.preventDefault();
-    currentInstance.proxy.$message.warn("Capture Vision Router is Loading...");
   }
 };
 </script>
@@ -136,17 +124,40 @@ const preventDefault = (e: Event) => {
   <div class="dbr-scanner-header">
     <CameraSelector />
     <label class="dbr-upload-image">
-      <img src="../assets/image/Images-add.svg" alt="image" />
-      <input type="file" id="dbr-image-read" accept=".jpg,.jpeg,.ico,.gif,.svg,.webp,.png,.bmp" class="dbr-image-read" @click="preventDefault" @change="readImage" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+        <g id="Images-Photography_Image-Files_image-file-add" data-name="Images-Photography / Image-Files / image-file-add" transform="translate(-376.074 -2192.76)">
+          <g id="Group_184" data-name="Group 184" transform="translate(377.074 2193.76)">
+            <g id="image-file-add">
+              <path id="Oval_118" data-name="Oval 118" d="M383.857,2204.325a2.782,2.782,0,1,0-2.783-2.782A2.782,2.782,0,0,0,383.857,2204.325Z" transform="translate(-375.509 -2191.804)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              <path id="Shape_876" data-name="Shape 876" d="M392.657,2204.907l-.863-1.38a.7.7,0,0,0-1.18,0l-3.672,5.874-1.5-2.4a.7.7,0,0,0-1.18,0l-4.193,6.709h6.956" transform="translate(-375.9 -2190.066)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              <path id="Shape_877" data-name="Shape 877" d="M390.987,2225.76H378.465a1.392,1.392,0,0,1-1.391-1.391v-29.217a1.392,1.392,0,0,1,1.391-1.391H396.96a1.394,1.394,0,0,1,.984.407l5.157,5.157a1.39,1.39,0,0,1,.408.984v5.973" transform="translate(-377.074 -2193.76)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              <path id="Oval_119" data-name="Oval 119" d="M396.422,2221.456a8.348,8.348,0,1,0-8.348-8.348A8.347,8.347,0,0,0,396.422,2221.456Z" transform="translate(-372.77 -2189.456)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              <path id="Shape_878" data-name="Shape 878" d="M394.074,2207.76v8.348" transform="translate(-370.422 -2188.282)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              <path id="Shape_879" data-name="Shape 879" d="M399.422,2210.76h-8.348" transform="translate(-371.596 -2187.108)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </g>
+          </g>
+        </g>
+      </svg>
+      <input type="file" id="dbr-image-read" accept=".jpg,.jpeg,.ico,.gif,.svg,.webp,.png,.bmp" class="dbr-image-read" @change="readImage" />
     </label>
     <div class="dbr-sound" @click="switchSoundPlay" :style="{
       backgroundColor: settingsStore.playSound ? 'rgba(110, 110, 110, 0.8)' : '',
     }">
-      <img class="dbr-music-selected" src="../assets/image/music-selected.svg" alt="Music-selected" v-show="settingsStore.playSound" />
-      <img class="dbr-music-unselected" src="../assets/image/music-unselected.svg" alt="Music-unselected" v-show="!settingsStore.playSound" />
+      <svg v-show="settingsStore.playSound" class="dbr-music-selected icon icon-tabler icon-tabler-volume" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffae38" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M15 8a5 5 0 0 1 0 8" />
+        <path d="M17.7 5a9 9 0 0 1 0 14" />
+        <path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5" />
+      </svg>
+      <svg v-show="!settingsStore.playSound" class="dbr-music-unselected icon icon-tabler icon-tabler-volume-off" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#aaa" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M15 8a5 5 0 0 1 1.912 4.934m-1.377 2.602a5 5 0 0 1 -.535 .464" />
+        <path d="M17.7 5a9 9 0 0 1 2.362 11.086m-1.676 2.299a9 9 0 0 1 -.686 .615" />
+        <path d="M9.069 5.054l.431 -.554a.8 .8 0 0 1 1.5 .5v2m0 4v8a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l1.294 -1.664" />
+        <path d="M3 3l18 18" />
+      </svg>
     </div>
-    <LiveChat />
-    <label class="dbr-current-mode" v-show="!captureImageStore.isShowCaptureImagePage">{{ currentModeName }}</label>
+    <label class="dbr-current-mode" v-show="!captureImageStore.isShowCaptureImagePage">{{ scanOptionsStore.currentScanOption.name }}</label>
     <HeaderRightPart />
   </div>
 </template>
@@ -164,10 +175,10 @@ const preventDefault = (e: Event) => {
   z-index: 10;
 
   .dbr-upload-image {
-    width: 7%;
+    width: 13%;
     height: 100%;
     max-width: 100px;
-    min-width: 60px;
+    // min-width: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -181,7 +192,7 @@ const preventDefault = (e: Event) => {
       display: none;
     }
 
-    img {
+    svg {
       height: 50%;
     }
 
@@ -191,10 +202,10 @@ const preventDefault = (e: Event) => {
   }
 
   .dbr-sound {
-    width: 8%;
+    width: 13%;
     height: 100%;
     max-width: 100px;
-    min-width: 60px;
+    // min-width: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -203,7 +214,7 @@ const preventDefault = (e: Event) => {
 
     .dbr-music-selected,
     .dbr-music-unselected {
-      height: 50%;
+      height: 60%;
     }
 
     &:hover {
@@ -220,7 +231,7 @@ const preventDefault = (e: Event) => {
     font-size: 20px;
     color: #ffffff;
 
-    @media (max-width: 768px) {
+    @media (max-width: 979.5px) {
       width: 100%;
       text-align: center;
       top: 135%;

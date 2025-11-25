@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { getCurrentInstance } from "vue";
 import { useResultCountStore } from "../../stores/resultCount";
+import { message } from "ant-design-vue";
 import Clipboard from "clipboard";
 
-const currentInstance: any = getCurrentInstance();
 const resultCountStore = useResultCountStore();
 
 /**
@@ -17,11 +16,17 @@ const copyResult = (txt: string) => {
     },
   });
   clipboard.on("success", () => {
-    currentInstance.proxy.$message.success("Copied!");
+    message.success({
+      content: "Copied!",
+      duration: 1
+    });
     clipboard.destroy();
   });
   clipboard.on("error", () => {
-    currentInstance.proxy.$message.error("Failed!");
+    message.error({
+      content: "Failed!",
+      duration: 1
+    });
     clipboard.destroy();
   });
 };
@@ -31,12 +36,12 @@ const copyResult = (txt: string) => {
   <div class="dbr-general-result-box">
     <ul class="dbr-general-result--box-ul">
       <li class="dbr-general-result--box-li" v-for="[key, value] of resultCountStore.$state" :key="key">
-        <div class="dbr-format">{{ value.format }} :</div>
+        <div class="dbr-format">{{ value.format }}&nbsp;:&nbsp;</div>
         <div class="dbr-text-area">
           <div class="dbr-text">{{ value.text }}</div>
           <div class="dbr-copy" @click="() => copyResult(value.text)">Copy</div>
         </div>
-        <div class="dbr-count">{{ value.count }}x</div>
+        <div class="dbr-count">x{{ value.count }}</div>
       </li>
     </ul>
   </div>
@@ -45,7 +50,7 @@ const copyResult = (txt: string) => {
 <style scoped lang="less">
 .dbr-general-result-box {
   .dbr-general-result--box-ul {
-    width: 50%;
+    width: 60%;
     position: absolute;
     bottom: 13%;
     font-size: 20px;
@@ -64,42 +69,36 @@ const copyResult = (txt: string) => {
       display: flex;
       align-items: center;
       margin-bottom: 1px;
-      padding: 5px 0;
-      color: #dddddd;
-      background-color: rgba(34, 34, 34, 0.42);
+      padding: 5px 15px;
+      color: black;
+      background-color: #fff;
       border-left: none;
       border-right: none;
 
       .dbr-format {
-        width: 20%;
-
-        @media (max-width: 980px) {
-          width: 30%;
-        }
+        flex: 0 0 auto;
+        white-space: nowrap;
       }
 
       .dbr-text-area {
         display: flex;
-        width: 65%;
-
-        @media (max-width: 980px) {
-          width: 55%;
-        }
+        flex: 1 1 auto;
+        min-width: 0;
 
         .dbr-text {
-          width: 80%;
+          flex: 1 1 auto;
           font-family: "OpenSans-Regular";
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
 
-          @media (max-width: 980px) {
+          @media (max-width: 979.5px) {
             font-size: 12px;
           }
         }
 
         .dbr-copy {
-          width: 20%;
+          flex: 0 0 auto;
           font-family: "OpenSans-Regular";
           color: #fe8e14;
           cursor: pointer;
@@ -109,7 +108,7 @@ const copyResult = (txt: string) => {
             color: #fea543 !important;
           }
 
-          @media (max-width: 980px) {
+          @media (max-width: 979.5px) {
             font-size: 12px;
           }
 
@@ -120,7 +119,8 @@ const copyResult = (txt: string) => {
       }
 
       .dbr-count {
-        width: 15%;
+        flex: 0 0 10%;
+        min-width: 0;
       }
 
       .dbr-format,
@@ -129,7 +129,7 @@ const copyResult = (txt: string) => {
         font-family: "OpenSans-Regular";
       }
 
-      @media (max-width: 980px) {
+      @media (max-width: 979.5px) {
         max-height: 30%;
         min-height: unset;
       }
@@ -140,7 +140,7 @@ const copyResult = (txt: string) => {
       }
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       min-width: 330px;
       width: 75%;
       bottom: 15%;

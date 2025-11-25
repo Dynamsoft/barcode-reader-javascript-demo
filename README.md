@@ -9,7 +9,7 @@ https://demo.dynamsoft.com/barcode-reader-js/.
 >
 > We recommend that you instead try the samples in the DBRJS samples repository https://github.com/Dynamsoft/barcode-reader-javascript-samples.
 >
-> The demo itself is based on Vue, you can find a simple Vue sample at https://github.com/Dynamsoft/barcode-reader-javascript-samples/tree/main/foundational-api-samples/hello-world/vue
+> The demo itself is based on Vue, you can find a simple Vue sample at https://github.com/Dynamsoft/barcode-reader-javascript-samples/tree/main/hello-world/vue
 
 If you would like to get this demo project running, you can follow the steps below:
 

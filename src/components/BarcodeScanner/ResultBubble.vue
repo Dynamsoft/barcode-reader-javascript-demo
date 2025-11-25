@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from "vue";
 import { BarcodeResultItem } from "dynamsoft-barcode-reader-bundle";
-import { useUseCaseStore } from "../../stores/useCase";
 import { useCaptureImageStore } from "../../stores/captureImage";
+import { useSettingsStore } from "../../stores/settings";
 
 const _window = window as any;
 
@@ -10,8 +10,8 @@ const props = defineProps<{
   result: BarcodeResultItem;
 }>();
 
-const useCaseStore = useUseCaseStore();
 const captureImageStore = useCaptureImageStore();
+const settingsStore = useSettingsStore();
 
 const isBubbleVisible = ref(false);
 const bubbleInfoBox = reactive({
@@ -39,6 +39,7 @@ onMounted(() => {
 watch(
   () => props.result,
   (newValue) => {
+    if (!settingsStore.resultTooltip) return;
     // Get the top-left corner point and bottom-right corner point.
     // And convert them from related to video to related to viewport.
     const localization = newValue.location;
@@ -83,6 +84,12 @@ watch(
   }
 );
 
+watch(() => settingsStore.resultTooltip, (newValue) => {
+  if (!newValue) {
+    isBubbleVisible.value = false;
+  } 
+})
+
 watch(
   () => captureImageStore.isShowCaptureImagePage,
   () => {
@@ -92,18 +99,14 @@ watch(
 </script>
 
 <template>
-  <div v-show="useCaseStore.useCaseName !== 'dl'">
-    <div
-      class="dbr-bubble"
-      v-show="isBubbleVisible"
-      :style="{
-        left: bubbleInfoBox.left,
-        top: bubbleInfoBox.top,
-        right: bubbleInfoBox.right,
-        maxWidth: bubbleInfoBox.maxWidth + 'px',
-        transform: bubbleInfoBox.transform,
-      }"
-    >
+  <div>
+    <div class="dbr-bubble" v-show="isBubbleVisible" :style="{
+      left: bubbleInfoBox.left,
+      top: bubbleInfoBox.top,
+      right: bubbleInfoBox.right,
+      maxWidth: bubbleInfoBox.maxWidth + 'px',
+      transform: bubbleInfoBox.transform,
+    }">
       <div class="dbr-bubble-content">
         <span class="dbr-bubble-format">{{ result.formatString }}</span>
         <!-- Calculate the count of characters and wrap. -->

@@ -1,29 +1,31 @@
 <script setup lang="ts">
 import { useCaptureImageStore } from "../../stores/captureImage";
+import { useScanOptionsStore } from "../../stores/scanOptions";
 
 const captureImageStore = useCaptureImageStore();
+const scanOptionsStore = useScanOptionsStore();
 </script>
 
 <template>
-  <ul class="dbr-dl-result">
-    <li class="dbr-dl-result-li" v-for="info in captureImageStore.parsedDLInfo">
+  <ul class="dbr-parsed-result">
+    <li class="dbr-parsed-result-li" v-for="info in captureImageStore.parsedDLInfo">
       <span class="dbr-description">{{ info.description }}: </span>
       <span class="dbr-value">{{ info.value }}</span>
     </li>
     <li class="dbr-no-barcode-found" v-show="!captureImageStore.captureResult.length && !captureImageStore.isDecoding">
-      No PDF417 code is found !
+      No {{ scanOptionsStore.currentScanOption.name === "Drivers License (PDF417)" ? "PDF417 code" : "barcode" }} is found !
     </li>
   </ul>
 </template>
 
 <style scoped lang="less">
-.dbr-dl-result {
+.dbr-parsed-result {
   width: 100%;
   height: 90%;
   padding-right: 15px;
   overflow: auto;
 
-  .dbr-dl-result-li {
+  .dbr-parsed-result-li {
     display: flex;
     margin-bottom: 10px;
     word-break: break-all;
@@ -50,7 +52,7 @@ const captureImageStore = useCaptureImageStore();
     font-size: 14px;
   }
 
-  @media (max-width: 980px) {
+  @media (max-width: 979.5px) {
     height: 70%;
   }
 }

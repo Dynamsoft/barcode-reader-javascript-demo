@@ -2,32 +2,11 @@ import { defineStore } from "pinia";
 import { VideoDeviceInfo, Resolution as VideoResolution } from "dynamsoft-barcode-reader-bundle";
 import { judgeCurResolution } from "../util";
 import { EnumResolution, Resolution } from "../assets/enum/Resolution";
-import { TypeUseCase } from "./useCase";
-import demoVideosConfig from "../demoVideosConfig";
 
 export interface VideoDeviceInfoOther {
   key: number;
   resolution: Resolution;
-  _isDemoVideo?: boolean;
-  _belong?: TypeUseCase;
   _isDefualt?: boolean;
-}
-
-const initDemoVideoList = () => {
-  const _demoCameraList: Array<VideoDeviceInfo & VideoDeviceInfoOther> = [];
-  for(let videoConfig of demoVideosConfig) {
-    _demoCameraList.push({
-      deviceId: videoConfig.name,
-      label: videoConfig.label + ` (${videoConfig.resolution})`,
-      key: videoConfig.key,
-      resolution: videoConfig.resolution,
-      _checked: false,
-      _isDemoVideo: true,
-      _belong: videoConfig.belong,
-      _isDefualt: videoConfig.default
-    })
-  }
-  return _demoCameraList;
 }
 
 export const useCameraListStore = defineStore("cameraList", {
@@ -36,16 +15,12 @@ export const useCameraListStore = defineStore("cameraList", {
     currentCamera: VideoDeviceInfo | null;
     currentResolution: Resolution;
     hasCamera: boolean;
-    isUseDemoVideo: boolean;
-    isLoading: boolean;
   } => {
     return {
-      cameraList: initDemoVideoList(),
+      cameraList: [],
       currentCamera: null,
       currentResolution: EnumResolution.HD,
       hasCamera: true,
-      isUseDemoVideo: false,
-      isLoading: true
     };
   },
   actions: {
@@ -67,10 +42,6 @@ export const useCameraListStore = defineStore("cameraList", {
           ...camera,
           key: index,
         }));
-      
-      const _demoVideoList = this.$state.cameraList.filter(camera => camera._isDemoVideo);
-      
-      _cameraList.push(..._demoVideoList);
 
       this.$state.cameraList = _cameraList;
     },
@@ -89,12 +60,6 @@ export const useCameraListStore = defineStore("cameraList", {
     },
     updateHasCamera(value: boolean) {
       this.$state.hasCamera = value;
-    },
-    updateIsUseDemoVideo(value: boolean) {
-      this.$state.isUseDemoVideo = value;
-    },
-    updateIsLoading(value: boolean) {
-      this.$state.isLoading = value;
     }
   },
 });

@@ -2,7 +2,7 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  font-family: "Oswald-Regular";
+  /* font-family: "Oswald-Regular"; */
 }
 
 html,
@@ -72,7 +72,7 @@ body {
   z-index: 99999999;
 }
 
-.ant-message > div > div > div > div {
+.ant-message>div>div>div>div {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,7 +90,31 @@ li {
   display: none !important;
 }
 
-@media screen and (max-width: 980px) and (orientation: landscape) {
+button {
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+input[type="radio"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+[class^="dbr-message-"] {
+  font-family: "Oswald-Regular";
+}
+
+@media screen and (max-width: 979.5px) and (orientation: landscape) {
   [id*=comm100-float-button] {
     display: none !important;
     width: 1px !important;
@@ -99,7 +123,7 @@ li {
   }
 }
 
-@media screen and (max-width: 980px) and (orientation: portrait) {
+@media screen and (max-width: 979.5px) and (orientation: portrait) {
   [id*=comm100-float-button] {
     display: none !important;
     width: 1px !important;

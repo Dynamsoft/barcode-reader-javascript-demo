@@ -2,82 +2,71 @@
 import {
   onMounted,
   ref,
-  Ref,
   watch,
-  getCurrentInstance,
   onBeforeMount,
-  onUnmounted
+  onUnmounted,
+  useTemplateRef
 } from "vue";
 import {
   CameraEnhancer,
   CameraView,
   EnumEnhancedFeatures,
   Feedback,
-  OriginalImageResultItem,
-  CapturedResultItem,
   CaptureVisionRouter,
   CapturedResult,
   CapturedResultReceiver,
   IntermediateResultReceiver,
-  CodeParser, ParsedResultItem,
-  BarcodeResultItem
+  CodeParser,
+  ParsedResult,
+  ParsedResultItem,
 } from "dynamsoft-barcode-reader-bundle";
 import GeneralResultBox from "./GeneralResultBox.vue";
-import DriverLicenseResultBox from "./DriverLicenseResultBox.vue";
+import ParsedResultBox from "./ParsedResultBox.vue";
 import ResultBubble from "./ResultBubble.vue";
 import FocusBox from "./FocusBox.vue";
 import { useCameraListStore } from "../../stores/cameraList";
-import { AllowNameSet, useUseCaseStore } from "../../stores/useCase";
+import { UrlName, useScanOptionsStore } from "../../stores/scanOptions";
 import { useSettingsStore } from "../../stores/settings";
 import { useResultCountStore } from "../../stores/resultCount";
 import { useCaptureImageStore } from "../../stores/captureImage";
 import { useScanRegionStore } from "../../stores/scanRegion";
-import { getValueByKey, urlMap } from "../../util";
-import { ExtendedMediaTrackCapabilities, ParsedDataFailed } from "../../types";
+import { ExtendedMediaTrackCapabilities } from "../../util";
 import { EnumResolution, ResolutionMap } from "../../assets/enum/Resolution";
+import { message } from "ant-design-vue";
+import templates from "../../templates";
 
 const _window = window as any;
 
 const props = defineProps<{
-  udpateSettings: () => Promise<void>;
-  eventOnUseCaseChange: (oldUseCase?: AllowNameSet) => Promise<void>;
-  setUseCaseBarcodeFormat: (isBeforeMount: boolean, oldUseCase?: AllowNameSet) => Promise<void>;
+  setUseCaseBarcodeFormat: () => Promise<void>;
 }>();
 
-const useCaseStore = useUseCaseStore();
+const scanOptionsStore = useScanOptionsStore();
 const cameraListStore = useCameraListStore();
 const resultCountStore = useResultCountStore();
 const settingsStore = useSettingsStore();
 const captureImageStore = useCaptureImageStore();
 const scanRegionStore = useScanRegionStore();
 
-const videoElRef: Ref<HTMLDivElement | null> = ref(null);
-const scanareaRef: Ref<HTMLDivElement | null> = ref(null);
+const videoElRef = useTemplateRef("videoElRef");
 const isMountFocusBox = ref(false);
 const isSupportFocus = ref(false);
 const isShowTorchButton = ref(false);
 const isOpenTorch = ref(false);
-const scannerResult: Ref<Array<BarcodeResultItem>> = ref([]);
+const isOpened = ref(false);
 let cameraView: CameraView | null;
 let cameraEnhancer: CameraEnhancer | null;
 let cvRouter: CaptureVisionRouter | null;
 let parser: CodeParser | null;
-let currentInstance: any = getCurrentInstance();
 let timer: any;
 
 // URL handling for use case setup
 let splitArr = location.pathname.split("/");
 let targetStr = splitArr[splitArr.length - 1] ? splitArr[splitArr.length - 1] : splitArr[splitArr.length - 2];
-let useCaseName = getValueByKey(urlMap, targetStr);
-useCaseStore.changeUseCase(useCaseName as AllowNameSet);
+scanOptionsStore.updateScanOption(targetStr as UrlName);
 
-onBeforeMount(async () => {
-  // After entering the video page from the guide page, set the barcode format type status corresponding to the selected useCaose before mounting
-  await props.setUseCaseBarcodeFormat(true);
-  if (useCaseStore.useCaseName === "dl") {
-    captureImageStore.updateCurrentTemplate("ReadDenseBarcodes");
-  }
-});
+// After entering the video page from the guide page, set the barcode format type status corresponding to the selected useCaose before mounting
+onBeforeMount(props.setUseCaseBarcodeFormat);
 
 // Event listener for window resize to adjust camera view and capture settings
 const resizeEvent = () => {
@@ -92,18 +81,15 @@ const resizeEvent = () => {
   timer && clearTimeout(timer);
   timer = setTimeout(() => {
     if (cameraView) {
-      // Update the visible region in pixels
-      scanRegionStore.updateVisibleRegionInPixels(cameraView.getVisibleRegionOfVideo({ inPixels: true }));
-
       // Update scan region settings
-      cameraEnhancer?.setScanRegion(scanRegionStore.region);
+      cameraEnhancer?.setScanRegion(scanRegionStore.region());
 
       // Re-show scan region mask and adjust scan laser visibility
       setTimeout(() => {
         cameraView?.setScanRegionMaskVisible(true);
-        if (!captureImageStore.isShowDlResultBox) {
+        if (!captureImageStore.isShowDlResultBox && !captureImageStore.isShowCaptureImagePage) {
           cameraView?.setScanLaserVisible(settingsStore.zonalScan);
-          cvRouter?.startCapturing(captureImageStore.currentTemplate);
+          cvRouter?.startCapturing(scanOptionsStore.currentScanOption.templateName);
         }
       }, 0);
     }
@@ -118,16 +104,6 @@ onMounted(async () => {
     parser = (_window.parser as CodeParser) || await CodeParser.createInstance();
 
     cvRouter.setInput(cameraEnhancer);
-    cameraEnhancer.getVideoEl().setAttribute("loop", "true");
-
-    if (cameraListStore.isUseDemoVideo) {
-      // Each use case may have multiple videos, and the default video should be selected upon the first load.
-      const _currentDemoCamera = cameraListStore.cameraList.filter((camera) => {
-        return camera._belong === useCaseStore.modeName;
-      }).filter(camera => camera._isDefualt)[0];
-      const _url = new URL(`../../assets/videos/${_currentDemoCamera.deviceId}`, import.meta.url).href;
-      cameraEnhancer.videoSrc = _url;
-    }
 
     // Configure Intermediate Result Receiver
     const intermediateManager = cvRouter.getIntermediateResultManager();
@@ -138,43 +114,66 @@ onMounted(async () => {
     intermediateManager.addResultReceiver(irr);
 
     // Configure Captured Result Receiver
-    const crr = new CapturedResultReceiver();
-    crr.onCapturedResultReceived = async (result: CapturedResult) => {
-      // Play sound when barcode is decoded
+    const resultReceiver = new CapturedResultReceiver();
+    resultReceiver.onCapturedResultReceived = async (result: CapturedResult) => {
+      let parsedResult: ParsedResult & { text: string } | null = null;
       if (result.decodedBarcodesResult?.barcodeResultItems) {
+        // Play sound when barcode is decoded
         settingsStore.playSound && Feedback.beep();
-      }
 
-      // Use Case: Non-Driver License
-      if (result.decodedBarcodesResult?.barcodeResultItems && useCaseStore.useCaseName !== "dl") {
-        scannerResult.value = result.decodedBarcodesResult.barcodeResultItems;
-        resultCountStore.updateResultCount(result.decodedBarcodesResult.barcodeResultItems);
-      } else {
-        scannerResult.value = [];
-      }
-
-      // Use Case: Driver License
-      let parsedData: ParsedResultItem | object = {};
-      if (result.decodedBarcodesResult?.barcodeResultItems && useCaseStore.useCaseName === "dl") {
-        cvRouter?.stopCapturing();
-        cameraView?.setScanLaserVisible(false);
-        cameraView?.clearAllInnerDrawingItems();
-        try {
-          parsedData = await parser!.parse(result.decodedBarcodesResult.barcodeResultItems[0].bytes);
-        } catch (ex: any) {
-          (parsedData as ParsedDataFailed).exception = true;
-          (parsedData as ParsedDataFailed).message = ex.message || ex;
-          (parsedData as ParsedDataFailed).text = result.decodedBarcodesResult.barcodeResultItems[0].text;
-        }
-        if ((parsedData as ParsedDataFailed).exception) {
-          captureImageStore.updateDLJsonString(JSON.stringify(parsedData));
+        // Use Case: Non-Driver License, VIN
+        if (!["Drivers License (PDF417)", "VIN"].includes(scanOptionsStore.currentScanOption.name)) {
+          captureImageStore.updateScannerCaptureResult(result.decodedBarcodesResult.barcodeResultItems);
+          resultCountStore.updateResultCount(result.decodedBarcodesResult.barcodeResultItems);
         } else {
-          captureImageStore.updateDLJsonString((parsedData as ParsedResultItem).jsonString);
+          cvRouter?.stopCapturing();
+          cameraView?.setScanLaserVisible(false);
+          cameraView?.clearAllInnerDrawingItems();
+          let parsedResultItem;
+          try {
+            message.loading({
+              content: "Parsing...",
+              key: "DCPParse",
+            });
+            parsedResultItem = await parser!.parse(result.decodedBarcodesResult.barcodeResultItems[0].bytes);
+          } catch (ex: any) {
+            parsedResult = {
+              errorCode: -90005,
+              errorString: ex.message,
+              originalImageHashId: result.originalImageHashId,
+              originalImageTag: result.originalImageTag,
+              text: result.decodedBarcodesResult.barcodeResultItems[0].text,
+              parsedResultItems: []
+            }
+          } finally {
+            if (!parsedResult) {
+              parsedResult = {
+                errorCode: 0,
+                errorString: "Successful.",
+                originalImageHashId: result.originalImageHashId,
+                originalImageTag: result.originalImageTag,
+                text: result.decodedBarcodesResult.barcodeResultItems[0].text,
+                parsedResultItems: [parsedResultItem as ParsedResultItem]
+              }
+            }
+          }
+          if (scanOptionsStore.currentScanOption.name === "Drivers License (PDF417)") {
+            captureImageStore.updateDLJsonString(parsedResult);
+          } else if (scanOptionsStore.currentScanOption.name === "VIN") { // Use Case: VIN
+            captureImageStore.updateVINJsonString(parsedResult);
+          }
+          captureImageStore.updateDlResultBoxVisibility(true);
+          message.destroy("DCPParse");
         }
-        captureImageStore.updateDlResultBoxVisibility(true);
+      } else {
+        captureImageStore.updateScannerCaptureResult();
       }
     };
-    cvRouter.addResultReceiver(crr);
+    cvRouter.addResultReceiver(resultReceiver);
+
+    // init template
+    const templateName = scanOptionsStore.currentScanOption.templateName;
+    await cvRouter.initSettings(templates[templateName as keyof typeof templates]);
 
     // Set global window objects for debugging
     _window.cameraView = cameraView;
@@ -182,67 +181,42 @@ onMounted(async () => {
     _window.cvRouter = _window.cvRouter || cvRouter;
     _window.parser = _window.parser || parser;
 
+    cameraEnhancer.cameraManager.imageDataGetter.useWebGLByDefault  = false;
+
     // Configure CameraView
     cameraView.setScanRegionMaskStyle({ lineWidth: 2, strokeStyle: "rgb(254,142,20)", fillStyle: "rgba(0,0,0,0.5)" });
-    cameraView.setVideoFit(cameraListStore.isUseDemoVideo ? "contain" : "cover");
+
+    cameraView.setVideoFit("cover");
+    cameraEnhancer.setScanRegion(scanRegionStore.region());
 
     // Set the camera resolution and open the camera
-    const _isVideoLoaded = _window.cameraView.isVideoLoaded;
     await cameraEnhancer.setResolution(ResolutionMap[EnumResolution.FULL_HD]);
     try {
       await cameraEnhancer.open();
-    } catch {
-      cameraListStore.updateHasCamera(false);
     } finally {
-      cameraListStore.updateIsLoading(false);
+      isOpened.value = true;
     }
     if (cameraListStore.hasCamera) {
-      cameraView.isVideoLoaded = () => true;
+      await cvRouter.startCapturing(templateName);
 
-      if (!cameraListStore.isUseDemoVideo) {
-        scanRegionStore.updateVisibleRegionInPixels(cameraView.getVisibleRegionOfVideo({ inPixels: true }));
-        cameraEnhancer.setScanRegion(scanRegionStore.region);
-
-        // Check for focus support and enable torch button
-        const capabilities = cameraEnhancer.getCapabilities() as ExtendedMediaTrackCapabilities;
-        isSupportFocus.value = !!capabilities?.focusMode;
-        isShowTorchButton.value = !!capabilities?.torch;
-        isMountFocusBox.value = true;
-      }
-
-      await props.udpateSettings();
+      // Check for focus support and enable torch button
+      const capabilities = cameraEnhancer.getCapabilities() as ExtendedMediaTrackCapabilities;
+      isSupportFocus.value = !!capabilities?.focusMode;
+      isShowTorchButton.value = !!capabilities?.torch;
+      isMountFocusBox.value = true;
 
       cameraView.setScanLaserVisible(settingsStore.zonalScan);
       cameraView.setScanRegionMaskVisible(true);
 
       // Update the camera list and selected camera/resolution
-      let cameraList: any = await cameraEnhancer.getAllCameras();
+      const cameraList: any = await cameraEnhancer.getAllCameras();
       cameraListStore.updateCameraList(cameraList);
-      let currentCamera;
-      let currentResolution;
-      if (cameraListStore.isUseDemoVideo) {
-        currentCamera = cameraListStore.cameraList.filter((camera) => {
-          return camera._belong === useCaseStore.modeName;
-        }).filter(camera => camera._isDefualt)[0];
-        currentResolution = currentCamera.resolution;
-      } else {
-        currentCamera = cameraEnhancer.getSelectedCamera();
-        currentResolution = cameraEnhancer.getResolution();
-      }
+
+      const currentCamera = cameraEnhancer.getSelectedCamera();
+      const currentResolution = cameraEnhancer.getResolution();
+
       cameraListStore.updateCurrentCamera(currentCamera);
       cameraListStore.updateCameraResolution(currentResolution);
-
-      /**
-        Why do we need to pass a "1d2d"? Since the settings and switching of useCase may be performed before the camera is opened, 
-        to ensure the correct barcode format settings, we need to make sure that the setUseCaseBarcodeFormat logic is executed. 
-        There is room for optimization in this logic.
-      */
-      await props.eventOnUseCaseChange("1d2d");
-      if (captureImageStore.isShowCaptureImagePage) {
-        cameraEnhancer.close();
-        cvRouter.stopCapturing();
-      }
-      cameraView.isVideoLoaded = _isVideoLoaded;
     }
   } catch (ex: any) {
     alert(ex.message || ex);
@@ -251,46 +225,41 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  cameraEnhancer?.dispose();
+  _window.cvRouter.stopCapturing();
+  _window.cameraEnhancer?.dispose();
   _window.cameraView = null;
   _window.cameraEnhancer = null;
-  window.removeEventListener("resize", resizeEvent);
+  _window.removeEventListener("resize", resizeEvent);
 })
 
-watch(
-  () => settingsStore.zonalScan,
-  (newValue: boolean) => {
-    if (!captureImageStore.isShowDlResultBox) {
-      cameraView?.setScanLaserVisible(newValue);
-    }
-    cameraEnhancer?.setScanRegion(scanRegionStore.region);
+watch(() => settingsStore.zonalScan, (newValue) => {
+  if (!captureImageStore.isShowDlResultBox) {
+    cameraView?.setScanLaserVisible(newValue);
   }
-);
+  cameraEnhancer?.setScanRegion(scanRegionStore.region());
+  if (newValue) {
+    settingsStore.updateAutoZoom(!newValue);
+  }
+});
 
-watch(
-  () => settingsStore.autoZoom,
-  (newValue: boolean) => {
-    if (newValue) {
-      cameraEnhancer?.enableEnhancedFeatures(EnumEnhancedFeatures.EF_AUTO_ZOOM);
-    } else {
-      cameraEnhancer?.disableEnhancedFeatures(EnumEnhancedFeatures.EF_AUTO_ZOOM);
-    }
-    // autozoom is only effective in full screen mode, so the scan region is updated synchronously here. This logic will be removed after the bug is fixed.
-    settingsStore.updateZonalScan(!settingsStore.autoZoom);
+watch(() => settingsStore.autoZoom, (newValue: boolean) => {
+  if (newValue) {
+    cameraEnhancer?.enableEnhancedFeatures(EnumEnhancedFeatures.EF_AUTO_ZOOM);
+  } else {
+    cameraEnhancer?.disableEnhancedFeatures(EnumEnhancedFeatures.EF_AUTO_ZOOM);
   }
-);
+  // autozoom is only effective in full screen mode, so the scan region is updated synchronously here. This logic will be removed after the bug is fixed.
+  settingsStore.updateZonalScan(!settingsStore.autoZoom);
+});
 
-watch(
-  () => captureImageStore.isShowCaptureImagePage,
-  (newValue: boolean) => {
-    resultCountStore.$state.clear();
-    captureImageStore.updateDlResultBoxVisibility(false);
-    if (!newValue) {
-      scanRegionStore.updateVisibleRegionInPixels(cameraView?.getVisibleRegionOfVideo({ inPixels: true }));
-      cameraEnhancer?.setScanRegion(scanRegionStore.region);
-    }
+watch(() => captureImageStore.isShowCaptureImagePage, (newValue: boolean) => {
+  resultCountStore.$state.clear();
+  captureImageStore.updateDlResultBoxVisibility(false);
+  if (!newValue) {
+    // scanRegionStore.updateVisibleRegionInPixels(cameraView?.getVisibleRegionOfVideo({ inPixels: true }));
+    cameraEnhancer?.setScanRegion(scanRegionStore.region());
   }
-);
+});
 
 const switchTorch = async () => {
   if (!isOpenTorch.value) {
@@ -298,7 +267,10 @@ const switchTorch = async () => {
       await cameraEnhancer?.turnOnTorch();
       isOpenTorch.value = true;
     } catch (ex: any) {
-      currentInstance.proxy.$message.error(ex.message);
+      message.error({
+        content: ex.message,
+        duration: 1
+      });
       isShowTorchButton.value = false;
     }
   } else {
@@ -306,10 +278,10 @@ const switchTorch = async () => {
     isOpenTorch.value = false;
   }
 };
-
 </script>
 
 <template>
+  <div class="dbr-camera-accessing-mask" v-if="!isOpened"></div>
   <div class="dbr-video-container" ref="videoElRef">
     <svg class="dce-bg-loading-demo" viewBox="0 0 1792 1792">
       <path d="M1760 896q0 176-68.5 336t-184 275.5-275.5 184-336 68.5-336-68.5-275.5-184-184-275.5-68.5-336q0-213 97-398.5t265-305.5 374-151v228q-221 45-366.5 221t-145.5 406q0 130 51 248.5t136.5 204 204 136.5 248.5 51 248.5-51 204-136.5 136.5-204 51-248.5q0-230-145.5-406t-366.5-221v-228q206 31 374 151t265 305.5 97 398.5z" />
@@ -318,7 +290,7 @@ const switchTorch = async () => {
       <path d="M1024 672q119 0 203.5 84.5t84.5 203.5-84.5 203.5-203.5 84.5-203.5-84.5-84.5-203.5 84.5-203.5 203.5-84.5zm704-416q106 0 181 75t75 181v896q0 106-75 181t-181 75h-1408q-106 0-181-75t-75-181v-896q0-106 75-181t181-75h224l51-136q19-49 69.5-84.5t103.5-35.5h512q53 0 103.5 35.5t69.5 84.5l51 136h224zm-704 1152q185 0 316.5-131.5t131.5-316.5-131.5-316.5-316.5-131.5-316.5 131.5-131.5 316.5 131.5 316.5 316.5 131.5z" />
     </svg>
     <div class="dce-video-container"></div>
-    <div class="dce-scanarea" ref="scanareaRef">
+    <div class="dce-scanarea">
       <div class="dce-scanlight"></div>
     </div>
     <!-- The "Powered by Dynamsoft" logo can be easily removed by eliminating the following line. -->
@@ -408,14 +380,24 @@ const switchTorch = async () => {
     <path d="M364 295.2h295.2L724.8 144H298.4zM278.4 0h466.4v98.4H278.4zM373.6 919.2c0 59.2 45.6 104.8 104.8 104.8H544c59.2 0 104.8-45.6 104.8-104.8V341.6H373.6v577.6z m112.8-435.2c0-12.8 12.8-24.8 24.8-24.8s24.8 11.2 24.8 24.8v200c0 12.8-12.8 24-24.8 24s-24.8-11.2-24.8-24v-200z" p-id="1173" :fill="isOpenTorch ? '#fe8e14' : '#ddd'"></path>
   </svg>
   <GeneralResultBox />
-  <DriverLicenseResultBox v-show="captureImageStore.isShowDlResultBox" />
-  <div v-show="useCaseStore.useCaseName !== 'dl'">
-    <ResultBubble v-for="(result, index) of scannerResult" :key="index" :result="result" />
+  <ParsedResultBox v-show="captureImageStore.isShowDlResultBox" />
+  <div v-show="!['Drivers License (PDF417)', 'VIN'].includes(scanOptionsStore.currentScanOption.name)">
+    <ResultBubble v-for="(result, index) of captureImageStore.scannerResult" :key="index" :result="result" />
   </div>
   <FocusBox v-if="isMountFocusBox && isSupportFocus" />
 </template>
 
 <style scoped lang="less">
+.dbr-camera-accessing-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999999;
+  background-color: transparent;
+}
+
 .dbr-video-container {
   position: absolute;
   top: 0;

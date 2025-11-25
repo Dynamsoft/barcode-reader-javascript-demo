@@ -1,68 +1,38 @@
 <script setup lang="ts">
-import { ref, Ref, getCurrentInstance, computed } from "vue";
-import { Popover, Switch } from "ant-design-vue";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons-vue";
+import { ref, Ref, computed } from "vue";
+import { message, Popover, Switch } from "ant-design-vue";
 import { usePopoverOpenStore } from "../../stores/popoverOpen";
-import { ColourMode, ScanMode, SingleOrMulti, useSettingsStore } from "../../stores/settings";
-import { useUseCaseStore } from "../../stores/useCase";
+import { ColourMode, SingleOrMulti, useSettingsStore } from "../../stores/settings";
+import { useScanOptionsStore } from "../../stores/scanOptions";
 import { useCaptureImageStore } from "../../stores/captureImage";
-import { useCameraListStore } from "../../stores/cameraList";
-import { getDate, isDebug } from "../../util";
-import { ResolutionMap } from "../../assets/enum/Resolution";
-import Clipboard from "clipboard";
+import { CaptureVisionRouter } from "dynamsoft-barcode-reader-bundle";
+import { getDate, isDebug, templateUrl } from "../../util";
+import { saveAs } from "file-saver";
 import JSZip from "jszip";
+import { useDeviceType } from "../../hooks/useDeviceType";
 
 const _window = window as any;
 
-type PopoverPlacement = "rightBottom" | "topRight";
-
 const popoverOpenStore = usePopoverOpenStore();
 const settingsStore = useSettingsStore();
-const useCaseStore = useUseCaseStore();
+const scanOptionsStore = useScanOptionsStore();
 const captureImageStore = useCaptureImageStore();
-const cameraListStore = useCameraListStore();
-const currentInstance: any = getCurrentInstance();
+const deviceType = useDeviceType();
+
 const isShowMask = ref(false);
 const downloadImg: Ref<Array<{ name: string; blob: Blob }>> = ref([]);
 
-const placement: Ref<PopoverPlacement> = ref(document.body.clientWidth > 980 ? "rightBottom" : "topRight");
-const shouldShowArrow = ref(document.body.clientWidth < 980);
-const isCopied = ref(false);
+const isSettingChangeEnabled = computed(() => {
+  if (templateUrl) return false;
+  return !["Drivers License (PDF417)", "VIN"].includes(scanOptionsStore.currentScanOption.name);
+})
 
 const updatePopoverStore = (e: Event) => {
   // Due to the fact that the first click under Mobile will also trigger a mouseenter event, the placement value is used to determine whether it is a mobile and ignore the mouseenter event triggering under Mobile
-  if (e.type === "mouseenter" && placement.value !== "topRight") {
-    popoverOpenStore.updatePopoverStore(false, false, true);
-  } else if (e.type === "click" && placement.value === "topRight") {
-    popoverOpenStore.updatePopoverStore(false, false, !popoverOpenStore.settingsController);
-  }
-};
-
-// Copy current view settings to the clipboard
-const copySettings = () => {
-  if (!isCopied.value) {
-    const btn = document.querySelector(".dbr-copy-settings");
-    let clipboard = new Clipboard(btn!, {
-      text: () => {
-        return viewSettings.value
-          .replace(/<br>/g, "\n")
-          .replace(/"/g, "")
-          .replace(/&nbsp;/g, " ");
-      },
-    });
-    clipboard.on("success", () => {
-      isCopied.value = true;
-      setTimeout(() => {
-        isCopied.value = false;
-      }, 5000);
-      currentInstance.proxy.$message.success("Copied!");
-      clipboard.destroy();
-    });
-    clipboard.on("error", () => {
-      isCopied.value = false;
-      currentInstance.proxy.$message.error("Failed!");
-      clipboard.destroy();
-    });
+  if (e.type === "mouseenter" && deviceType.value === "pc") {
+    popoverOpenStore.updatePopoverStore(false, true);
+  } else if (e.type === "click" && deviceType.value === "mobile") {
+    popoverOpenStore.updatePopoverStore(false, !popoverOpenStore.settingsController);
   }
 };
 
@@ -73,7 +43,7 @@ const getImages = async () => {
   _window.cameraView.clearAllInnerDrawingItems();
   isShowMask.value = true;
   _window.cvRouter.stopCapturing();
-  currentInstance.proxy.$message.loading({ content: "Capturing...", duration: 0 });
+  message.loading({ content: "Capturing..." });
   _window.cameraEnhancer.startFetching();
 
   // Save captured images
@@ -88,13 +58,13 @@ const getImages = async () => {
 
   // Download zip file
   const content = await zip.generateAsync({ type: "blob" });
-  _window.saveAs(content, `screenshot-${getDate()}.zip`);
+  saveAs(content, `screenshot-${getDate()}.zip`);
   downloadImg.value = [];
-  currentInstance.proxy.$message.destroy();
+  message.destroy();
   isShowMask.value = false;
 
   // Restart capturing with the current template
-  await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
+  await _window.cvRouter.startCapturing(scanOptionsStore.currentScanOption.templateName);
 };
 
 // Captures images from the camera and adds them to the download list.
@@ -104,7 +74,7 @@ const saveImages = async () => {
     while (index < 8) {
       const image = await new Promise<any>((rs) => {
         setTimeout(() => {
-          const image = _window.cameraEnhancer.getImage();
+          const image = _window.cameraEnhancer.fetchImage();
           rs(image);
         }, 0)
       })
@@ -125,47 +95,7 @@ const saveImages = async () => {
   });
 };
 
-/**
- * Computes the view settings based on the current configuration.
- * @returns {string} The view settings formatted for display.
- */
-const viewSettings = computed(() => {
-  let _viewSettings = "";
-  if (!captureImageStore.isShowCaptureImagePage) {
-    const rsl = ResolutionMap[cameraListStore.currentResolution];
-
-    _viewSettings += `await cameraEnhancer.setResolution(${JSON.stringify(rsl)});<br>`;
-    _viewSettings += `cvRouter.stopCapturing();<br>`;
-  }
-  _viewSettings += `const settings = await cvRouter.getSimplifiedSettings('${captureImageStore.currentTemplate}');<br>`;
-  _viewSettings += `settings.barcodeSettings.expectedBarcodesCount = ${settingsStore.singleOrMulti === "Single" ? 1 : 512};<br>`;
-
-  const colourModeMap = {
-    Inverted: "[1]",
-    Normal: "[2]",
-    Both: "[1, 2]",
-  };
-  _viewSettings += `settings.barcodeSettings.grayscaleTransformationModes = ${colourModeMap[settingsStore.colourMode]};<br>`;
-
-  if (useCaseStore.useCaseName === "vin") {
-    _viewSettings += `settings.barcodeSettings.barcodeFormatIds = 0x1 | 0x2 | 0x4 | 0x400 | 0x8 | 0x10 | 0x200 | 0x04000000 | 0x08000000;<br>`;
-  } else if (useCaseStore.useCaseName === "dl") {
-    _viewSettings += `settings.barcodeSettings.barcodeFormatIds = 0x02000000;<br>`;
-  } else if (useCaseStore.useCaseName === "dpm") {
-    _viewSettings += `settings.barcodeSettings.barcodeFormatIds = 0x08000000;<br>`;
-  }
-
-  _viewSettings += `await cvRouter.updateSettings('${captureImageStore.currentTemplate}', settings);<br>`;
-  if (!captureImageStore.isShowCaptureImagePage) {
-    _viewSettings += `await cvRouter.startCapturing('${captureImageStore.currentTemplate}');<br>`;
-  }
-  if (settingsStore.autoZoom && !captureImageStore.isShowCaptureImagePage) {
-    _viewSettings += `cameraEnhancer.enableEnhancedFeatures(0x10);<br>`;
-  }
-  return _viewSettings;
-});
-
-const uploadTemplate = (e: any) => {
+const uploadTemplate = (e: any): void => {
   _window.cvRouter.stopCapturing();
   const file = e.target.files[0];
   const fileReadr = new FileReader();
@@ -176,51 +106,60 @@ const uploadTemplate = (e: any) => {
       await _window.cvRouter.initSettings(jsonString);
       const templateName = JSON.parse(jsonString).CaptureVisionTemplates[0].Name;
       await _window.cvRouter.startCapturing(templateName);
-      captureImageStore.updateCurrentTemplate(templateName);
-      currentInstance.proxy.$message.success({ content: "Successful." });
+      scanOptionsStore.updateScanOption({ name: "User Defined", templateName, checked: true, urlName: "user-defined", templateNameForReadRate: templateName });
+      message.success({ content: "Successful.", duration: 1 });
     } catch (ex: Error) {
-      currentInstance.proxy.$message.error({ content: ex.message || ex });
+      message.error({ content: ex.message || ex, duration: 1 });
     }
   };
   fileReadr.onerror = (event) => {
-    currentInstance.proxy.$message.error({ content: event.target?.error?.message || "Failed to read file." });
+    message.error({ content: event.target?.error?.message || "Failed to read file.", duration: 1 });
   };
 }
 
-window.addEventListener("resize", () => {
-  const isWideScreen = document.body.clientWidth > 980;
-  placement.value = isWideScreen ? "rightBottom" : "topRight";
-  shouldShowArrow.value = !isWideScreen;
-});
+const downloadTemplate = () => {
+  const templateName = scanOptionsStore.currentScanOption.templateName;
+  (_window.cvRouter as CaptureVisionRouter).outputSettingsToFile("*", templateName, true, true);
+}
+
 </script>
 
 <template>
-  <Popover overlayClassName="dbr-settings-popover" :placement="placement" :arrow="shouldShowArrow" :open="popoverOpenStore.settingsController">
-    <div class="dbr-settings-controller" @click.stop="updatePopoverStore" @mouseenter="updatePopoverStore">
-      <img class="dbr-settings-icon" src="../../assets/image/icon-web-settings.svg" alt="settings" />
-      <label class="dbr-settings-text-in-desktop">Scan Settings</label>
-      <label class="dbr-settings-text-in-mobile">Settings</label>
+  <Popover overlayClassName="dbr-settings-popover" :placement="deviceType === 'pc' ? 'rightBottom' : 'topRight'" :arrow="false" :open="isSettingChangeEnabled && popoverOpenStore.settingsController">
+    <div class="dbr-settings-controller" @click.stop="updatePopoverStore" @mouseenter="updatePopoverStore" :style="{ backgroundColor: !isSettingChangeEnabled ? 'rgb(77, 77, 77)' : '#000000', cursor: !isSettingChangeEnabled ? 'not-allowed' : 'pointer', }">
+      <svg version="1.1" id="Layer_1" class="dbr-settings-icon" :fill="isSettingChangeEnabled ? '#FEA543' : 'grey'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 29.4 29.4" style="enable-background:new 0 0 29.4 29.4;" xml:space="preserve">
+        <g>
+          <path class="st0"
+            d="M27.2,11.9h-1.9c-0.2-0.8-0.5-1.5-0.8-2.3l1.4-1.4c0.9-0.9,0.9-2.2,0-3.1l-1.7-1.7c-0.9-0.9-2.2-0.9-3.1,0l-1.4,1.4c-0.7-0.3-1.5-0.6-2.3-0.8V2.2c0-1.2-1-2.2-2.2-2.2h-1.2c-1.2,0-2.2,1-2.2,2.2v1.9c-0.8,0.2-1.5,0.5-2.3,0.8L8.2,3.5C7.4,2.6,6,2.6,5.1,3.5L3.5,5.2C2.6,6,2.6,7.4,3.5,8.3l1.4,1.4c-0.3,0.7-0.6,1.5-0.8,2.3H2.2c-1.2,0-2.2,1-2.2,2.2v1.2c0,1.2,1,2.2,2.2,2.2h1.9c0.2,0.8,0.5,1.5,0.8,2.3l-1.4,1.4c-0.9,0.9-0.9,2.2,0,3.1l1.7,1.7c0.9,0.9,2.2,0.8,3.1,0l1.4-1.4c0.7,0.3,1.5,0.6,2.3,0.8v1.9c0,1.2,1,2.2,2.2,2.2h1.2c1.2,0,2.2-1,2.2-2.2v-1.9c0.8-0.2,1.5-0.5,2.3-0.8l1.4,1.4c0.8,0.8,2.3,0.8,3.1,0l1.7-1.7c0.8-0.9,0.8-2.2,0-3.1l-1.4-1.4c0.3-0.7,0.6-1.5,0.8-2.3h1.9c1.2,0,2.2-1,2.2-2.2v-1.2C29.4,12.9,28.4,11.9,27.2,11.9z M27.4,15.3c0,0.1-0.1,0.2-0.2,0.2h-2.7c-0.5,0-0.9,0.3-1,0.8c-0.2,1.1-0.6,2.2-1.1,3.2c-0.2,0.4-0.1,0.8,0.2,1.2l1.9,1.9c0.1,0.1,0.1,0.2,0,0.3l-1.7,1.7c-0.1,0.1-0.2,0.1-0.3,0l-1.9-1.9c-0.3-0.3-0.8-0.4-1.2-0.2c-1,0.5-2.1,0.9-3.2,1.1c-0.5,0.1-0.8,0.5-0.8,1v2.7c0,0.1-0.1,0.2-0.2,0.2h-1.2c-0.1,0-0.2-0.1-0.2-0.2v-2.7c0-0.5-0.3-0.9-0.8-1c-1.1-0.2-2.2-0.6-3.2-1.1c-0.1-0.1-0.3-0.1-0.4-0.1c-0.3,0-0.5,0.1-0.7,0.3l-1.9,1.9c-0.1,0.1-0.2,0.1-0.3,0l-1.7-1.7c-0.1-0.1-0.1-0.2,0-0.3l1.9-1.9c0.3-0.3,0.4-0.8,0.2-1.2c-0.5-1-0.9-2.1-1.1-3.2c-0.1-0.5-0.5-0.8-1-0.8H2.2c-0.1,0-0.2-0.1-0.2-0.2v-1.2c0-0.1,0.1-0.2,0.2-0.2h2.7c0.5,0,0.9-0.3,1-0.8C6.1,12,6.4,10.9,7,9.9C7.1,9.5,7.1,9,6.8,8.7L4.9,6.8c-0.1-0.1-0.1-0.2,0-0.3l1.7-1.7c0.1-0.1,0.2-0.1,0.3,0l1.9,1.9C9,7.1,9.5,7.1,9.9,7c1-0.5,2.1-0.9,3.2-1.1c0.5-0.1,0.8-0.5,0.8-1V2.2C13.9,2.1,14,2,14.1,2h1.2c0.1,0,0.2,0.1,0.2,0.2v2.7c0,0.5,0.3,0.9,0.8,1c1.1,0.2,2.2,0.6,3.2,1.1c0.4,0.2,0.8,0.1,1.2-0.2l1.9-1.9c0.1-0.1,0.2-0.1,0.3,0l1.7,1.7c0.1,0.1,0.1,0.2,0,0.3l-1.9,1.9c-0.3,0.3-0.4,0.8-0.2,1.2c0.5,1,0.9,2.1,1.1,3.2c0.1,0.5,0.5,0.8,1,0.8h2.7c0.1,0,0.2,0.1,0.2,0.2V15.3z" />
+          <path class="st0" d="M14.7,8.3c-3.5,0-6.4,2.9-6.4,6.4c0,3.5,2.9,6.4,6.4,6.4c3.5,0,6.4-2.9,6.4-6.4C21.1,11.2,18.2,8.3,14.7,8.3zM14.7,19.1c-2.4,0-4.4-2-4.4-4.4s2-4.4,4.4-4.4s4.4,2,4.4,4.4S17.1,19.1,14.7,19.1z" />
+        </g>
+      </svg>
+
+      <label class="dbr-settings-text-in-desktop" :style="{ color: !isSettingChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff', cursor: !isSettingChangeEnabled ? 'not-allowed' : 'pointer', }">Scan Settings</label>
+      <label class="dbr-settings-text-in-mobile" :style="{ color: !isSettingChangeEnabled ? 'rgb(103, 103, 103)' : '#ffffff', cursor: !isSettingChangeEnabled ? 'not-allowed' : 'pointer', }">Settings</label>
     </div>
     <template #content>
-      <div class="dbr-settings" v-show="!settingsStore.shwoSettingCodesArea">
+      <div class="dbr-settings">
         <div class="dbr-screenshot-btn" @click="getImages" v-show="isDebug">
-          <img src="../../assets/image/grey.svg" alt="screenshot" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 34 34">
+            <g id="grey" transform="translate(0.5 0.5)">
+              <g id="Group_125" data-name="Group 125" transform="translate(0.5 0.5)">
+                <path id="Path_91" data-name="Path 91" d="M20.445,10.445V2.158A1.658,1.658,0,0,0,18.788.5H10.5" transform="translate(6.076 -0.5)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                <path id="Path_92" data-name="Path 92" d="M20.445,10.5v8.288a1.658,1.658,0,0,1-1.658,1.658H10.5" transform="translate(6.076 6.076)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                <path id="Path_93" data-name="Path 93" d="M.5,10.445V2.158A1.658,1.658,0,0,1,2.158.5h8.288" transform="translate(-0.5 -0.5)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                <path id="Path_94" data-name="Path 94" d="M.5,10.5v8.288a1.658,1.658,0,0,0,1.658,1.658h8.288" transform="translate(-0.5 6.076)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                <line id="Line_13" data-name="Line 13" y2="10.958" transform="translate(26.521 21.042)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                <line id="Line_14" data-name="Line 14" x2="10.958" transform="translate(21.042 26.524)" fill="none" stroke="#aaa" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </g>
+            </g>
+          </svg>
         </div>
         <div class="dbr-settings-options" @click.stop="">
-          <div class="dbr-settings-option-1" v-show="['1d', '2d', '1d2d'].includes(useCaseStore.useCaseName)">
+          <div class="dbr-settings-option-1" v-show="!['Drivers License (PDF417)', 'VIN'].includes(scanOptionsStore.currentScanOption.name)">
             <label>Single/Multi Barcode Scanning</label>
             <div class="dbr-single-or-multi-options">
               <label v-for="mode of ['Single', 'Multiple']" :class="`dbr-${mode.toLowerCase()}`" @click="() => settingsStore.updateSingleOrMulti(mode as SingleOrMulti)" :style="{ backgroundColor: settingsStore.singleOrMulti === mode ? '#fe8e14' : '#222' }">
-                <input type="radio" class="dbr-radio" name="single-or-multiple" style="margin-right: 5px;" :checked="mode === 'Single'">
-                {{ mode }}
-              </label>
-            </div>
-          </div>
-          <div class="dbr-settings-option-2" v-show="['1d', '2d', '1d2d'].includes(useCaseStore.useCaseName)">
-            <label>Scan Mode</label>
-            <div class="dbr-scan-mode">
-              <label v-for="mode of ['Speed', 'Balance', 'Coverage']" :class="`dbr-${mode.toLowerCase()}`" @click="() => settingsStore.updateScanMode(mode as ScanMode)" :style="{ backgroundColor: settingsStore.scanMode === mode ? '#fe8e14' : '#222' }">
-                <input type="radio" class="dbr-radio" name="scan-mode" style="margin-right: 5px;" :checked="mode === 'Speed'">
+                <input type="radio" class="dbr-radio" name="single-or-multiple" style="margin-right: 5px;" :checked="settingsStore.singleOrMulti === mode">
                 {{ mode }}
               </label>
             </div>
@@ -235,7 +174,7 @@ window.addEventListener("resize", () => {
             <div class="dbr-colour-mode">
               <label v-for="mode of ['Inverted', 'Normal', 'Both']" :class="`dbr-${mode.toLowerCase()}`" @click="() => settingsStore.updateColourMode(mode as ColourMode)" :style="{ backgroundColor: settingsStore.colourMode === mode ? '#fe8e14' : '#222' }">
                 <div class="dbr-text">
-                  <input type="radio" class="dbr-radio" name="colour-mode" style="margin-right: 5px;" :checked="mode === 'Both'">
+                  <input type="radio" class="dbr-radio" name="colour-mode" style="margin-right: 5px;" :checked="settingsStore.colourMode === mode">
                   {{ mode }}
                 </div>
               </label>
@@ -246,6 +185,10 @@ window.addEventListener("resize", () => {
           <div class="dbr-auto-zoom-title">Auto Zoom</div>
           <Switch v-model:checked="settingsStore.autoZoom" />
         </div>
+        <div class="dbr-result-tooltip" @click.stop v-show="!captureImageStore.isShowCaptureImagePage">
+          <div class="dbr-result-tooltip-title">Result Tooltip</div>
+          <Switch v-model:checked="settingsStore.resultTooltip" />
+        </div>
         <div class="dbr-view-setting-codes-btn" @click.stop="" :style="{ justifyContent: isDebug ? 'space-between' : 'flex-end' }">
           <label class="dbr-upload-template" for="upload-template" v-show="isDebug">
             <input type="file" id="upload-template" accept=".json" @change="uploadTemplate" style="display: none;">
@@ -255,20 +198,17 @@ window.addEventListener("resize", () => {
               <path d="M284.622029 215.4496c-22.528 0-40.96 18.432-40.96 40.96s18.432 40.96 40.96 40.96h396.0832c22.528 0 40.96-18.432 40.96-40.96s-18.432-40.96-40.96-40.96H284.622029zM557.825229 420.2496H284.622029c-22.528 0-40.96 18.432-40.96 40.96s18.432 40.96 40.96 40.96h273.2032c22.528 0 40.96-18.432 40.96-40.96s-18.432-40.96-40.96-40.96z" p-id="1442" fill="#ffffff"></path>
             </svg>
           </label>
-          <div class="dbr-open-settings-view" @click.stop="() => settingsStore.updateSettingCodesAreaOpen(true)">
-            View Setting Codes
-            <RightOutlined />
-          </div>
-        </div>
-      </div>
-      <div class="dbr-setting-codes-area" v-show="settingsStore.shwoSettingCodesArea" @click.stop>
-        <div class="dbr-setting-code-main" v-html="viewSettings"></div>
-        <div class="dbr-setting-codes-area-footer">
-          <div class="dbr-back" @click="() => settingsStore.updateSettingCodesAreaOpen(false)">
-            <LeftOutlined /> Back
-          </div>
-          <div class="dbr-copy-settings" @click="copySettings" :style="{ color: isCopied ? '#FE8E14' : '#ffffff' }">
-            {{ isCopied ? "Copied" : "Copy" }}
+          <div class="dbr-open-settings-view" @click.stop="downloadTemplate">
+            Download Template
+            <svg data-v-8dc7cce2="" viewBox="0 0 18 18" width="16" height="16" stroke="rgb(254, 142, 20)">
+              <g data-v-8dc7cce2="" transform="translate(-519 -1339)">
+                <g data-v-8dc7cce2="" transform="translate(520 1340)">
+                  <path data-v-8dc7cce2="" d="M528,1356a8,8,0,1,0-8-8A8,8,0,0,0,528,1356Z" transform="translate(-520 -1340)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  <path data-v-8dc7cce2="" d="M531,1352.274V1344.5" transform="translate(-523 -1340.387)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  <path data-v-8dc7cce2="" d="M533.554,1352l-4.027,5.027L525.5,1352" transform="translate(-521.527 -1344.02)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </g>
+              </g>
+            </svg>
           </div>
         </div>
       </div>
@@ -290,12 +230,12 @@ window.addEventListener("resize", () => {
     width: 28px;
     height: 28px;
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       width: 18px;
       height: 18px;
     }
 
-    @media (max-height: 500px) and (max-width: 980px) {
+    @media (max-height: 500px) and (max-width: 979.5px) {
       display: none;
     }
   }
@@ -311,7 +251,7 @@ window.addEventListener("resize", () => {
   .dbr-settings-text-in-desktop {
     margin-top: 5px;
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       display: none;
     }
   }
@@ -324,13 +264,13 @@ window.addEventListener("resize", () => {
     }
   }
 
-  @media (max-width: 980px) {
-    width: 25%;
+  @media (max-width: 979.5px) {
+    flex: 1;
   }
 }
 
 .ant-popover-open {
-  background-color: rgb(34, 34, 34);
+  background-color: rgb(34, 34, 34) !important;
 }
 </style>
 
@@ -363,11 +303,6 @@ window.addEventListener("resize", () => {
         background-color: rgba(0, 0, 0, 0.6);
         border-radius: 50%;
         cursor: pointer;
-
-        img {
-          width: 15px;
-          height: 15px;
-        }
       }
 
       .dbr-settings-options {
@@ -418,7 +353,7 @@ window.addEventListener("resize", () => {
               white-space: nowrap;
               cursor: pointer;
 
-              @media (max-width: 980px) {
+              @media (max-width: 979.5px) {
                 font-size: 14px;
                 margin-right: 10px;
                 min-width: 80px;
@@ -467,7 +402,7 @@ window.addEventListener("resize", () => {
                 padding-right: 15px;
                 text-align: center;
 
-                @media (max-width: 980px) {
+                @media (max-width: 979.5px) {
                   font-size: 14px;
                   min-width: 80px;
                 }
@@ -508,7 +443,8 @@ window.addEventListener("resize", () => {
         }
       }
 
-      .dbr-auto-zoom {
+      .dbr-auto-zoom,
+      .dbr-result-tooltip {
         width: 100%;
         height: 40px;
         display: flex;
@@ -518,7 +454,8 @@ window.addEventListener("resize", () => {
         color: #dddddd;
         padding: 0 18px;
 
-        .dbr-auto-zoom-title {
+        .dbr-auto-zoom-title,
+        .dbr-result-tooltip-title {
           font-family: OpenSans-Regular;
           font-size: 14px;
         }
@@ -555,6 +492,10 @@ window.addEventListener("resize", () => {
         .dbr-open-settings-view {
           cursor: pointer;
           font-family: OpenSans-Regular;
+
+          svg {
+            vertical-align: middle;
+          }
         }
 
         @media (hover: hover) and (pointer: fine) {
@@ -563,7 +504,7 @@ window.addEventListener("resize", () => {
           }
         }
 
-        @media (max-width: 980px) {
+        @media (max-width: 979.5px) {
           height: 40px;
           line-height: 40px;
           font-size: 16px;
@@ -579,7 +520,7 @@ window.addEventListener("resize", () => {
       padding: 0 17px 55px 17px;
       overflow: auto;
 
-      @media (max-width: 980px) and (orientation: landscape) {
+      @media (max-width: 979.5px) and (orientation: landscape) {
         height: 200px;
       }
 
@@ -616,7 +557,7 @@ window.addEventListener("resize", () => {
       }
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       width: 330px;
       max-height: 65vh;
     }

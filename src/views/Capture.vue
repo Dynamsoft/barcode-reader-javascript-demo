@@ -1,62 +1,81 @@
 <script setup lang="ts">
-import { getCurrentInstance, watch } from "vue";
+import { onUnmounted } from "vue";
 import CaptureHeader from "../components/CaptureHeader.vue";
 import SettingsControlsBar from "../components/SettingsControlsBar.vue";
 import ScannerVideo from "../components/BarcodeScanner/ScannerVideo.vue";
 import CaptureImage from "../components/BarcodeReader/CaptureImage.vue";
 import NoCameraPage from "../components/NoCameraPage.vue";
+import templates from "../templates";
 import { useCaptureImageStore } from "../stores/captureImage";
-import { AllowNameSet, useUseCaseStore } from "../stores/useCase";
+import { useScanOptionsStore } from "../stores/scanOptions";
 import { useSettingsStore } from "../stores/settings";
-import { BarcodeCategory, useBarcodeFormatStore } from "../stores/barcodeFormat";
-import { templateMap, urlMap, useCaseBarcodeFormatMap } from "../util";
+import { useBarcodeFormatStore } from "../stores/barcodeFormat";
+import { templateUrl } from "../util";
 import {
   _getNorImageData,
   _toCanvas,
-  EnumCapturedResultItemType,
   EnumGrayscaleTransformationMode,
-  PlayCallbackInfo,
-  ParsedResultItem,
   CapturedResult,
-  CaptureVisionRouter
+  CaptureVisionRouter,
+  ParsedResult,
+  ParsedResultItem,
+  CodeParser,
+  EnumBarcodeFormat
 } from "dynamsoft-barcode-reader-bundle";
-import { ParsedDataFailed } from "../types";
 import { useCameraListStore } from "../stores/cameraList";
-import { useScanRegionStore } from "../stores/scanRegion";
 import { useResultCountStore } from "../stores/resultCount";
-import { useRouter } from "vue-router";
-import { EnumResolution, ResolutionMap } from "../assets/enum/Resolution";
+import { message } from "ant-design-vue";
 
 const _window = window as any;
 
-const router = useRouter();
 const captureImageStore = useCaptureImageStore();
 const settingsStore = useSettingsStore();
-const useCaseStore = useUseCaseStore();
+const scanOptionsStore = useScanOptionsStore();
 const barcodeFormatStore = useBarcodeFormatStore();
 const cameraListStore = useCameraListStore();
 const resultCountStore = useResultCountStore();
-const scanRegionStore = useScanRegionStore();
-const currentInstance: any = getCurrentInstance();
+
+onUnmounted(() => {
+  captureImageStore.captureImagePageVisible(false);
+})
 
 const reDecode = async () => {
   let captureResult: CapturedResult | null = null;
-  let parsedData: ParsedResultItem | ParsedDataFailed | {} = {};
   try {
     const cvRouter = _window.cvRouter as CaptureVisionRouter;
-    captureResult = await cvRouter.capture(captureImageStore.currentSelectedImageFile!, captureImageStore.currentTemplate);
-    if (captureResult.decodedBarcodesResult?.barcodeResultItems && useCaseStore.useCaseName === "dl") {
+    captureResult = await cvRouter.capture(captureImageStore.currentSelectedImageFile!, scanOptionsStore.currentScanOption.templateNameForReadRate);
+
+    // Parse Driver License barcodes
+    let parsedResult: ParsedResult & { text: string } | null = null;
+    if (captureResult.decodedBarcodesResult?.barcodeResultItems) {
+      let parsedResultItem;
       try {
-        parsedData = await _window.parser.parse(captureResult.decodedBarcodesResult.barcodeResultItems[0].bytes);
+        parsedResultItem = await (_window.parser as CodeParser).parse(captureResult.decodedBarcodesResult.barcodeResultItems[0].bytes);
       } catch (ex: any) {
-        (parsedData as ParsedDataFailed).exception = true;
-        (parsedData as ParsedDataFailed).message = ex.message || ex;
-        (parsedData as ParsedDataFailed).text = captureResult.decodedBarcodesResult.barcodeResultItems[0].text;
+        parsedResult = {
+          errorCode: -90003,
+          errorString: ex.message,
+          originalImageHashId: captureResult.originalImageHashId,
+          originalImageTag: captureResult.originalImageTag,
+          text: captureResult.decodedBarcodesResult.barcodeResultItems[0].text,
+          parsedResultItems: []
+        }
+      } finally {
+        if (!parsedResult) {
+          parsedResult = {
+            errorCode: 0,
+            errorString: "Successful.",
+            originalImageHashId: captureResult.originalImageHashId,
+            originalImageTag: captureResult.originalImageTag,
+            text: captureResult.decodedBarcodesResult.barcodeResultItems[0].text,
+            parsedResultItems: [parsedResultItem as ParsedResultItem]
+          }
+        }
       }
-      if ((parsedData as ParsedDataFailed).exception) {
-        captureImageStore.updateDLJsonString(JSON.stringify(parsedData));
-      } else {
-        captureImageStore.updateDLJsonString((parsedData as ParsedResultItem).jsonString);
+      if (scanOptionsStore.currentScanOption.name === "Drivers License (PDF417)") {
+        captureImageStore.updateDLJsonString(parsedResult);
+      } else if (scanOptionsStore.currentScanOption.name === "VIN") {
+        captureImageStore.updateVINJsonString(parsedResult);
       }
     }
     captureImageStore.updateCaptureResult(captureResult.decodedBarcodesResult?.barcodeResultItems);
@@ -66,140 +85,107 @@ const reDecode = async () => {
   }
 };
 
-const udpateSettings = async () => {
+const updateSimplifiedSettings = async (templateName: string) => {
+  const settings = await _window.cvRouter.getSimplifiedSettings(templateName);
+  settings.outputOriginalImage = true;
+
+  settings.barcodeSettings.expectedBarcodesCount = settingsStore.singleOrMulti === "Single" ? 1 : 999;
+
+  settings.barcodeSettings.grayscaleTransformationModes = Array(8).fill(-1);;
+  if (settingsStore.colourMode === "Inverted") {
+    settings.barcodeSettings.grayscaleTransformationModes[0] = EnumGrayscaleTransformationMode.GTM_INVERTED;
+  } else if (settingsStore.colourMode === "Normal") {
+    settings.barcodeSettings.grayscaleTransformationModes[0] = EnumGrayscaleTransformationMode.GTM_ORIGINAL;
+  } else {
+    settings.barcodeSettings.grayscaleTransformationModes[0] = EnumGrayscaleTransformationMode.GTM_ORIGINAL;
+    settings.barcodeSettings.grayscaleTransformationModes[1] = EnumGrayscaleTransformationMode.GTM_INVERTED;
+  }
+
+  await _window.cvRouter.updateSettings(templateName, settings);
+  if (barcodeFormatStore.isFormatChangeEnabled) {
+    await barcodeFormatStore.updateBarcodeFormat(templateName);
+  }
+}
+
+const updateSettings = async () => {
   try {
-    const isInNoCameraPage = !captureImageStore.isShowCaptureImagePage && !cameraListStore.hasCamera;
-    const isInScannerPageLoading = cameraListStore.isLoading && !captureImageStore.isShowCaptureImagePage && cameraListStore.hasCamera;
-    const isInScannerPage = !cameraListStore.isLoading && !captureImageStore.isShowCaptureImagePage && cameraListStore.hasCamera;
-    if (isInNoCameraPage || isInScannerPageLoading) return;
+    if (templateUrl) {
+      await _window.cvRouter.initSettings(templateUrl);
+      const settings = await _window.cvRouter.outputSettings("*");
+      const templateName = settings.CaptureVisionTemplates[0].Name;
+      await _window.cvRouter.startCapturing(templateName);
+      scanOptionsStore.updateScanOption({ name: "User Defined", templateName, checked: true, urlName: "user-defined", templateNameForReadRate: templateName });
+      return;
+    }
     captureImageStore.updateCaptureResult();
+    captureImageStore.updateScannerCaptureResult();
     captureImageStore.updateDLJsonString();
     captureImageStore.updateDecodingState(true);
-    settingsStore.updateZonalScan(!cameraListStore.isUseDemoVideo && !(useCaseStore.useCaseName === "dl"));
+    captureImageStore.updateDlResultBoxVisibility(false);
+    _window.cameraView?.clearAllInnerDrawingItems();
+    resultCountStore.$state.clear();
+
     const isShowCaptureImagePage = captureImageStore.isShowCaptureImagePage;
-    const message = isShowCaptureImagePage ? "Setting and reDecoding..." : "Settings...";
-    currentInstance.proxy.$message.loading({
-      content: message,
+    const content = isShowCaptureImagePage ? "Setting and reDecoding..." : "Settings...";
+    message.loading({
+      content,
       key: "updateSettings",
     });
     _window.cvRouter.stopCapturing();
-    if (useCaseStore.isGeneral) {
-      captureImageStore.updateCurrentTemplate(templateMap[settingsStore.scanMode]);
+
+    const currentTplName = scanOptionsStore.currentScanOption.templateName;
+    const currentTplNameForReadRate = scanOptionsStore.currentScanOption.templateNameForReadRate;
+    await updateSimplifiedSettings(currentTplName);
+    await updateSimplifiedSettings(currentTplNameForReadRate);
+
+    if (!captureImageStore.isShowCaptureImagePage) {
+      await _window.cvRouter.startCapturing(currentTplName);
+      _window.cameraView?.setScanLaserVisible(settingsStore.zonalScan);
+      _window.cameraView?.setScanRegionMaskVisible(true);
     } else {
-      const settings = await _window.cvRouter.outputSettings("*");
-      const dpmSettings = settings.BarcodeReaderTaskSettingOptions.filter((setting: any) => {
-        return setting.Name === "task-read-barcodes-dense";
-      })[0];
-      if (useCaseStore.useCaseName === "dpm") {
-        dpmSettings.DPMCodeReadingModes = [{
-          Mode: "DPMCRM_GENERAL"
-        }];
-      } else {
-        dpmSettings.DPMCodeReadingModes = [{
-          Mode: "DPMCRM_SKIP"
-        }];
-      }
-      await _window.cvRouter.initSettings(settings);
-
-      captureImageStore.updateCurrentTemplate("ReadDenseBarcodes");
-    }
-    const settings = await _window.cvRouter.getSimplifiedSettings(captureImageStore.currentTemplate);
-    settings.capturedResultItemTypes |= EnumCapturedResultItemType.CRIT_ORIGINAL_IMAGE;
-    if (useCaseStore.isGeneral) {
-      settings.barcodeSettings.expectedBarcodesCount = settingsStore.singleOrMulti === "Single" ? 1 : 512;
-    }
-
-    settings.barcodeSettings.grayscaleTransformationModes = [];
-    if(settingsStore.colourMode === "Inverted") {
-      settings.barcodeSettings.grayscaleTransformationModes[0] = EnumGrayscaleTransformationMode.GTM_INVERTED;
-    } else if(settingsStore.colourMode === "Normal") {
-      settings.barcodeSettings.grayscaleTransformationModes[0] = EnumGrayscaleTransformationMode.GTM_ORIGINAL;
-    } else {
-      settings.barcodeSettings.grayscaleTransformationModes[0] = EnumGrayscaleTransformationMode.GTM_ORIGINAL;
-      settings.barcodeSettings.grayscaleTransformationModes[1] = EnumGrayscaleTransformationMode.GTM_INVERTED;
-    }
-
-    await _window.cvRouter.updateSettings(captureImageStore.currentTemplate, settings);
-    await barcodeFormatStore.updateBarcodeFormat(captureImageStore.currentTemplate, captureImageStore.isShowCaptureImagePage);
-    if (isInScannerPage) {
-      await _window.cameraEnhancer.open();
-      await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
-    } else if (captureImageStore.isShowCaptureImagePage) {
       await reDecode();
     }
-    
-    currentInstance.proxy.$message.success({
+
+    message.success({
       content: "Settings Updated",
       key: "updateSettings",
+      duration: 1
     });
   } catch (ex: any) {
-    currentInstance.proxy.$message.error({
+    message.error({
       content: ex.message || ex,
       key: "updateSettings",
+      duration: 1
     });
   } finally {
     captureImageStore.updateDecodingState(false);
   }
 };
 
-const setUseCaseBarcodeFormat = async (isBeforeMount: boolean, oldUseCase?: AllowNameSet) => {
-  if (isBeforeMount || oldUseCase) {
-    for (let formatType in barcodeFormatStore.$state) {
-      const _formatType = formatType as BarcodeCategory;
-      for (let format in barcodeFormatStore.$state[_formatType]) {
-        barcodeFormatStore.$state[_formatType][format].state = false;
+const setUseCaseBarcodeFormat = async () => {
+  barcodeFormatStore.updateAllBarcodeFormatState(false);
+  if (barcodeFormatStore.isFormatChangeEnabled) {
+    const tplName = templates[scanOptionsStore.currentScanOption.templateName as keyof typeof templates];
+    const defaultBarcodes = tplName.BarcodeReaderTaskSettingOptions[0].BarcodeFormatIds.map((format => format.trim())) as Array<keyof typeof EnumBarcodeFormat>;
+    if (defaultBarcodes.includes("BF_ALL")) {
+      barcodeFormatStore.updateAllBarcodeFormatState(true);
+    } else if (defaultBarcodes.includes("BF_DEFAULT")) {
+      barcodeFormatStore.updateDefaultBarcodeFormatState(true);
+    } else {
+      for (let formatString of defaultBarcodes) {
+        barcodeFormatStore.findFormatAndUpdateState(formatString, true);
       }
-    }
-    for (let format of useCaseBarcodeFormatMap[useCaseStore.useCaseName]) {
-      barcodeFormatStore.findFormatAndUpdateState(format, true);
     }
   }
 };
-
-const eventOnUseCaseChange = async (oldUseCase?: AllowNameSet) => {
-  if (cameraListStore.isLoading && !captureImageStore.isShowCaptureImagePage && cameraListStore.hasCamera) return;
-  resultCountStore.$state.clear();
-  captureImageStore.updateDlResultBoxVisibility(false);
-  if (cameraListStore.hasCamera) {
-    _window.cameraView?.setScanLaserVisible(settingsStore.zonalScan);
-    if (!captureImageStore.isShowCaptureImagePage) {
-      _window.cvRouter?.stopCapturing();
-      if (!useCaseStore.isGeneral) {
-        if (
-          ["vin", " dl"].includes(useCaseStore.useCaseName) &&
-          cameraListStore.currentResolution !== EnumResolution.FULL_HD
-        ) {
-          const _currentResolution: PlayCallbackInfo = await _window.cameraEnhancer?.setResolution(ResolutionMap[EnumResolution.FULL_HD]);
-          cameraListStore.updateCameraResolution(_currentResolution);
-        }
-      } else {
-        captureImageStore.updateCurrentTemplate(templateMap[settingsStore.scanMode]);
-      }
-      if (!cameraListStore.isUseDemoVideo) {
-        scanRegionStore.updateVisibleRegionInPixels(_window.cameraView?.getVisibleRegionOfVideo({ inPixels: true }));
-        _window.cameraEnhancer?.setScanRegion(scanRegionStore.region);
-      }
-    }
-  }
-  await setUseCaseBarcodeFormat(false, oldUseCase);
-  await barcodeFormatStore.updateBarcodeFormat(captureImageStore.currentTemplate, captureImageStore.isShowCaptureImagePage);
-};
-
-watch(
-  () => useCaseStore.useCaseName,
-  async (_: AllowNameSet, oldUseCase: AllowNameSet) => {
-    await router.push("/" + urlMap[useCaseStore.useCaseName] + location.search);
-    await eventOnUseCaseChange(oldUseCase);
-  }
-);
 </script>
 
 <template>
   <CaptureHeader />
-  <ScannerVideo :udpateSettings="udpateSettings" :eventOnUseCaseChange="eventOnUseCaseChange" :setUseCaseBarcodeFormat="setUseCaseBarcodeFormat" v-if="cameraListStore.hasCamera" />
-  <NoCameraPage :eventOnUseCaseChange="eventOnUseCaseChange" v-else></NoCameraPage>
+  <ScannerVideo :setUseCaseBarcodeFormat="setUseCaseBarcodeFormat" v-if="cameraListStore.hasCamera" />
+  <NoCameraPage v-else></NoCameraPage>
   <CaptureImage v-show="captureImageStore.isShowCaptureImagePage" />
-  <SettingsControlsBar :udpateSettings="udpateSettings" />
+  <SettingsControlsBar :updateSettings="updateSettings" />
 </template>
 
 <style scoped lang="less"></style>

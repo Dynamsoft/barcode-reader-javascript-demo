@@ -1,24 +1,33 @@
 <script setup lang="ts">
-import { ref, Ref, watch, nextTick, getCurrentInstance } from "vue";
+import { ref, Ref, watch, nextTick, onMounted, onUnmounted, useTemplateRef } from "vue";
 import { useCaptureImageStore } from "../../stores/captureImage";
-import { useUseCaseStore } from "../../stores/useCase";
+import { useScanOptionsStore } from "../../stores/scanOptions";
 import { useSettingsStore } from "../../stores/settings";
 import { useCameraListStore } from "../../stores/cameraList";
+import { message } from "ant-design-vue";
 import Clipboard from "clipboard";
-import DriverLicenseResult from "./DriverLicenseResult.vue";
+import ParsedResult from "./ParsedResult.vue";
 
 const _window = window as any;
 
-const imageAreaRef: Ref<HTMLDivElement | null> = ref(null);
-const resultCanvasRef: Ref<HTMLDivElement | null> = ref(null);
+const imageAreaRef = useTemplateRef("imageAreaRef");
+const resultCanvasRef = useTemplateRef("resultCanvasRef");
 const isCopied: Ref<Array<boolean>> = ref([]);
 const captureImageStore = useCaptureImageStore();
-const useCaseStore = useUseCaseStore();
+const scanOptionsStore = useScanOptionsStore();
 const settingsStore = useSettingsStore();
 const cameraListStore = useCameraListStore();
-const currentInstance: any = getCurrentInstance();
 
 let currentImage: HTMLCanvasElement;
+
+onMounted(() => {
+  // Redraws overlay when the window is resized.
+  window.addEventListener("resize", resizeEvent);
+})
+
+onUnmounted(() => {
+  window.removeEventListener("resize", resizeEvent);
+})
 
 /**
  * Converts an image file to an HTMLCanvasElement.
@@ -124,14 +133,11 @@ const drawResults = (oriImg: HTMLCanvasElement) => {
     ctx.fill();
 
     cvs.title = `${i + 1}. ${result.formatString} : ${result.text}`;
-    resultCanvasRef.value!.appendChild(cvs);
+    resultCanvasRef.value?.appendChild(cvs);
   });
 };
 
-// Redraws overlay when the window is resized.
-window.addEventListener("resize", () => {
-  drawResults(currentImage);
-});
+const resizeEvent = () => { drawResults(currentImage); }
 
 /**
  * Copies read barcode results to the clipboard.
@@ -150,38 +156,46 @@ const copyResult = (txt: string, index: number) => {
     setTimeout(() => {
       isCopied.value[index] = false;
     }, 5000);
-    currentInstance.proxy.$message.success("Copied!");
+    message.success({
+      content: "Copied!",
+      duration: 1
+    });
     clipboard.destroy();
   });
 
   clipboard.on("error", () => {
     isCopied.value[index] = false;
-    currentInstance.proxy.$message.error("Failed!");
+    message.error({
+      content: "Failed!",
+      duration: 1
+    });
     clipboard.destroy();
   });
 };
 
 const restartVideo = async () => {
-  currentInstance.proxy.$message.loading({
+  message.loading({
     content: "Restarting...",
     key: "restartVideo",
   });
 
   try {
-    if(cameraListStore.hasCamera) {
+    if (cameraListStore.hasCamera) {
       await _window.cameraEnhancer.open();
-      await _window.cvRouter.startCapturing(captureImageStore.currentTemplate);
+      await _window.cvRouter.startCapturing(scanOptionsStore.currentScanOption.templateName);
       _window.cameraView.setScanLaserVisible(settingsStore.zonalScan);
     }
     captureImageStore.captureImagePageVisible(false);
-    currentInstance.proxy.$message.success({
+    message.success({
       content: cameraListStore.hasCamera ? "Restarted" : "Returned",
       key: "restartVideo",
+      duration: 1
     });
   } catch (ex: any) {
-    currentInstance.proxy.$message.error({
+    message.error({
       content: ex.message || ex,
       key: "restartVideo",
+      duration: 1
     });
   }
 };
@@ -212,34 +226,27 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
         <div class="dbr-result-header">
           <div class="dbr-result-title">Results</div>
         </div>
-        <ul class="dbr-result-list" v-show="useCaseStore.useCaseName !== 'dl' && !captureImageStore.isDecoding">
+        <ul class="dbr-result-list" v-show="!['Drivers License (PDF417)', 'VIN'].includes(scanOptionsStore.currentScanOption.name) && !captureImageStore.isDecoding">
           <li v-for="(item, index) of captureImageStore.captureResult" class="dbr-result-item" :key="index">
             <div class="dbr-result-format-and-text">
               {{ `${index + 1}. ${item.formatString} : ${item.text}` }}
             </div>
-            <div
-              class="dbr-result-copy-btn"
-              :style="{ color: isCopied[index] ? '#fe8e14 ' : '#aaaaaa' }"
-              @click="
-                () => {
-                  copyResult(item.text, index);
-                }
-              "
-            >
+            <div class="dbr-result-copy-btn" :style="{ color: isCopied[index] ? '#fe8e14 ' : '#aaaaaa' }" @click="
+              () => {
+                copyResult(item.text, index);
+              }
+            ">
               {{ isCopied[index] ? "Copied" : "Copy" }}
             </div>
           </li>
-          <li
-            class="dbr-no-barcode-found"
-            v-show="!captureImageStore.captureResult.length && useCaseStore.useCaseName !== 'dl'"
-          >
+          <li class="dbr-no-barcode-found" v-show="!captureImageStore.captureResult.length && scanOptionsStore.currentScanOption.name !== 'Drivers License (PDF417)'">
             {{ "No barcodes found !" }}
           </li>
         </ul>
-        <DriverLicenseResult v-show="useCaseStore.useCaseName === 'dl'" />
+        <ParsedResult v-show="['Drivers License (PDF417)', 'VIN'].includes(scanOptionsStore.currentScanOption.name)" />
       </div>
     </div>
-    <div class="dbr-restart-video-btn" @click="restartVideo">{{cameraListStore.hasCamera ? "RESTART VIDEO" : "BACK"}}</div>
+    <div class="dbr-restart-video-btn" @click="restartVideo">{{ cameraListStore.hasCamera ? "RESTART VIDEO" : "BACK" }}</div>
   </div>
 </template>
 
@@ -261,9 +268,9 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
     transform: translate(-50%, -50%);
     display: flex;
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       width: 100%;
-      height: calc(100% - 9vh);
+      height: calc(100% - 16.5vh);
       flex-direction: column;
     }
 
@@ -288,7 +295,7 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
         position: absolute;
       }
 
-      @media (max-width: 980px) {
+      @media (max-width: 979.5px) {
         width: 100%;
         height: 25%;
       }
@@ -307,6 +314,7 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
 
         .dbr-result-title {
           margin-bottom: 15px;
+          font-family: "Oswald-Regular";
         }
       }
 
@@ -330,6 +338,7 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
           .dbr-result-copy-btn {
             font-size: 16px;
             cursor: pointer;
+            font-family: "Oswald-Regular"
           }
         }
 
@@ -338,18 +347,18 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
           font-size: 14px;
         }
 
-        @media (max-width: 980px) {
-          height: 70%;
+        @media (max-width: 979.5px) {
+          height: 80%;
         }
       }
 
-      @media (max-width: 980px) {
+      @media (max-width: 979.5px) {
         width: 100%;
-        height: 70%;
+        height: 75%;
       }
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       top: 7.5vh;
       left: unset;
       transform: unset;
@@ -371,12 +380,13 @@ watch([() => captureImageStore.currentSelectedImageFile, () => captureImageStore
     justify-content: center;
     align-items: center;
     cursor: pointer;
-
+    font-family: "Oswald-Regular";
+    
     &:hover {
       background-color: #fea543 !important;
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 979.5px) {
       top: unset;
       bottom: 12%;
     }

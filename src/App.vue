@@ -1,22 +1,28 @@
 <script setup lang="ts">
-import { RouterView } from "vue-router";
 import "./dynamsoft.config";
-
-import FooterCopyright from "./components/FooterCopyright.vue";
+import { RouterView } from "vue-router";
 import { usePopoverOpenStore } from "./stores/popoverOpen";
+import LoadingMask from "./components/LoadingMask.vue";
+import FooterCopyright from "./components/FooterCopyright.vue";
 
 const popoverOpenStore = usePopoverOpenStore();
 
-window.addEventListener("click", () => {
-  popoverOpenStore.useCaseSelector = false;
-  popoverOpenStore.formatSelector = false;
-  popoverOpenStore.settingsController = false;
+document.querySelector("#app")?.addEventListener("click", () => {
+  popoverOpenStore.updatePopoverStore(false, false);
 });
 </script>
 
 <template>
-  <RouterView />
-  <FooterCopyright />
+  <main>
+    <LoadingMask />
+    <RouterView />
+    <FooterCopyright />
+  </main>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+main {
+  width: 100%;
+  height: 100%;
+}
+</style>

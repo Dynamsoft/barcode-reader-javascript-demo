@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { watch } from "vue";
-import ModeSelector from "./SettingsControlsBar/UseCaseSelector.vue";
 import FormatSelector from "./SettingsControlsBar/FormatSelector.vue";
 import RegionController from "./SettingsControlsBar/RegionController.vue";
 import SettingsController from "./SettingsControlsBar/SettingsController.vue";
@@ -8,7 +7,7 @@ import { useSettingsStore } from "../stores/settings";
 import { useBarcodeFormatStore } from "../stores/barcodeFormat";
 
 const props = defineProps<{
-  udpateSettings: () => Promise<void>;
+  updateSettings: () => Promise<void>;
 }>();
 
 const settingsStore = useSettingsStore();
@@ -17,12 +16,11 @@ const barcodeFormatStore = useBarcodeFormatStore();
 watch(
   [
     () => settingsStore.singleOrMulti,
-    () => settingsStore.scanMode,
     () => settingsStore.colourMode,
     () => barcodeFormatStore.$state,
   ],
   async () => {
-    await props.udpateSettings();
+    await props.updateSettings();
   },
   { deep: true }
 );
@@ -30,7 +28,6 @@ watch(
 
 <template>
   <div class="dbr-scanner-controls-bar">
-    <ModeSelector />
     <FormatSelector />
     <RegionController />
     <SettingsController />
@@ -46,11 +43,12 @@ watch(
   height: 40vh;
   min-width: 140px;
   min-height: 360px;
+  max-height: 120px;
   display: flex;
   flex-direction: column;
   background-color: #000000;
 
-  @media (max-width: 980px) {
+  @media (max-width: 979.5px) {
     width: 100%;
     height: 9vh;
     top: unset;

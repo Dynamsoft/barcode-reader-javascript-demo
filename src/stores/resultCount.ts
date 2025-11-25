@@ -23,7 +23,7 @@ export const useResultCountStore = defineStore("resultCount", {
         map_getObj!.timer && clearTimeout(map_getObj!.timer);
         map_getObj!.timer = setTimeout(() => {
           this.$state.delete(formatConcatText);
-        }, 3000);
+        }, 5000);
       }
     },
   },

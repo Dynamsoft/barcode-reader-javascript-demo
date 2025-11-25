@@ -1,15 +1,9 @@
-// ignore this part when uploading to github, remove all config code
-// baseUrl changed to "./" when uploading to github
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import viteCompression from 'vite-plugin-compression';
-import fs from "fs";
 
 // https://vitejs.dev/config/
 export default defineConfig((config) => {
-  const urlJsonStr = JSON.parse(fs.readFileSync("baseUrl.json", "utf8"));
-  let baseUrl = urlJsonStr[config.mode];
-
   return {
     plugins: [
       vue(),
@@ -21,13 +15,7 @@ export default defineConfig((config) => {
         ext: '.gz',
       })
     ],
-    base: baseUrl,
-    define: {
-      'process.env': {
-        BUILD_ENV: config.mode,
-        VUE_APP_PUBLIC_PATH: baseUrl
-      },
-    },
+    base: "./",
     build: {
       chunkSizeWarningLimit: 600,
       rollupOptions: {
@@ -44,8 +32,22 @@ export default defineConfig((config) => {
               "ant-design-vue",
               "vue-router"
             ]
-          }
-        }
+          },
+          entryFileNames: "js/[name]-[hash].js",
+          chunkFileNames: "js/[name]-[hash].js",
+          assetFileNames: (assets) => {
+            if (/\.(css)$/.test(assets.names?.[0] ?? "")) {
+              return "css/[name]-[hash][extname]";
+            }
+            if (/\.(png|jpg|jpeg|gif|svg)$/.test(assets.names?.[0] ?? "")) {
+              return "images/[name]-[hash][extname]";
+            }
+            if (/\.(woff2?|ttf|eot)$/.test(assets.names?.[0] ?? "")) {
+              return "fonts/[name]-[hash][extname]";
+            }
+            return "assets/[name]-[hash][extname]";
+          },
+        },
       }
     }
   }

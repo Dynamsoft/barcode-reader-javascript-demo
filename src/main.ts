@@ -10,25 +10,28 @@ import { message } from 'ant-design-vue';
 const pinia = createPinia();
 const app = createApp(App);
 
-app.config.globalProperties.$message = message;
-app.config.globalProperties.$message.config({
+message.config({
   top: '85%',
-  duration: 2,
-  maxCount: 2
+  duration: 0,
+  maxCount: 2,
+  prefixCls: "dbr-message-"
 });
 
 const routes = [
   { path: '/', component: Guide },
-  { path: '/common-oned', component: Capture },
+  { path: '/oned-retail', component: Capture },
+  { path: '/oned-industrial', component: Capture },
+  { path: '/qr', component: Capture },
+  { path: '/data-matrix', component: Capture },
   { path: '/common-twod', component: Capture },
   { path: '/common-oned-twod', component: Capture },
   { path: '/vin', component: Capture },
   { path: '/driver-license', component: Capture },
-  { path: '/dpm', component: Capture }
+  { path: '/distant', component: Capture },
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.VUE_APP_PUBLIC_PATH),
+  history: createWebHistory("./"), // if build, replace with your deployment path
   routes,
 })
 
